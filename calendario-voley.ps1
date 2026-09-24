@@ -698,7 +698,7 @@ function Get-ConfigSalidas($Cfg) {
         Lat           = [double]$lat
         Lon           = [double]$lon
         Calentamiento = [int](ConvertTo-Numero $s.calentamiento_minutos 60)
-        FactorBus     = [double](ConvertTo-Numero $s.factor_bus 1.15)
+        FactorBus     = [double](ConvertTo-Numero $s.factor_bus 1.10)
         Margen        = [int](ConvertTo-Numero $s.margen_minutos 0)
         # El viaje se redondea hacia arriba y la salida hacia abajo (a cuartos de hora): siempre con margen.
         RedondeoViaje = [Math]::Max(1, [int](ConvertTo-Numero $s.redondeo_viaje_minutos 15))
