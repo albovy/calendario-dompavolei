@@ -1,0 +1,47 @@
+# Genera el calendario de Dompavolei varias veces al día y lo publica en GitHub Pages.
+# Este archivo va en el repositorio como: .github/workflows/calendario.yml
+
+name: Calendario Dompavolei
+
+on:
+  schedule:
+    - cron: '17 5,11,17 * * *'   # a las 7:17, 13:17 y 19:17 (hora de verano en Galicia)
+  workflow_dispatch:              # botón "Run workflow" para actualizar a mano
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    env:
+      TZ: Europe/Madrid
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generar calendario
+        shell: pwsh
+        run: ./calendario-voley.ps1 -SinPreguntar -Salida web -NombreBase calendario
+
+      - name: Página de inicio
+        run: cp web/calendario.html web/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - id: despliegue
+        uses: actions/deploy-pages@v4
