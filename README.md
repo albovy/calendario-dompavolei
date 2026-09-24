@@ -16,7 +16,7 @@ la federación, se queda con los del club indicado en `config.json` (ID 20657258
 página, el `.ics`, un Excel y un `.ics` por equipo. La tarea `.github/workflows/calendario.yml`
 lo ejecuta y publica el resultado en GitHub Pages. La carpeta `historial` guarda la lista de partidos cada vez que la federación cambia algo (su historial de cambios muestra qué cambió y cuándo).
 
-Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje por carretera, siempre al alza) o, en casa, a la hora de calentamiento. Los tiempos de viaje se guardan en `pabellones.json` y se pueden fijar a mano en `config.json`.
+Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje por carretera, siempre al alza) o, en casa, a la hora de calentamiento. Los tiempos de viaje se guardan en `pabellones.json` y se pueden fijar a mano en `config.json`. Cada hora solo se descarga la temporada en curso; los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez en `temporada-anterior.json`.
 
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 

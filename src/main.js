@@ -38,7 +38,7 @@
 
 import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, resolve, sep } from 'node:path';
+import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { crearHistorial } from './historial.js';
@@ -105,13 +105,17 @@ export function leerOpciones(args) {
   };
 }
 
-// config.json y pabellones.json van juntos: en la carpeta actual o en la de --config.
+// config.json, pabellones.json y temporada-anterior.json van juntos: en la carpeta actual o en la de --config.
 export function rutasConfig(ruta) {
   let config = resolve('config.json');
   if (ruta) {
     config = existsSync(ruta) && statSync(ruta).isDirectory() ? join(resolve(ruta), 'config.json') : resolve(ruta);
   }
-  return { config, pabellones: join(dirname(config), 'pabellones.json') };
+  return {
+    config,
+    pabellones: join(dirname(config), 'pabellones.json'),
+    temporadaAnterior: join(dirname(config), 'temporada-anterior.json'),
+  };
 }
 
 // Como las propiedades de ConvertFrom-Json, los nombres de config.json no distinguen mayúsculas
@@ -264,6 +268,66 @@ export async function resolverClubs(textoClub, crudosTemporada, crudosTodos, cfg
   throw new Error('No hay ningún club configurado en config.json. Indica el club con --club.');
 }
 
+// --- Temporada anterior ------------------------------------------------------------------------
+//
+// De la temporada anterior solo hacen falta los partidos del club: para que cada equipo tenga su
+// calendario aunque todavía no juegue y para no quedarse vacío en agosto. Ya no cambian, así que se
+// descargan una sola vez y se guardan en temporada-anterior.json; cada hora solo se pide la temporada
+// en curso (antes, la anterior era el 90 % de lo que se bajaba).
+
+const CAMPOS_GUARDADOS = ['id_club_local', 'id_club_visitante', 'nombre_local', 'nombre_visitante', 'nombre_competicion',
+  'campo', 'categoria', 'fecha', 'fecha_confirmada', 'fecha_calendario'];
+
+// Una fila de la federación con solo lo que se usa; sin el escudo (<img>), que es lo que más ocupa.
+function filaGuardada(r) {
+  const fila = {};
+  for (const k of CAMPOS_GUARDADOS) {
+    const v = r[k];
+    fila[k] = typeof v === 'string' ? v.replace(/<img\b[^>]*>/gi, '').replace(/\s+/g, ' ').trim() : (v ?? null);
+  }
+  return fila;
+}
+
+// Filas crudas de los partidos del club en la temporada anterior a la de "rango".
+// guardar: false en las consultas de otra temporada (--temporada/--desde/--hasta), para no pisar la copia
+// que usa la actualización de cada hora. descargar: se puede cambiar en las pruebas.
+export async function temporadaAnterior({ rango, ids, ruta, guardar, descargar = partidosApi }) {
+  const anio = rango.anio - 1;
+  const clubs = [...ids].sort().join(',');
+  if (existsSync(ruta)) {
+    try {
+      const copia = leerJson(readFileSync(ruta, 'utf8'));
+      if (copia?.anio === anio && comoLista(copia.clubs).map(txt).sort().join(',') === clubs && Array.isArray(copia.partidos)) {
+        return copia.partidos;
+      }
+    } catch (e) {
+      aviso(`${basename(ruta)} no se puede leer (${e.message}); se vuelve a descargar.`);
+    }
+  }
+
+  paso(`Descargando una sola vez la temporada ${nuevoRango(anio).etiqueta} (se guarda en ${basename(ruta)})...`);
+  let crudos;
+  try {
+    crudos = await descargar(fechaPared(anio, 8, 1));
+  } catch (e) {
+    aviso(`No se pudo descargar la temporada anterior (${e.message}); se sigue sin ella.`);
+    return [];
+  }
+  const ini = fmt(fechaPared(anio, 8, 1), 'yyyy-MM-dd');
+  const fin = fmt(fechaPared(anio + 1, 7, 31), 'yyyy-MM-dd');
+  const partidos = crudos
+    .filter((r) => {
+      const f = fechaCruda(r);
+      return f && f >= ini && f <= fin && (ids.has(txt(r.id_club_local)) || ids.has(txt(r.id_club_visitante)));
+    })
+    .map(filaGuardada);
+  if (guardar) {
+    const copia = { temporada: nuevoRango(anio).etiqueta, anio, clubs: [...ids].sort(), partidos };
+    writeFileSync(ruta, `${JSON.stringify(copia, null, 1)}\n`, 'utf8');
+  }
+  return partidos;
+}
+
 // --- Programa principal ------------------------------------------------------------------------
 
 // Una línea de "Próximos partidos" del resumen: día, hora, salida, categoría y equipos.
@@ -289,29 +353,35 @@ export async function principal(args, ahora = new Date()) {
   console.log('');
   console.log(`  CALENDARIO DE VOLEIBOL · temporada ${rango.etiqueta}`);
   paso('Descargando partidos de volei.gal...');
-  // Se descarga también la temporada anterior: sirve para conocer todos los equipos del club y para
-  // no quedarse vacío en verano, antes de que la federación publique la temporada nueva.
-  const crudos = await partidosApi(fechaPared(rango.anio - 1, 8, 1));
-  if (crudos.length === 0) {
-    throw new Error('La federación no ha devuelto ningún partido (ni de esta temporada ni de la anterior). Puede ser un fallo temporal de su web: inténtalo más tarde. No se ha cambiado ningún archivo.');
+  // Solo la temporada en curso; la anterior sale de temporada-anterior.json (más abajo).
+  const actuales = await partidosApi(fechaPared(rango.anio, 8, 1));
+  // Al empezar la temporada puede no haber nada publicado todavía; ya avanzada, 0 partidos en toda
+  // Galicia es un fallo de la federación y no se toca nada.
+  if (actuales.length === 0 && generado.pared >= fechaPared(rango.anio, 10, 1)) {
+    throw new Error('La federación no ha devuelto ningún partido de esta temporada. Puede ser un fallo temporal de su web: inténtalo más tarde. No se ha cambiado ningún archivo.');
   }
   const iniTxt = fmt(fechaPared(rango.anio, 8, 1), 'yyyy-MM-dd');
   const finTxt = fmt(fechaPared(rango.anio + 1, 7, 31), 'yyyy-MM-dd');
-  const deTemporada = crudos.filter((r) => {
+  const deTemporada = actuales.filter((r) => {
     const f = fechaCruda(r);
     return f && f >= iniTxt && f <= finTxt;
   });
   paso(`${deTemporada.length} partidos publicados en Galicia en la temporada ${rango.etiqueta}.`);
 
   if (opciones.listarClubs) {
-    mostrarCatalogo(await catalogoClubs(deTemporada, crudos), rango.etiqueta);
+    mostrarCatalogo(await catalogoClubs(deTemporada, deTemporada), rango.etiqueta);
     return;
   }
 
-  const clubs = await resolverClubs(opciones.club, deTemporada, crudos, cfg);
+  const clubs = await resolverClubs(opciones.club, deTemporada, deTemporada, cfg);
   if (!clubs.length) throw new Error('No se ha elegido ningún club.');
   const ids = new Set(clubs.map((c) => txt(c.id)));
   const nombreClub = clubs.map((c) => c.nombre).join(' + ');
+
+  const anteriorCrudos = await temporadaAnterior({
+    rango, ids, ruta: rutas.temporadaAnterior, guardar: !rango.explicito,
+  });
+  const crudos = [...deTemporada, ...anteriorCrudos];
 
   const idsConPartidos = new Set(crudos.flatMap((r) => [txt(r.id_club_local), txt(r.id_club_visitante)]));
   for (const c of clubs) {

@@ -9,7 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  duracionConfig, fechaParametro, leerConfig, leerOpciones, mostrarError, principal, rangoTemporada, resolverClubs,
+  duracionConfig, fechaParametro, leerConfig, leerOpciones, mostrarError, nuevoRango, principal, rangoTemporada,
+  resolverClubs, temporadaAnterior,
 } from '../src/main.js';
 import { configPedirBus, configSalidas } from '../src/salidas.js';
 import { fechaPared, fmt } from '../src/util.js';
@@ -217,15 +218,79 @@ test('se ejecuta con "node src/main.js" y con "node src/main", y no al importarl
   assert.deepEqual([importado.status, importado.stdout.trim(), importado.stderr], [0, 'importado', '']);
 });
 
-test('respuesta vacía de la federación: error y ningún archivo', async () => {
+test('respuesta vacía de la federación a mitad de temporada: error y ningún archivo', async () => {
   const dir = carpetaConConfig();
   try {
     const salida = join(dir, 'salida');
     const args = ['--config', join(dir, 'config.json'), '--salida', salida];
-    await enSilencio(() => assert.rejects(conFetch(() => '{"data":[]}', () => principal(args)), /ningún partido/));
-    await enSilencio(() => assert.rejects(conFetch(() => '{"data":null}', () => principal(args)), /respuesta inesperada/));
-    await enSilencio(() => assert.rejects(conFetch(() => '<html>', () => principal(args)), /datos que no se entienden/));
+    const noviembre = new Date('2026-11-15T10:00:00Z');
+    await enSilencio(() => assert.rejects(conFetch(() => '{"data":[]}', () => principal(args, noviembre)), /ningún partido/));
+    await enSilencio(() => assert.rejects(conFetch(() => '{"data":null}', () => principal(args, noviembre)), /respuesta inesperada/));
+    await enSilencio(() => assert.rejects(conFetch(() => '<html>', () => principal(args, noviembre)), /datos que no se entienden/));
     assert.equal(existsSync(salida), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('al empezar la temporada (antes de octubre) puede no haber nada publicado todavía', async () => {
+  const dir = carpetaConConfig();
+  try {
+    const salida = join(dir, 'salida');
+    const args = ['--config', join(dir, 'config.json'), '--salida', salida];
+    await enSilencio(() => conFetch(() => '{"data":[]}', () => principal(args, new Date('2026-09-10T10:00:00Z'))));
+    assert.equal(existsSync(salida), true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('temporada anterior: se descarga una vez, se guarda solo lo del club y luego se usa la copia', async () => {
+  const dir = carpetaConConfig();
+  try {
+    const ruta = join(dir, 'temporada-anterior.json');
+    const rango = nuevoRango(2026);
+    const ids = new Set([DOMPA]);
+    const filas = [
+      fila('2025-10-04 11:00:00', 'DOMPAVOLEI IF1', 'RIVAL', DOMPA, '1'),
+      fila('2025-10-04 11:00:00', 'OTRO', 'RIVAL', '2', '1'),        // de otro club: no se guarda
+      fila('2026-10-03 11:00:00', 'DOMPAVOLEI IF1', 'RIVAL', DOMPA, '1'), // de la temporada en curso: no se guarda
+    ];
+    let descargas = 0;
+    const descargar = async (desde) => { descargas++; assert.equal(desde.getTime(), Date.UTC(2025, 7, 1)); return filas; };
+
+    const [primera] = await enSilencio(() => temporadaAnterior({ rango, ids, ruta, guardar: true, descargar }));
+    assert.equal(descargas, 1);
+    assert.equal(primera.length, 1);
+    assert.equal(primera[0].nombre_local, 'DOMPAVOLEI IF1');
+    const copia = JSON.parse(readFileSync(ruta, 'utf8'));
+    assert.equal(copia.anio, 2025);
+    assert.deepEqual(copia.clubs, [DOMPA]);
+
+    const [segunda] = await enSilencio(() => temporadaAnterior({ rango, ids, ruta, guardar: true, descargar }));
+    assert.equal(descargas, 1, 'con copia no se vuelve a descargar');
+    assert.deepEqual(segunda, primera);
+
+    // Otro club: la copia no vale y se descarga de nuevo.
+    await enSilencio(() => temporadaAnterior({ rango, ids: new Set(['1']), ruta, guardar: true, descargar }));
+    assert.equal(descargas, 2);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('temporada anterior: con otra temporada no se pisa la copia; si falla la descarga se sigue sin ella', async () => {
+  const dir = carpetaConConfig();
+  try {
+    const ruta = join(dir, 'temporada-anterior.json');
+    const ids = new Set([DOMPA]);
+    await enSilencio(() => temporadaAnterior({ rango: nuevoRango(2024), ids, ruta, guardar: false, descargar: async () => [] }));
+    assert.equal(existsSync(ruta), false);
+    const [r] = await enSilencio(() => temporadaAnterior({
+      rango: nuevoRango(2026), ids, ruta, guardar: true, descargar: async () => { throw new Error('sin red'); },
+    }));
+    assert.deepEqual(r, []);
+    assert.equal(existsSync(ruta), false);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
