@@ -23,9 +23,14 @@ function motivo(error) {
   return causa?.message || causa?.errors?.[0]?.message || causa?.code || error.message;
 }
 
+// La web de la federación a veces no acepta conexiones desde los servidores de GitHub durante unos
+// minutos (en septiembre de 2026 pasó varias veces en un día; al rato volvía a responder). Por eso se
+// reintenta con esperas cada vez más largas, unos 3 minutos en total, antes de rendirse.
+export const ESPERAS_SEGUNDOS = [15, 30, 60, 90];
+
 export async function peticion(ruta, datos) {
   const url = `${URL_BASE}/${ruta}`;
-  const intentos = 3;
+  const intentos = ESPERAS_SEGUNDOS.length + 1;
   for (let i = 1; i <= intentos; i++) {
     try {
       const r = await fetch(url, {
@@ -43,8 +48,9 @@ export async function peticion(ruta, datos) {
       if (i === intentos) {
         throw new Error(`No se pudo descargar ${url}\n    (${motivo(e)})\n    Comprueba la conexión a Internet y vuelve a intentarlo.`);
       }
-      aviso(`La web de la federación no responde; reintentando (${i + 1} de ${intentos})...`);
-      await esperar(2000 * i);
+      const segundos = ESPERAS_SEGUNDOS[i - 1];
+      aviso(`La web de la federación no responde; se vuelve a intentar en ${segundos} s (intento ${i + 1} de ${intentos})...`);
+      await esperar(segundos * 1000);
     }
   }
 }

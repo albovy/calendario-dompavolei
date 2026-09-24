@@ -1,14 +1,14 @@
 // Pruebas de peticion (src/isquad.js) sin red: fetch simulado, reintentos, errores HTTP y de conexión.
-// El reloj va simulado: las esperas de 2 y 4 s entre intentos no se esperan de verdad.
+// El reloj va simulado: las esperas entre intentos (15 s, 30 s, 1 min y 1,5 min) no se esperan de verdad.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { peticion } from '../src/isquad.js';
+import { ESPERAS_SEGUNDOS, peticion } from '../src/isquad.js';
 import { BOM } from '../src/util.js';
 
 const URL_PARTIDOS = 'https://resultadosvoleibol.isquad.es/json/partidos_equipos_consultas.php';
-const AVISO_2 = '  ! La web de la federación no responde; reintentando (2 de 3)...';
-const AVISO_3 = '  ! La web de la federación no responde; reintentando (3 de 3)...';
+const aviso = (segundos, n) => `  ! La web de la federación no responde; se vuelve a intentar en ${segundos} s (intento ${n} de 5)...`;
+const AVISOS = [aviso(15, 2), aviso(30, 3), aviso(60, 4), aviso(90, 5)];
 
 // Ejecuta peticion con fetch simulado (responder(n) da la respuesta a la llamada n o lanza el error) y
 // el reloj simulado. Devuelve { resultado, error, avisos, llamadas }.
@@ -59,16 +59,52 @@ test('peticion: POST con el formulario o GET, y sin los BOM del principio', asyn
   assert.deepEqual([get.llamadas[0].opciones.method, get.llamadas[0].opciones.body], ['GET', undefined]);
 });
 
-test('peticion: si falla, avisa y lo vuelve a intentar (3 veces en total)', async (t) => {
+test('peticion: si falla, avisa y lo vuelve a intentar con esperas crecientes (5 veces en total)', async (t) => {
+  assert.deepEqual(ESPERAS_SEGUNDOS, [15, 30, 60, 90]);
   const bien = await simular(t, (n) => (n === 1 ? new Response('', { status: 503 }) : new Response('{"data":[1]}')));
   assert.equal(bien.resultado, '{"data":[1]}');
   assert.equal(bien.llamadas.length, 2);
-  assert.deepEqual(bien.avisos, [AVISO_2]);
+  assert.deepEqual(bien.avisos, [AVISOS[0]]);
+
+  // Como en GitHub: no responde durante un rato y al tercer intento sí.
+  const tarde = await simular(t, (n) => {
+    if (n < 3) throw new TypeError('fetch failed', { cause: new Error('Connect Timeout Error') });
+    return new Response('{"data":[2]}');
+  });
+  assert.equal(tarde.resultado, '{"data":[2]}');
+  assert.deepEqual(tarde.avisos, AVISOS.slice(0, 2));
 
   const mal = await simular(t, () => new Response('x', { status: 500, statusText: 'Internal Server Error' }));
-  assert.equal(mal.llamadas.length, 3);
-  assert.deepEqual(mal.avisos, [AVISO_2, AVISO_3]);
+  assert.equal(mal.llamadas.length, 5);
+  assert.deepEqual(mal.avisos, AVISOS);
   assert.equal(mal.error.message, mensajeError('respuesta 500 Internal Server Error'));
+});
+
+test('peticion: espera de verdad entre intentos (15 s antes del segundo)', async (t) => {
+  // Con el reloj simulado parado, el segundo intento no llega hasta que pasan 15 s.
+  const llamadas = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => {
+    llamadas.push(1);
+    if (llamadas.length === 1) throw new TypeError('fetch failed', { cause: new Error('Connect Timeout Error') });
+    return new Response('ok');
+  };
+  const consola = t.mock.method(console, 'log', () => {});
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  try {
+    const promesa = peticion('json/x.php', null);
+    for (let i = 0; i < 5; i++) await new Promise((seguir) => { setImmediate(seguir); });
+    t.mock.timers.tick(14000);
+    for (let i = 0; i < 5; i++) await new Promise((seguir) => { setImmediate(seguir); });
+    assert.equal(llamadas.length, 1, 'a los 14 s todavía no se ha reintentado');
+    t.mock.timers.tick(1000);
+    assert.equal(await promesa, 'ok');
+    assert.equal(llamadas.length, 2);
+  } finally {
+    t.mock.timers.reset();
+    consola.mock.restore();
+    globalThis.fetch = original;
+  }
 });
 
 test('peticion: el motivo del error nunca queda vacío', async (t) => {
