@@ -18,5 +18,12 @@
         "margen_minutos": 0,
         "tiempos_viaje_minutos": {
         }
+    },
+    "pedir_bus": {
+        "para": "",
+        "cc": "",
+        "plazas": "",
+        "firma": "",
+        "direccion_origen": "Rúa Pardo de Cela, 2, Ourense"
     }
 }
