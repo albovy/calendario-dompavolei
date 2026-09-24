@@ -346,31 +346,20 @@ export function anadirSalidas(partidos, pabellones, cfgSalidas) {
 }
 
 export function lineasSalida(p, cfgSalidas) {
-  // Líneas del detalle del evento con la salida, el viaje, el calentamiento y el partido.
-  if (!cfgSalidas) return [];
-  if (!conHora(p)) return ['La hora de salida se calculará cuando la federación publique la hora del partido.'];
+  // Líneas cortas para el detalle del evento en el calendario del móvil: salida, viaje, calentamiento
+  // y partido, sin repetir lo que ya se ve en el título o en la ubicación.
+  if (!cfgSalidas || !conHora(p)) return [];
   if (p.segundo) {
     const ref = p.salidaPrimero;
-    let texto = '2º partido del día en este pabellón: se va con el primero';
-    if (ref && ref.salida) texto += ` (salida a las ${hora(ref.salida)})`;
-    return [texto, `Partido: ${hora(p.fecha)}`];
+    return [`2º partido del día: se va con el primero${ref && ref.salida ? ` (salida ${hora(ref.salida)})` : ''}`];
   }
-  const lineas = [];
-  if (p.enCasa) {
-    lineas.push(`En casa (${cfgSalidas.origen})`);
-  } else if (p.salida) {
-    lineas.push(`Salida en bus desde ${cfgSalidas.origen}: ${hora(p.salida)}`);
-    const donde = [];
-    if (p.municipio) donde.push(p.municipio);
-    if (p.km != null) donde.push(`${Number(p.km).toFixed(0)} km`);
-    lineas.push(`Viaje en bus: ${formatDuracion(p.viajeMin)}${p.viajeFuente === 'manual' ? '' : ' aprox.'}`
-      + (donde.length ? ` (${donde.join(', ')})` : ''));
-  } else {
-    lineas.push('Tiempo de viaje sin calcular para este pabellón (se puede poner a mano en config.json).');
+  const horas = `calentamiento ${hora(p.calentamiento)} · partido ${hora(p.fecha)}${p.estado === 'provisional' ? ' (provisional)' : ''}`;
+  if (p.enCasa) return [`En casa · ${horas}`];
+  if (p.salida) {
+    return [`Salida ${hora(p.salida)} desde ${cfgSalidas.origen} · bus ${formatDuracion(p.viajeMin)}`,
+      horas.charAt(0).toUpperCase() + horas.slice(1)];
   }
-  lineas.push(`Calentamiento: ${hora(p.calentamiento)}`);
-  lineas.push(`Partido: ${hora(p.fecha)}${p.estado === 'provisional' ? ' (provisional)' : ''}`);
-  return lineas;
+  return [`Viaje sin calcular · ${horas}`];
 }
 
 export function textoSalida(p) {

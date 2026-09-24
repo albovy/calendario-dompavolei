@@ -4,7 +4,7 @@
 
 import { clave, fmt, sumarDias, sumarMinutos } from './util.js';
 import { URL_FUENTE } from './isquad.js';
-import { conHora, sufijoEstado } from './partidos.js';
+import { conHora } from './partidos.js';
 import { lineasSalida } from './salidas.js';
 
 const ZONA_HORARIA = 'Europe/Madrid';
@@ -50,8 +50,36 @@ function contienePalabra(texto, palabra) {
   return new RegExp(`\\b${escapada}\\b`, 'i').test(texto);
 }
 
-// generado: { pared, utc } de la generación; cfgSalidas: configuración de las horas de salida o null.
-export function crearIcs(partidos, nombreCalendario, descripcion, duracionMin, generado, cfgSalidas) {
+// Título corto para que se lea bien en el calendario del móvil: "🚌 IF1 vs RIVAL (10:00)".
+// La hora entre paréntesis es la del partido cuando el evento empieza antes (salida del bus o
+// calentamiento); los equipos del club van sin el nombre del club delante (prefijo).
+function tituloEvento(p, inicio, prefijo) {
+  const corto = (n) => (prefijo && n.startsWith(`${prefijo} `) ? n.slice(prefijo.length + 1) : n);
+  const partido = p.condicion === 'derbi'
+    ? `${corto(p.local)} vs ${corto(p.visitante)}`
+    : `${corto(p.nuestros[0])} vs ${p.rival}`;
+  const notas = [];
+  if (conHora(p) && inicio.getTime() !== p.fecha.getTime()) notas.push(fmt(p.fecha, 'HH:mm'));
+  if (p.estado === 'provisional') notas.push('provisional');
+  else if (p.estado === 'sinhora') notas.push('sin hora');
+  else if (p.estado === 'pendiente') notas.push('por confirmar');
+  return `${p.salida ? '🚌 ' : ''}${partido}${notas.length ? ` (${notas.join(', ')})` : ''}`;
+}
+
+// Detalle breve: horas del día (si hay horas de salida), el partido y la competición. El pabellón
+// ya va en la ubicación del evento.
+function detalleEvento(p, cfgSalidas) {
+  const lineas = [...lineasSalida(p, cfgSalidas)];
+  if (p.estado === 'sinhora') lineas.push('Hora por confirmar');
+  else if (p.estado === 'pendiente') lineas.push('Fecha y hora por confirmar (día de la jornada prevista)');
+  else if (p.estado === 'provisional' && !lineas.length) lineas.push('Hora provisional');
+  lineas.push(`${p.local} - ${p.visitante}`, p.competicion);
+  return lineas.join('\n');
+}
+
+// generado: { pared, utc } de la generación; cfgSalidas: configuración de las horas de salida o null;
+// prefijo: principio común del nombre de los equipos del club ("DOMPAVOLEI"), que se quita en el título.
+export function crearIcs(partidos, nombreCalendario, descripcion, duracionMin, generado, cfgSalidas, { prefijo = '' } = {}) {
   const lista = [...(partidos ?? [])];
   const sello = fmt(generado.utc, "yyyyMMdd'T'HHmmss'Z'");
   // SEQUENCE crece en cada generación: Google y Outlook solo aplican un cambio si es mayor que el anterior.
@@ -90,28 +118,12 @@ export function crearIcs(partidos, nombreCalendario, descripcion, duracionMin, g
     'END:VTIMEZONE',
   );
 
-  const actualizado = fmt(generado.pared, 'dd/MM/yyyy HH:mm');
   for (const p of lista) {
     const hora = conHora(p);
+    // El evento empieza a la hora de salida (o de calentamiento); la del partido va en el título.
     const inicio = hora && p.inicio ? p.inicio : p.fecha;
-    // El evento empieza a la hora de salida (o de calentamiento): el título lleva la hora del partido.
-    let titulo = `${p.salida ? '🚌 ' : ''}${p.categoria} · ${p.local} - ${p.visitante}`;
-    if (hora && inicio.getTime() !== p.fecha.getTime()) titulo += ` · partido ${fmt(p.fecha, 'HH:mm')}`;
-    titulo += sufijoEstado(p);
-
-    const desc = [...(lineasSalida(p, cfgSalidas) ?? [])];
-    if (desc.length) desc.push('');
-    desc.push(
-      textoJuega(p),
-      `Competición: ${p.competicion}`,
-      `Categoría: ${p.categoria}`,
-      `Local: ${p.local}`,
-      `Visitante: ${p.visitante}`,
-      `Pabellón: ${p.pabellon ? p.pabellon : 'por confirmar'}`,
-    );
-    // Con horas de salida, la hora del partido ya va en las líneas de salida.
-    if (!(cfgSalidas && hora)) desc.push(textoCuando(p));
-    desc.push('', `Datos de la Federación Galega de Voleibol (${URL_FUENTE}), actualizados el ${actualizado}. Los horarios pueden cambiar.`);
+    const titulo = tituloEvento(p, inicio, prefijo);
+    const desc = detalleEvento(p, cfgSalidas);
 
     let lugar = p.pabellon;
     if (lugar && p.municipio && !contienePalabra(clave(lugar), clave(p.municipio))) lugar += `, ${p.municipio}`;
@@ -139,7 +151,7 @@ export function crearIcs(partidos, nombreCalendario, descripcion, duracionMin, g
     lineas.push(`SUMMARY:${textoIcs(titulo)}`);
     if (lugar) lineas.push(`LOCATION:${textoIcs(lugar)}`);
     lineas.push(
-      `DESCRIPTION:${textoIcs(desc.join('\n'))}`,
+      `DESCRIPTION:${textoIcs(desc)}`,
       `CATEGORIES:${textoIcs(p.categoria)}`,
       `STATUS:${p.estado === 'confirmada' ? 'CONFIRMED' : 'TENTATIVE'}`,
       `URL:${URL_FUENTE}`,
@@ -150,19 +162,3 @@ export function crearIcs(partidos, nombreCalendario, descripcion, duracionMin, g
   return lineas.map(lineaIcs).join('');
 }
 
-function textoJuega(p) {
-  switch (p.condicion) {
-    case 'local': return `${p.local} juega como local`;
-    case 'visitante': return `${p.visitante} juega como visitante`;
-    default: return 'Partido entre dos equipos del club';
-  }
-}
-
-function textoCuando(p) {
-  switch (p.estado) {
-    case 'confirmada': return `Hora: ${fmt(p.fecha, 'HH:mm')}`;
-    case 'provisional': return `Fecha y hora provisionales (${fmt(p.fecha, 'HH:mm')}): la federación aún no las ha confirmado`;
-    case 'sinhora': return 'Hora: por confirmar';
-    default: return 'Fecha y hora por confirmar: el día indicado es el de la jornada prevista';
-  }
-}

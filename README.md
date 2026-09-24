@@ -27,4 +27,4 @@ Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://node
   opciones, como `--temporada 2025-26` o `--club`, están explicadas al principio de `src/main.js`.
 
 `calendario-voley.ps1` es la versión anterior, en PowerShell: ya no se usa y se guarda solo como
-referencia. Para comprobar que `src/` genera exactamente lo mismo: `node test/paridad/comparar.mjs` (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo).
+referencia. `node test/paridad/comparar.mjs` compara lo que generan las dos versiones (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo). Desde que el título y el detalle de los eventos del `.ics` se acortaron (septiembre de 2026), esa comparación marca diferencias en los `.ics`; el resto debe salir igual.

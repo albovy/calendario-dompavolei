@@ -157,12 +157,3 @@ export function formatHora(p) {
     default: return 'Fecha y hora por confirmar';
   }
 }
-
-export function sufijoEstado(p) {
-  switch (p.estado) {
-    case 'provisional': return ' (fecha y hora provisionales)';
-    case 'sinhora': return ' (hora por confirmar)';
-    case 'pendiente': return ' (fecha y hora por confirmar)';
-    default: return '';
-  }
-}

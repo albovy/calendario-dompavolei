@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buscarClubs, fechaCruda } from '../src/isquad.js';
-import { conHora, convertirPartidos, equipos, formatHora, sufijoEstado } from '../src/partidos.js';
+import { conHora, convertirPartidos, equipos, formatHora } from '../src/partidos.js';
 
 // Fila de iSquad con lo mínimo (los nombres pueden llevar HTML, como en la web).
 function fila({ fecha, conf = '1', local = 'A', visit = 'B', idL = '1', idV = '2', comp = 'LIGA X', campo = 'P', cat = 'CADETE' }) {
@@ -39,9 +39,6 @@ test('estados de fecha y hora', () => {
   ], CLUB);
   assert.deepEqual(ps.map((p) => `${p.estado}=${formatHora(p)}`), [
     'confirmada=11:00', 'sinhora=Por confirmar', 'provisional=18:00 (provisional)', 'pendiente=Fecha y hora por confirmar',
-  ]);
-  assert.deepEqual(ps.map(sufijoEstado), [
-    '', ' (hora por confirmar)', ' (fecha y hora provisionales)', ' (fecha y hora por confirmar)',
   ]);
   assert.deepEqual(ps.map(conHora), [true, false, true, false]);
   // Un partido con segundos también tiene hora.

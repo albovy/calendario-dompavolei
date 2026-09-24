@@ -1,5 +1,5 @@
-// Pruebas de src/ics.js (sin red). Los textos esperados son los que genera New-Ics de calendario-voley.ps1
-// con los mismos partidos.
+// Pruebas de src/ics.js (sin red). La cabecera y el plegado son los de New-Ics de calendario-voley.ps1;
+// el título y el detalle de los eventos son más cortos que en el .ps1 (para que se lean bien en el móvil).
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { crearIcs, lineaIcs, textoIcs } from '../src/ics.js';
@@ -103,8 +103,8 @@ describe('crearIcs', () => {
     assert.deepEqual(fisicas.slice(7, 7 + CABECERA_ZONA.length), CABECERA_ZONA);
   });
 
-  test('partido con hora (sin horas de salida): evento completo', () => {
-    const ics = crearIcs([partido()], 'Voleibol', 'Desc', 120, GENERADO, null);
+  test('partido con hora (sin horas de salida): evento completo y corto', () => {
+    const ics = crearIcs([partido()], 'Voleibol', 'Desc', 120, GENERADO, null, { prefijo: 'DOMPAVOLEI' });
     assert.deepEqual(evento(ics), [
       'BEGIN:VEVENT',
       'UID:aaaaaaaaaaaaaaaaaaaaaaaa@calendario-voley',
@@ -114,13 +114,9 @@ describe('crearIcs', () => {
       'DTSTART;TZID=Europe/Madrid:20261003T183000',
       'DTEND;TZID=Europe/Madrid:20261003T203000',
       'TRANSP:OPAQUE',
-      'SUMMARY:Cadete F · DOMPAVOLEI CF1 - CV VIGO',
+      'SUMMARY:CF1 vs CV VIGO',
       'LOCATION:PAVILLON DOS REMEDIOS',
-      'DESCRIPTION:DOMPAVOLEI CF1 juega como local\\nCompetición: LIGA GALEGA CADE',
-      ' TE F\\nCategoría: Cadete F\\nLocal: DOMPAVOLEI CF1\\nVisitante: CV VIGO\\nPab',
-      ' ellón: PAVILLON DOS REMEDIOS\\nHora: 18:30\\n\\nDatos de la Federación Gale',
-      ' ga de Voleibol (https://volei.gal/competiciones/)\\, actualizados el 24/09/',
-      ' 2026 13:45. Los horarios pueden cambiar.',
+      'DESCRIPTION:DOMPAVOLEI CF1 - CV VIGO\\nLIGA GALEGA CADETE F',
       'CATEGORIES:Cadete F',
       'STATUS:CONFIRMED',
       'URL:https://volei.gal/competiciones/',
@@ -128,14 +124,21 @@ describe('crearIcs', () => {
     ]);
   });
 
-  test('DTSTAMP, LAST-MODIFIED y SEQUENCE salen de generado.utc; "actualizados el" de generado.pared', () => {
+  test('título: sin prefijo del club, el equipo va con su nombre completo', () => {
+    const ics = crearIcs([partido()], 'Voleibol', 'Desc', 120, GENERADO, null);
+    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:DOMPAVOLEI CF1 vs CV VIGO']);
+    // Un prefijo que no es el principio del nombre (o no va seguido de espacio) no se quita.
+    const otro = crearIcs([partido()], 'Voleibol', 'Desc', 120, GENERADO, null, { prefijo: 'DOMPA' });
+    assert.deepEqual(propiedad(otro, 'SUMMARY'), ['SUMMARY:DOMPAVOLEI CF1 vs CV VIGO']);
+  });
+
+  test('DTSTAMP, LAST-MODIFIED y SEQUENCE salen de generado.utc', () => {
     const invierno = { pared: fechaPared(2026, 12, 15, 20, 5), utc: new Date(Date.UTC(2026, 11, 15, 19, 5, 59)) };
     const ics = crearIcs([partido()], 'Voleibol', 'Desc', 120, invierno, null);
     assert.deepEqual(propiedad(ics, 'DTSTAMP'), ['DTSTAMP:20261215T190559Z']);
     assert.deepEqual(propiedad(ics, 'LAST-MODIFIED'), ['LAST-MODIFIED:20261215T190559Z']);
     // Minutos desde 1970: crece en cada generación (una por hora).
     assert.deepEqual(propiedad(ics, 'SEQUENCE'), ['SEQUENCE:29956025']);
-    assert.match(propiedad(ics, 'DESCRIPTION')[0], /actualizados el 15\/12\/2026 20:05\. /);
   });
 
   test('la duración cuenta desde la hora del partido', () => {
@@ -146,27 +149,25 @@ describe('crearIcs', () => {
   test('sin hora y pendiente: eventos de día completo, provisionales', () => {
     const sinHora = partido({ fecha: fechaPared(2026, 10, 31), estado: 'sinhora' });
     const pendiente = partido({ fecha: fechaPared(2026, 12, 31), estado: 'pendiente' });
-    const ics = crearIcs([sinHora, pendiente], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS);
+    const ics = crearIcs([sinHora, pendiente], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS, { prefijo: 'DOMPAVOLEI' });
     assert.deepEqual(propiedad(ics, 'DTSTART'), ['DTSTART;VALUE=DATE:20261031', 'DTSTART;VALUE=DATE:20261231']);
     assert.deepEqual(propiedad(ics, 'DTEND'), ['DTEND;VALUE=DATE:20261101', 'DTEND;VALUE=DATE:20270101']);
     assert.deepEqual(propiedad(ics, 'TRANSP'), ['TRANSP:TRANSPARENT', 'TRANSP:TRANSPARENT']);
     assert.deepEqual(propiedad(ics, 'STATUS'), ['STATUS:TENTATIVE', 'STATUS:TENTATIVE']);
     assert.deepEqual(propiedad(ics, 'SUMMARY'), [
-      'SUMMARY:Cadete F · DOMPAVOLEI CF1 - CV VIGO (hora por confirmar)',
-      'SUMMARY:Cadete F · DOMPAVOLEI CF1 - CV VIGO (fecha y hora por confirmar)',
+      'SUMMARY:CF1 vs CV VIGO (sin hora)',
+      'SUMMARY:CF1 vs CV VIGO (por confirmar)',
     ]);
-    const [d1, d2] = propiedad(ics, 'DESCRIPTION');
-    // Con horas de salida, un partido sin hora avisa de que la salida se calculará más adelante.
-    assert.ok(d1.startsWith('DESCRIPTION:La hora de salida se calculará cuando la federación publique la hora del partido.\\n\\n'));
-    assert.ok(d1.includes('\\nHora: por confirmar\\n\\n'));
-    assert.ok(d2.includes('\\nFecha y hora por confirmar: el día indicado es el de la jornada prevista\\n\\n'));
+    assert.deepEqual(propiedad(ics, 'DESCRIPTION'), [
+      'DESCRIPTION:Hora por confirmar\\nDOMPAVOLEI CF1 - CV VIGO\\nLIGA GALEGA CADETE F',
+      'DESCRIPTION:Fecha y hora por confirmar (día de la jornada prevista)\\nDOMPAVOLEI CF1 - CV VIGO\\nLIGA GALEGA CADETE F',
+    ]);
   });
 
   test('hora provisional: título y descripción lo dicen', () => {
-    const ics = crearIcs([partido({ estado: 'provisional' })], 'Voleibol', 'Desc', 120, GENERADO, null);
-    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:Cadete F · DOMPAVOLEI CF1 - CV VIGO (fecha y hora provisionales)']);
-    assert.ok(propiedad(ics, 'DESCRIPTION')[0].includes(
-      '\\nFecha y hora provisionales (18:30): la federación aún no las ha confirmado\\n\\n'));
+    const ics = crearIcs([partido({ estado: 'provisional' })], 'Voleibol', 'Desc', 120, GENERADO, null, { prefijo: 'DOMPAVOLEI' });
+    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:CF1 vs CV VIGO (provisional)']);
+    assert.deepEqual(propiedad(ics, 'DESCRIPTION'), ['DESCRIPTION:Hora provisional\\nDOMPAVOLEI CF1 - CV VIGO\\nLIGA GALEGA CADETE F']);
     assert.deepEqual(propiedad(ics, 'STATUS'), ['STATUS:TENTATIVE']);
   });
 
@@ -175,15 +176,14 @@ describe('crearIcs', () => {
       visitante: 'DOMPAVOLEI CF2', esVisitante: true, condicion: 'derbi', rival: '',
       nuestros: ['DOMPAVOLEI CF1', 'DOMPAVOLEI CF2'], pabellon: '',
     });
-    const ics = crearIcs([derbi], 'Voleibol', 'Desc', 120, GENERADO, null);
-    const desc = propiedad(ics, 'DESCRIPTION')[0];
-    assert.ok(desc.startsWith('DESCRIPTION:Partido entre dos equipos del club\\n'));
-    assert.ok(desc.includes('\\nPabellón: por confirmar\\n'));
+    const ics = crearIcs([derbi], 'Voleibol', 'Desc', 120, GENERADO, null, { prefijo: 'DOMPAVOLEI' });
+    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:CF1 vs CF2']);
+    assert.deepEqual(propiedad(ics, 'DESCRIPTION'), ['DESCRIPTION:DOMPAVOLEI CF1 - DOMPAVOLEI CF2\\nLIGA GALEGA CADETE F']);
     assert.deepEqual(propiedad(ics, 'LOCATION'), []);
   });
 
   test('con salida en bus: 🚌, empieza a la hora de salida y lleva la hora del partido', () => {
-    const ics = crearIcs([partidoFuera()], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS);
+    const ics = crearIcs([partidoFuera()], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS, { prefijo: 'DOMPAVOLEI' });
     assert.deepEqual(evento(ics), [
       'BEGIN:VEVENT',
       'UID:bbbbbbbbbbbbbbbbbbbbbbbb@calendario-voley',
@@ -193,16 +193,11 @@ describe('crearIcs', () => {
       'DTSTART;TZID=Europe/Madrid:20261004T094500',
       'DTEND;TZID=Europe/Madrid:20261004T140000',
       'TRANSP:OPAQUE',
-      'SUMMARY:🚌 Infantil F · CLUB VOLEIBOL LALÍN - DOMPAVOLEI IF1 · partido',
-      '  12:00',
+      'SUMMARY:🚌 IF1 vs CLUB VOLEIBOL LALÍN (12:00)',
       'LOCATION:PAVILLÓN MUNICIPAL DE LALÍN - PISTA 1',
-      'DESCRIPTION:Salida en bus desde Os Remedios: 09:45\\nViaje en bus: 1 h 15 mi',
-      ' n aprox. (Lalín\\, 58 km)\\nCalentamiento: 11:00\\nPartido: 12:00\\n\\nDOMPAVO',
-      ' LEI IF1 juega como visitante\\nCompetición: LIGA GALEGA INFANTIL F\\nCatego',
-      ' ría: Infantil F\\nLocal: CLUB VOLEIBOL LALÍN\\nVisitante: DOMPAVOLEI IF1\\n',
-      ' Pabellón: PAVILLÓN MUNICIPAL DE LALÍN - PISTA 1\\n\\nDatos de la Federaci',
-      ' ón Galega de Voleibol (https://volei.gal/competiciones/)\\, actualizados e',
-      ' l 24/09/2026 13:45. Los horarios pueden cambiar.',
+      'DESCRIPTION:Salida 09:45 desde Os Remedios · bus 1 h 15 min\\nCalentamiento',
+      '  11:00 · partido 12:00\\nCLUB VOLEIBOL LALÍN - DOMPAVOLEI IF1\\nLIGA GALEG',
+      ' A INFANTIL F',
       'CATEGORIES:Infantil F',
       'STATUS:CONFIRMED',
       'URL:https://volei.gal/competiciones/',
@@ -210,18 +205,18 @@ describe('crearIcs', () => {
     ]);
   });
 
-  test('en casa: empieza a la hora de calentamiento, sin 🚌 ni línea "Hora:"', () => {
+  test('en casa: empieza a la hora de calentamiento, sin 🚌 y con la hora del partido en el título', () => {
     const casa = partido({
       inicio: fechaPared(2026, 10, 3, 17, 30), calentamiento: fechaPared(2026, 10, 3, 17, 30),
       enCasa: true, municipio: 'Pontevedra', km: 0.3,
     });
-    const ics = crearIcs([casa], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS);
+    const ics = crearIcs([casa], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS, { prefijo: 'DOMPAVOLEI' });
     assert.deepEqual(propiedad(ics, 'DTSTART'), ['DTSTART;TZID=Europe/Madrid:20261003T173000']);
     assert.deepEqual(propiedad(ics, 'DTEND'), ['DTEND;TZID=Europe/Madrid:20261003T203000']);
-    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:Cadete F · DOMPAVOLEI CF1 - CV VIGO · partido 18:30']);
-    const desc = propiedad(ics, 'DESCRIPTION')[0];
-    assert.ok(desc.startsWith('DESCRIPTION:En casa (Os Remedios)\\nCalentamiento: 17:30\\nPartido: 18:30\\n\\nDOMPAVOLEI CF1 juega como local\\n'));
-    assert.ok(!desc.includes('Hora:'));
+    assert.deepEqual(propiedad(ics, 'SUMMARY'), ['SUMMARY:CF1 vs CV VIGO (18:30)']);
+    assert.deepEqual(propiedad(ics, 'DESCRIPTION'), [
+      'DESCRIPTION:En casa · calentamiento 17:30 · partido 18:30\\nDOMPAVOLEI CF1 - CV VIGO\\nLIGA GALEGA CADETE F',
+    ]);
   });
 
   test('2º partido del día en el mismo pabellón: sin 🚌 y a la hora del partido', () => {
@@ -231,11 +226,11 @@ describe('crearIcs', () => {
       calentamiento: fechaPared(2026, 10, 4, 12, 30), segundo: true, salidaPrimero: primero,
       uid: 'cccccccccccccccccccccccc@calendario-voley',
     });
-    const ics = crearIcs([primero, segundo], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS);
-    assert.equal(propiedad(ics, 'SUMMARY')[1], 'SUMMARY:Infantil F · CLUB VOLEIBOL LALÍN - DOMPAVOLEI IF1');
+    const ics = crearIcs([primero, segundo], 'Voleibol', 'Desc', 120, GENERADO, SALIDAS, { prefijo: 'DOMPAVOLEI' });
+    assert.equal(propiedad(ics, 'SUMMARY')[1], 'SUMMARY:IF1 vs CLUB VOLEIBOL LALÍN');
     assert.equal(propiedad(ics, 'DTSTART')[1], 'DTSTART;TZID=Europe/Madrid:20261004T133000');
-    assert.ok(propiedad(ics, 'DESCRIPTION')[1].startsWith(
-      'DESCRIPTION:2º partido del día en este pabellón: se va con el primero (salida a las 09:45)\\nPartido: 13:30\\n\\n'));
+    assert.equal(propiedad(ics, 'DESCRIPTION')[1],
+      'DESCRIPTION:2º partido del día: se va con el primero (salida 09:45)\\nCLUB VOLEIBOL LALÍN - DOMPAVOLEI IF1\\nLIGA GALEGA INFANTIL F');
   });
 
   test('LOCATION: se añade el municipio si no aparece como palabra en el nombre del pabellón', () => {
@@ -263,13 +258,9 @@ describe('crearIcs', () => {
     assert.doesNotMatch(ics, /[^\r]\n|\r[^\n]/);
     for (const l of ics.split('\r\n')) assert.ok(Buffer.byteLength(l) <= 75, l);
     assert.ok(lineas(ics).includes(
-      'DESCRIPTION:A CORUÑA "VOLEI" & CIA\\; S.L.\\, <B> juega como local\\n'
-      + 'Competición: SEGUNDA DIVISIÓN NACIONAL \\\\ GRUPO B\\; FASE 1\\, '
-      + 'XORNADA 7 🏐 ÑÁÉÍÓÚ ÇÜ àèìòù ñandú pingüino — «comillas» … fin\\nCategoría: Cadete F\\n'
-      + 'Local: A CORUÑA "VOLEI" & CIA\\; S.L.\\, <B>\\nVisitante: CV VIGO\\nPabellón: PAVILLON DOS REMEDIOS\\n'
-      + 'Hora: 18:30\\n\\n'
-      + 'Datos de la Federación Galega de Voleibol (https://volei.gal/competiciones/)\\, actualizados el 24/09/2026 13:45. '
-      + 'Los horarios pueden cambiar.'));
+      'DESCRIPTION:A CORUÑA "VOLEI" & CIA\\; S.L.\\, <B> - CV VIGO\\n'
+      + 'SEGUNDA DIVISIÓN NACIONAL \\\\ GRUPO B\\; FASE 1\\, '
+      + 'XORNADA 7 🏐 ÑÁÉÍÓÚ ÇÜ àèìòù ñandú pingüino — «comillas» … fin'));
   });
 });
 

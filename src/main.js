@@ -49,7 +49,7 @@ import { conHora, convertirPartidos, equipos as equiposDelClub } from './partido
 import { anadirSalidas, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
 import {
   ahoraMadrid, anioTemporada, aviso, comoLista, esObjeto, fechaCorta, fechaPared, fechaValida, fmt, leerJson,
-  minusculas, ordenarUnicos, paso, slug, soloDia, txt,
+  minusculas, ordenarUnicos, paso, prefijoComun, slug, soloDia, txt,
 } from './util.js';
 import { crearXlsx } from './xlsx.js';
 
@@ -365,6 +365,9 @@ export async function principal(args, ahora = new Date()) {
 
   // Un .ics por equipo (también para los equipos que aún no tienen partidos publicados)
   const conEquipos = !opciones.sinEquipos && !rango.parcial && equipos.length > 0;
+  // En los títulos del calendario los equipos van sin el nombre del club delante: "IF1 vs RIVAL".
+  const opcionesIcs = { prefijo: prefijoComun(equipos.map((e) => e.nombre)) };
+
   if (conEquipos) {
     const carpetaEquipos = join(carpetaSalida, 'equipos');
     mkdirSync(carpetaEquipos, { recursive: true });
@@ -375,7 +378,7 @@ export async function principal(args, ahora = new Date()) {
       usados.add(nombre);
       const contenido = crearIcs(e.partidos, `Voleibol · ${e.nombre}`,
         `Partidos de ${e.nombre} (${e.categoria}), temporada ${rango.etiqueta}. Fuente: Federación Galega de Voleibol.`,
-        duracion, generado, salidas);
+        duracion, generado, salidas, opcionesIcs);
       writeFileSync(join(carpetaEquipos, `${nombre}.ics`), contenido, 'utf8');
       e.ics = `equipos/${nombre}.ics`;
     }
@@ -385,7 +388,7 @@ export async function principal(args, ahora = new Date()) {
   const archivoXlsx = `${base}.xlsx`;
   const archivoHtml = `${base}.html`;
   writeFileSync(join(carpetaSalida, archivoIcs),
-    crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas), 'utf8');
+    crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
   const html = crearHtml({
     partidos, equipos, nombreClub, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,

@@ -90,13 +90,13 @@ test('salidas: casa, fuera, 2º partido, tiempo a mano y pabellón desconocido',
   ]);
 
   assert.deepEqual(ps.map((p) => lineasSalida(p, cfg).join(' || ')), [
-    'En casa (Os Remedios) || Calentamiento: 10:30 || Partido: 11:30',
-    'Salida en bus desde Os Remedios: 09:30 || Viaje en bus: 1 h aprox. (MONFORTE DE LEMOS, 46 km) || Calentamiento: 10:30 || Partido: 11:30',
-    '2º partido del día en este pabellón: se va con el primero (salida a las 09:30) || Partido: 13:00',
-    'Salida en bus desde Os Remedios: 16:15 || Viaje en bus: 40 min || Calentamiento: 17:00 || Partido: 18:00',
-    'Tiempo de viaje sin calcular para este pabellón (se puede poner a mano en config.json). || Calentamiento: 11:00 || Partido: 12:00',
-    'Salida en bus desde Os Remedios: 16:00 || Viaje en bus: 1 h aprox. (MONFORTE DE LEMOS, 46 km) || Calentamiento: 17:00 || Partido: 18:00 (provisional)',
-    'La hora de salida se calculará cuando la federación publique la hora del partido.',
+    'En casa · calentamiento 10:30 · partido 11:30',
+    'Salida 09:30 desde Os Remedios · bus 1 h || Calentamiento 10:30 · partido 11:30',
+    '2º partido del día: se va con el primero (salida 09:30)',
+    'Salida 16:15 desde Os Remedios · bus 40 min || Calentamiento 17:00 · partido 18:00',
+    'Viaje sin calcular · calentamiento 11:00 · partido 12:00',
+    'Salida 16:00 desde Os Remedios · bus 1 h || Calentamiento 17:00 · partido 18:00 (provisional)',
+    '',
   ]);
   assert.deepEqual(ps.map(textoSalida), ['En casa', '09:30', '2º partido', '16:15', 'Sin calcular', '16:00', '']);
   assert.deepEqual(lineasSalida(ps[0], null), []);
