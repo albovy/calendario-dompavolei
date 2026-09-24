@@ -1,5 +1,4 @@
-﻿#requires -Version 5.1
-<#
+﻿<#
 .SYNOPSIS
     Genera el calendario de partidos de un club de voleibol gallego (todas sus categorías).
 
@@ -14,6 +13,8 @@
       - equipos\*.ics  Un calendario por cada equipo del club (para entrenadores y familias).
 
     La primera vez pregunta cuál es el club y lo guarda en config.json.
+    Solo incluye los partidos que publica la federación gallega: en ligas nacionales
+    faltan los partidos contra equipos de fuera de Galicia.
 
 .PARAMETER Club
     Club a usar en lugar del guardado en config.json. Admite el ID de iSquad
@@ -21,13 +22,14 @@
 
 .PARAMETER Temporada
     Temporada a descargar, p. ej. "2026-27". Por defecto, la temporada en curso
-    (del 1 de agosto al 31 de julio).
+    (del 1 de agosto al 31 de julio). Si todavía no hay partidos del club en la
+    temporada en curso, se usa la anterior.
 
 .PARAMETER Desde
-    Fecha inicial (aaaa-mm-dd). Por defecto, el 1 de agosto de la temporada.
+    Fecha inicial (aaaa-mm-dd), dentro de la temporada. Por defecto, el 1 de agosto.
 
 .PARAMETER Hasta
-    Fecha final (aaaa-mm-dd). Por defecto, el 31 de julio de la temporada.
+    Fecha final (aaaa-mm-dd), dentro de la temporada. Por defecto, el 31 de julio.
 
 .PARAMETER Salida
     Carpeta donde se guardan los archivos. Por defecto, "calendario" junto a este script.
@@ -37,6 +39,10 @@
 
 .PARAMETER DuracionMinutos
     Duración de cada partido en el calendario. Por defecto 120 minutos (o lo que diga config.json).
+
+.PARAMETER Historial
+    Archivo de texto donde guardar la lista de partidos sin fecha de generación, para
+    detectar cambios (lo usa la publicación automática en GitHub).
 
 .PARAMETER CambiarClub
     Vuelve a preguntar el club y guarda la nueva elección.
@@ -58,9 +64,11 @@
     Genera el calendario del club guardado (la primera vez pregunta cuál es).
 
 .EXAMPLE
-    .\calendario-voley.ps1 -Club pontevedra -Temporada 2026-27 -SinPreguntar
+    .\calendario-voley.ps1 -Temporada 2025-26
+    Genera el calendario de la temporada anterior.
 #>
-[CmdletBinding()]
+#requires -Version 5.1
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [string] $Club,
     [string] $Temporada,
@@ -70,6 +78,7 @@ param(
     [string] $NombreBase,
     [ValidateRange(0, 600)]
     [int]    $DuracionMinutos = 0,
+    [string] $Historial,
     [switch] $CambiarClub,
     [switch] $ListarClubs,
     [switch] $SinPreguntar,
@@ -97,8 +106,6 @@ $Script:RutaConfig  = Join-Path $Script:Carpeta 'config.json'
 
 $Script:DiasCortos  = @('dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb')
 $Script:Dias        = @('domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado')
-$Script:Meses       = @('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
-                        'septiembre', 'octubre', 'noviembre', 'diciembre')
 
 # Orden y color de las categorías (de menor a mayor edad).
 $Script:Categorias = @(
@@ -143,10 +150,10 @@ function Get-SinTildes([string]$Texto) {
     return $sb.ToString().Normalize([Text.NormalizationForm]::FormC)
 }
 
-function Get-Clave([string]$Texto) { return ((Get-SinTildes $Texto).ToUpperInvariant() -replace '[^A-Z0-9]+', ' ').Trim() }
+function Get-Clave([string]$Texto) { return ((Get-SinTildes $Texto).ToUpperInvariant() -creplace '[^A-Z0-9]+', ' ').Trim() }
 
 function Get-Slug([string]$Texto) {
-    $s = ((Get-SinTildes $Texto).ToLowerInvariant() -replace '[^a-z0-9]+', '-').Trim('-')
+    $s = ((Get-SinTildes $Texto).ToLowerInvariant() -creplace '[^a-z0-9]+', '-').Trim('-')
     if ($s.Length -gt 60) { $s = $s.Substring(0, 60).Trim('-') }
     if (-not $s) { $s = 'calendario' }
     return $s
@@ -187,41 +194,37 @@ function Get-InfoCategoria([string]$Categoria, [string]$Competicion) {
     if (-not $base) { $base = 'Sin categoría' }
     $nombre = $Script:Inv.TextInfo.ToTitleCase($base.ToLowerInvariant())
     $nombre = $nombre -replace '\bAlevin\b', 'Alevín' -replace '\bBenjamin\b', 'Benjamín' -replace '\bDivision\b', 'División'
-    # El sexo va al final del nombre de la competición: "TORNEO APERTURA CADETE F".
-    if ($nombre -notmatch '\s[FM]$' -and $comp -match '(?i)(?:^|\s)(F|M|FEM\.?|MASC\.?|FEMENINO|MASCULINO)\s*$') {
+    # El sexo va al final del nombre de la competición: "TORNEO APERTURA CADETE F", "... NACIONAL FEMENINA".
+    if ($nombre -notmatch '\s[FM]$' -and $comp -match '(?i)(?:^|\s)(F|M|FEM\.?|MASC\.?|FEMENIN[OA]|MASCULIN[OA])\s*$') {
         $nombre = "$nombre " + $Matches[1].Substring(0, 1).ToUpperInvariant()
     }
     return [pscustomobject]@{ Nombre = $nombre; Clave = $clave; Orden = $orden }
 }
 
+function Get-AnioTemporada([datetime]$Fecha) {
+    # La temporada va del 1 de agosto al 31 de julio: se nombra por el año en que empieza.
+    if ($Fecha.Month -ge 8) { return $Fecha.Year }
+    return ($Fecha.Year - 1)
+}
+
 function Format-FechaCorta([datetime]$F) {
-    return '{0} {1:dd}/{1:MM}' -f $Script:DiasCortos[[int]$F.DayOfWeek], $F
+    return $Script:DiasCortos[[int]$F.DayOfWeek] + ' ' + $F.ToString('dd/MM', $Script:Inv)
 }
 
 function Format-Hora($P) {
     switch ($P.Estado) {
         'confirmada'  { return $P.Fecha.ToString('HH:mm', $Script:Inv) }
         'provisional' { return $P.Fecha.ToString('HH:mm', $Script:Inv) + ' (provisional)' }
-        default       { return 'Por confirmar' }
+        'sinhora'     { return 'Por confirmar' }
+        default       { return 'Fecha y hora por confirmar' }
     }
 }
+
+function Test-ConHora($P) { return ($P.Estado -eq 'confirmada' -or $P.Estado -eq 'provisional') }
 
 function Resolve-Ruta([string]$Ruta) {
     if ([IO.Path]::IsPathRooted($Ruta)) { return [IO.Path]::GetFullPath($Ruta) }
     return [IO.Path]::GetFullPath((Join-Path (Get-Location).Path $Ruta))
-}
-
-function Save-Texto([string]$Ruta, [string]$Texto) {
-    # Si el archivo está abierto (p. ej. en Excel) se guarda con otro nombre en lugar de fallar.
-    try {
-        [IO.File]::WriteAllText($Ruta, $Texto, $Script:Utf8)
-        return $Ruta
-    } catch [IO.IOException] {
-        $alt = Get-RutaAlternativa $Ruta
-        [IO.File]::WriteAllText($alt, $Texto, $Script:Utf8)
-        Write-Aviso "No se pudo sobrescribir $(Split-Path $Ruta -Leaf) (¿está abierto?). Guardado como $(Split-Path $alt -Leaf)."
-        return $alt
-    }
 }
 
 function Get-RutaAlternativa([string]$Ruta) {
@@ -229,6 +232,35 @@ function Get-RutaAlternativa([string]$Ruta) {
     $nombre = [IO.Path]::GetFileNameWithoutExtension($Ruta)
     $ext = [IO.Path]::GetExtension($Ruta)
     return (Join-Path $dir ('{0} ({1}){2}' -f $nombre, (Get-Date).ToString('HHmmss'), $ext))
+}
+
+function Remove-CopiasAntiguas([string]$Ruta) {
+    # Borra las copias "nombre (HHmmss).ext" que quedaron cuando el archivo estaba abierto.
+    $dir = Split-Path $Ruta -Parent
+    $nombre = [IO.Path]::GetFileNameWithoutExtension($Ruta)
+    $ext = [IO.Path]::GetExtension($Ruta)
+    $patron = '^' + [regex]::Escape($nombre) + ' \(\d{6}\)' + [regex]::Escape($ext) + '$'
+    Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $patron } | ForEach-Object {
+        try { Remove-Item -LiteralPath $_.FullName -ErrorAction Stop } catch { }
+    }
+}
+
+function Save-Archivo([string]$Ruta, [scriptblock]$Escribir, [string]$Que) {
+    # Si el archivo está abierto (p. ej. en Excel) se guarda con otro nombre en lugar de fallar.
+    try {
+        & $Escribir $Ruta
+        Remove-CopiasAntiguas $Ruta
+        return $Ruta
+    } catch [IO.IOException] {
+        $alt = Get-RutaAlternativa $Ruta
+        & $Escribir $alt
+        Write-Aviso "No se pudo sobrescribir $(Split-Path $Ruta -Leaf) (¿está abierto$Que?). Guardado como $(Split-Path $alt -Leaf)."
+        return $alt
+    }
+}
+
+function Save-Texto([string]$Ruta, [string]$Texto) {
+    return (Save-Archivo $Ruta { param($r) [IO.File]::WriteAllText($r, $Texto, $Script:Utf8) } '')
 }
 
 # --- Descarga ----------------------------------------------------------------------------------
@@ -241,7 +273,7 @@ function Invoke-Isquad([string]$Ruta, [hashtable]$Datos) {
             $p = @{
                 Uri             = $url
                 UseBasicParsing = $true
-                TimeoutSec      = 120
+                TimeoutSec      = 45
                 UserAgent       = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendario-voley/1.0'
             }
             if ($Datos) { $p.Method = 'Post'; $p.Body = $Datos } else { $p.Method = 'Get' }
@@ -253,6 +285,7 @@ function Invoke-Isquad([string]$Ruta, [hashtable]$Datos) {
             if ($i -eq $intentos) {
                 throw "No se pudo descargar $url`n    ($($_.Exception.Message))`n    Comprueba la conexión a Internet y vuelve a intentarlo."
             }
+            Write-Aviso "La web de la federación no responde; reintentando ($($i + 1) de $intentos)..."
             Start-Sleep -Seconds (2 * $i)
         }
     }
@@ -269,10 +302,17 @@ function Get-PartidosApi([datetime]$Desde) {
     }
     try { $obj = $json | ConvertFrom-Json }
     catch { throw 'La web de la federación devolvió datos que no se entienden. Puede que haya cambiado; revisa si hay una versión nueva de esta herramienta.' }
-    if ($null -eq $obj -or -not ($obj.PSObject.Properties.Name -contains 'data')) {
-        throw 'La web de la federación devolvió una respuesta inesperada (falta la lista de partidos).'
+    if ($null -eq $obj -or -not ($obj.PSObject.Properties.Name -contains 'data') -or $null -eq $obj.data) {
+        throw 'La web de la federación devolvió una respuesta inesperada (falta la lista de partidos). Inténtalo más tarde.'
     }
-    $obj.data
+    $obj.data | Where-Object { $null -ne $_ -and $_.PSObject.Properties['id_club_local'] }
+}
+
+function Get-FechaCruda($R) {
+    # Día del partido tal como viene de iSquad ("aaaa-mm-dd").
+    $f = [string]$R.fecha_calendario
+    if (-not $f -and $R.fecha) { $f = ([string]$R.fecha).Substring(0, [Math]::Min(10, ([string]$R.fecha).Length)) }
+    return $f
 }
 
 function Get-ClubsFederacion {
@@ -292,21 +332,43 @@ function Get-ClubsFederacion {
     return $clubs
 }
 
-function Get-CatalogoClubs($Crudos) {
+function Get-PrefijoComun($Nombres) {
+    # "DOMPAVOLEI IF1", "DOMPAVOLEI CF1" -> "DOMPAVOLEI" (palabras completas, al menos 3 letras).
+    $lista = @($Nombres | Where-Object { $_ })
+    if ($lista.Count -lt 2) { return '' }
+    $prefijo = $lista[0]
+    foreach ($n in $lista) {
+        $i = 0
+        while ($i -lt $prefijo.Length -and $i -lt $n.Length -and $prefijo[$i] -eq $n[$i]) { $i++ }
+        $prefijo = $prefijo.Substring(0, $i)
+    }
+    $corte = $prefijo.LastIndexOf(' ')
+    if ($corte -lt 0) { return '' }
+    $prefijo = $prefijo.Substring(0, $corte).Trim(' ', '-', '.', ',')
+    if ($prefijo.Length -lt 3) { return '' }
+    return $prefijo
+}
+
+function Get-CatalogoClubs($CrudosTemporada, $CrudosTodos) {
     # Clubs que se pueden elegir: los del listado oficial más los que aparecen en los partidos.
     # Se puede buscar por el nombre del club o por el de cualquiera de sus equipos.
     $oficiales = Get-ClubsFederacion
     $cuenta = @{}; $equipos = @{}
-    foreach ($r in $Crudos) {
+    foreach ($r in $CrudosTemporada) {
+        foreach ($lado in @('local', 'visitante')) {
+            $id = [string]$r.("id_club_$lado")
+            if ($id -and $id -ne 'None') { $cuenta[$id] = 1 + [int]$cuenta[$id] }
+        }
+    }
+    foreach ($r in $CrudosTodos) {
         foreach ($lado in @('local', 'visitante')) {
             $id = [string]$r.("id_club_$lado")
             if (-not $id -or $id -eq 'None') { continue }
-            $cuenta[$id] = 1 + [int]$cuenta[$id]
             if (-not $equipos.ContainsKey($id)) { $equipos[$id] = New-Object 'Collections.Generic.HashSet[string]' }
             [void]$equipos[$id].Add([string]$r.("nombre_$lado"))
         }
     }
-    $ids = @(@($oficiales.Keys) + @($cuenta.Keys) | Sort-Object -Unique)
+    $ids = @(@($oficiales.Keys) + @($equipos.Keys) | Sort-Object -Unique)
     $catalogo = foreach ($id in $ids) {
         $nombresEquipos = @()
         if ($equipos.ContainsKey($id)) { $nombresEquipos = @($equipos[$id] | ForEach-Object { ConvertTo-UnaLinea $_ } | Where-Object { $_ } | Sort-Object -Unique) }
@@ -325,23 +387,6 @@ function Get-CatalogoClubs($Crudos) {
         }
     }
     $catalogo | Sort-Object Orden
-}
-
-function Get-PrefijoComun($Nombres) {
-    # "DOMPAVOLEI IF1", "DOMPAVOLEI CF1" -> "DOMPAVOLEI" (palabras completas, al menos 3 letras).
-    $lista = @($Nombres | Where-Object { $_ })
-    if ($lista.Count -lt 2) { return '' }
-    $prefijo = $lista[0]
-    foreach ($n in $lista) {
-        $i = 0
-        while ($i -lt $prefijo.Length -and $i -lt $n.Length -and $prefijo[$i] -eq $n[$i]) { $i++ }
-        $prefijo = $prefijo.Substring(0, $i)
-    }
-    $corte = $prefijo.LastIndexOf(' ')
-    if ($corte -lt 0) { return '' }
-    $prefijo = $prefijo.Substring(0, $corte).Trim(' ', '-', '.', ',')
-    if ($prefijo.Length -lt 3) { return '' }
-    return $prefijo
 }
 
 # --- Elegir club -------------------------------------------------------------------------------
@@ -368,6 +413,7 @@ function Show-Catalogo($Lista, [string]$Temp) {
         $n = if ($c.Partidos -gt 0) { [string]$c.Partidos } else { '-' }
         Write-Host ('  {0,3}  {1,-34} {2,8}  {3,-10} {4}' -f ($i + 1), $c.Nombre, $n, $c.Id, $c.Oficial)
     }
+    Write-Host "  (Partidos = partidos publicados en la temporada $Temp)" -ForegroundColor DarkGray
     Write-Host ''
 }
 
@@ -415,17 +461,70 @@ function Read-Config {
     }
 }
 
-function Save-Config($Clubs, [int]$Duracion) {
-    $cfg = [ordered]@{
+function Get-DuracionConfig($Cfg) {
+    $n = 0
+    if ($Cfg -and [int]::TryParse([string]$Cfg.duracion_minutos, [ref]$n) -and $n -gt 0 -and $n -le 600) { return $n }
+    if ($Cfg -and $Cfg.duracion_minutos) { Write-Aviso "duracion_minutos de config.json no es un número válido; se usan 120 minutos." }
+    return 120
+}
+
+function Save-Config($Clubs, [int]$Duracion, $Cfg) {
+    $nuevo = [ordered]@{
         clubs            = @($Clubs | ForEach-Object { [ordered]@{ id = [string]$_.Id; nombre = [string]$_.Nombre } })
         duracion_minutos = $Duracion
     }
-    [IO.File]::WriteAllText($Script:RutaConfig, (ConvertTo-Json -InputObject $cfg -Depth 4), $Script:Utf8)
+    if ($Cfg -and $Cfg.calendario_publicado) { $nuevo.calendario_publicado = [string]$Cfg.calendario_publicado }
+    [IO.File]::WriteAllText($Script:RutaConfig, (ConvertTo-Json -InputObject $nuevo -Depth 4), $Script:Utf8)
+}
+
+function Resolve-Clubs($CrudosTemporada, $CrudosTodos, [string]$Temp, $Cfg) {
+    # Devuelve los clubs (Id, Nombre) a usar: -Club, luego config.json y, si no hay, se pregunta.
+    if ($CambiarClub -and $SinPreguntar) { throw '-CambiarClub necesita preguntar el club; no se puede usar con -SinPreguntar (usa -Club).' }
+
+    if ($Club) {
+        $catalogo = @(Get-CatalogoClubs $CrudosTemporada $CrudosTodos)
+        $elegidos = @()
+        foreach ($trozo in ($Club -split '[,;]')) {
+            $t = $trozo.Trim()
+            if (-not $t) { continue }
+            if ($t -match '^\d{5,}$') {
+                $c = @($catalogo | Where-Object { $_.Id -eq $t })
+                if ($c.Count) { $elegidos += $c[0] } else { $elegidos += [pscustomobject]@{ Id = $t; Nombre = "Club $t" } }
+                continue
+            }
+            $encontrados = @(Find-Clubs $catalogo $t)
+            if ($encontrados.Count -eq 1) { $elegidos += $encontrados[0] }
+            elseif ($encontrados.Count -eq 0) { throw "Ningún club ni equipo coincide con «$t». Usa -ListarClubs para ver los disponibles." }
+            elseif ($SinPreguntar) {
+                $nombres = ($encontrados | ForEach-Object { "    $($_.Id)  $($_.Nombre)" }) -join "`n"
+                throw "Hay varios clubs que coinciden con «$t»; indica el ID:`n$nombres"
+            } else {
+                $elegidos += @(Select-ClubInteractivo $encontrados $Temp '')
+            }
+        }
+        return ($elegidos | Sort-Object Id -Unique)
+    }
+
+    if (-not $CambiarClub -and $Cfg -and $Cfg.clubs) {
+        $lista = @($Cfg.clubs | Where-Object { $_.id } | ForEach-Object {
+            $nombre = if ($_.nombre) { [string]$_.nombre } else { "Club $($_.id)" }
+            [pscustomobject]@{ Id = [string]$_.id; Nombre = $nombre }
+        })
+        if ($lista.Count) { return $lista }
+    }
+
+    if ($SinPreguntar) { throw 'No hay ningún club configurado en config.json. Ejecuta sin -SinPreguntar o indica -Club.' }
+    $elegidos = @(Select-ClubInteractivo @(Get-CatalogoClubs $CrudosTemporada $CrudosTodos) $Temp '')
+    Save-Config $elegidos (Get-DuracionConfig $Cfg) $Cfg
+    Write-Host ''
+    Write-Host ("  Guardado en config.json: " + (($elegidos | ForEach-Object { $_.Nombre }) -join ' + ')) -ForegroundColor Green
+    return $elegidos
 }
 
 # --- Partidos ----------------------------------------------------------------------------------
 
-function ConvertTo-Partidos($Crudos, $IdsClub, [datetime]$Inicio, [datetime]$Fin) {
+function ConvertTo-Partidos($Crudos, $IdsClub) {
+    # Convierte los partidos del club (de todas las temporadas descargadas) a objetos limpios.
     $lista = New-Object 'Collections.Generic.List[object]'
     $sinFecha = 0
     $vistos = New-Object 'Collections.Generic.HashSet[string]'
@@ -440,15 +539,20 @@ function ConvertTo-Partidos($Crudos, $IdsClub, [datetime]$Inicio, [datetime]$Fin
         $ok = [datetime]::TryParseExact([string]$r.fecha, 'yyyy-MM-dd HH:mm:ss', $Script:Inv,
             [Globalization.DateTimeStyles]::None, [ref]$fecha)
         if (-not $ok) {
-            $ok = [datetime]::TryParseExact([string]$r.fecha_calendario, 'yyyy-MM-dd', $Script:Inv,
+            $ok = [datetime]::TryParseExact((Get-FechaCruda $r), 'yyyy-MM-dd', $Script:Inv,
                 [Globalization.DateTimeStyles]::None, [ref]$fecha)
         }
         if (-not $ok) { $sinFecha++; continue }
-        if ($fecha.Date -lt $Inicio.Date -or $fecha.Date -gt $Fin.Date) { continue }
 
+        # fecha_confirmada = "1": la federación ya publica el día (y la hora, si no es 00:00).
+        # Sin confirmar, la web de la federación no enseña ni el día: es la jornada prevista.
         $tieneHora = $fecha.TimeOfDay.TotalMinutes -gt 0
         $confirmada = ([string]$r.fecha_confirmada) -eq '1'
-        $estado = if ($tieneHora -and $confirmada) { 'confirmada' } elseif ($tieneHora) { 'provisional' } else { 'pendiente' }
+        $estado = if ($confirmada) {
+            if ($tieneHora) { 'confirmada' } else { 'sinhora' }
+        } else {
+            if ($tieneHora) { 'provisional' } else { 'pendiente' }
+        }
         if (-not $tieneHora) { $fecha = $fecha.Date }
 
         $local = ConvertTo-UnaLinea $r.nombre_local
@@ -458,7 +562,7 @@ function ConvertTo-Partidos($Crudos, $IdsClub, [datetime]$Inicio, [datetime]$Fin
         $cat = Get-InfoCategoria $r.categoria $r.nombre_competicion
 
         # iSquad a veces repite exactamente el mismo partido.
-        $clave = '{0:yyyyMMddHHmm}|{1}|{2}|{3}|{4}' -f $fecha, $local, $visit, $comp, $pab
+        $clave = '{0}|{1}|{2}|{3}|{4}' -f $fecha.ToString('yyyyMMddHHmm', $Script:Inv), $local, $visit, $comp, $pab
         if (-not $vistos.Add($clave)) { continue }
 
         $nuestros = @()
@@ -469,6 +573,7 @@ function ConvertTo-Partidos($Crudos, $IdsClub, [datetime]$Inicio, [datetime]$Fin
 
         $lista.Add([pscustomobject]@{
             Fecha          = $fecha
+            Temporada      = (Get-AnioTemporada $fecha)
             Estado         = $estado
             Local          = $local
             Visitante      = $visit
@@ -489,34 +594,43 @@ function ConvertTo-Partidos($Crudos, $IdsClub, [datetime]$Inicio, [datetime]$Fin
 
     $ordenados = @($lista | Sort-Object Fecha, OrdenCategoria, Local, Visitante)
 
-    # UID estable: si la federación cambia la fecha u hora, el calendario actualiza el evento en vez de duplicarlo.
+    # UID estable: si la federación cambia la fecha u hora, el calendario actualiza el evento en vez de
+    # duplicarlo. Se numera dentro de cada temporada (ida, vuelta...) sin depender de -Desde/-Hasta.
     $veces = @{}
     foreach ($p in $ordenados) {
-        $clave = (Get-Clave "$($p.Competicion)|$($p.Local)|$($p.Visitante)")
+        $clave = (Get-Clave "$($p.Temporada)|$($p.Competicion)|$($p.Local)|$($p.Visitante)")
         $veces[$clave] = 1 + [int]$veces[$clave]
         $p.Uid = (Get-Hash "$clave|$($veces[$clave])").Substring(0, 24) + '@calendario-voley'
     }
     $ordenados
 }
 
-function Get-Equipos($Partidos) {
-    $porEquipo = @{}
-    foreach ($p in $Partidos) {
-        foreach ($e in $p.Nuestros) {
-            if (-not $porEquipo.ContainsKey($e)) { $porEquipo[$e] = New-Object 'Collections.Generic.List[object]' }
-            $porEquipo[$e].Add($p)
+function Get-Equipos($Partidos, $Anteriores) {
+    # Equipos del club con partidos en la temporada, más los de la temporada anterior que aún no
+    # tienen: así su calendario (y su enlace) existe desde el principio.
+    $info = [ordered]@{}
+    foreach ($grupo in @(@{ Lista = @($Partidos); Actual = $true }, @{ Lista = @($Anteriores); Actual = $false })) {
+        foreach ($p in $grupo.Lista) {
+            foreach ($e in $p.Nuestros) {
+                if (-not $info.Contains($e)) {
+                    $info[$e] = @{ Actual = (New-Object 'Collections.Generic.List[object]'); Todos = (New-Object 'Collections.Generic.List[object]') }
+                }
+                if ($grupo.Actual) { $info[$e].Actual.Add($p) }
+                $info[$e].Todos.Add($p)
+            }
         }
     }
-    $equipos = foreach ($nombre in $porEquipo.Keys) {
-        [object[]]$ps = $porEquipo[$nombre].ToArray()
-        $top = $ps | Group-Object Categoria | Sort-Object Count -Descending | Select-Object -First 1
-        $muestra = $ps | Where-Object { $_.Categoria -eq $top.Name } | Select-Object -First 1
+    $equipos = foreach ($nombre in $info.Keys) {
+        [object[]]$actuales = $info[$nombre].Actual.ToArray()
+        [object[]]$muestras = if ($actuales.Count) { $actuales } else { $info[$nombre].Todos.ToArray() }
+        $top = $muestras | Group-Object Categoria | Sort-Object Count -Descending | Select-Object -First 1
+        $muestra = $muestras | Where-Object { $_.Categoria -eq $top.Name } | Select-Object -First 1
         $equipo = New-Object psobject
         $equipo | Add-Member NoteProperty Nombre $nombre
         $equipo | Add-Member NoteProperty Categoria $muestra.Categoria
         $equipo | Add-Member NoteProperty ClaveCategoria $muestra.ClaveCategoria
         $equipo | Add-Member NoteProperty OrdenCategoria $muestra.OrdenCategoria
-        $equipo | Add-Member NoteProperty Partidos $ps
+        $equipo | Add-Member NoteProperty Partidos $actuales
         $equipo | Add-Member NoteProperty Ics ''
         $equipo
     }
@@ -550,20 +664,35 @@ function Add-LineaIcs([Text.StringBuilder]$Sb, [string]$Linea) {
     [void]$Sb.Append("`r`n")
 }
 
+function Get-SufijoEstado($P) {
+    switch ($P.Estado) {
+        'provisional' { return ' (fecha y hora provisionales)' }
+        'sinhora'     { return ' (hora por confirmar)' }
+        'pendiente'   { return ' (fecha y hora por confirmar)' }
+        default       { return '' }
+    }
+}
+
 function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [int]$Duracion, [datetime]$Generado) {
+    $Partidos = @($Partidos)
     $sb = New-Object Text.StringBuilder
     $sello = $Generado.ToUniversalTime().ToString("yyyyMMdd'T'HHmmss'Z'", $Script:Inv)
+    # SEQUENCE crece en cada generación: Google y Outlook solo aplican un cambio si es mayor que el anterior.
+    $secuencia = [int][Math]::Floor(([DateTimeOffset]$Generado.ToUniversalTime()).ToUnixTimeSeconds() / 60)
     $cabecera = @(
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
         'PRODID:-//calendario-voley//Calendario de voleibol (volei.gal)//ES',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
+        'CALSCALE:GREGORIAN'
+    )
+    # METHOD:PUBLISH exige al menos un evento; un calendario todavía vacío va sin él.
+    if ($Partidos.Count -gt 0) { $cabecera += 'METHOD:PUBLISH' }
+    $cabecera += @(
         ('X-WR-CALNAME:' + (ConvertTo-TextoIcs $NombreCalendario)),
         ('X-WR-CALDESC:' + (ConvertTo-TextoIcs $Descripcion)),
         "X-WR-TIMEZONE:$Script:ZonaHoraria",
-        'REFRESH-INTERVAL;VALUE=DURATION:PT6H',
-        'X-PUBLISHED-TTL:PT6H',
+        'REFRESH-INTERVAL;VALUE=DURATION:PT1H',
+        'X-PUBLISHED-TTL:PT1H',
         'BEGIN:VTIMEZONE',
         "TZID:$Script:ZonaHoraria",
         "X-LIC-LOCATION:$Script:ZonaHoraria",
@@ -587,14 +716,17 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
 
     $actualizado = $Generado.ToString('dd/MM/yyyy HH:mm', $Script:Inv)
     foreach ($p in $Partidos) {
-        $titulo = "$($p.Categoria) · $($p.Local) - $($p.Visitante)"
-        if ($p.Estado -eq 'pendiente') { $titulo += ' (hora por confirmar)' }
-        elseif ($p.Estado -eq 'provisional') { $titulo += ' (hora provisional)' }
-
+        $titulo = "$($p.Categoria) · $($p.Local) - $($p.Visitante)" + (Get-SufijoEstado $p)
         $juega = switch ($p.Condicion) {
             'local'     { "$($p.Local) juega como local" }
             'visitante' { "$($p.Visitante) juega como visitante" }
-            default { 'Partido entre dos equipos del club' }
+            default     { 'Partido entre dos equipos del club' }
+        }
+        $cuando = switch ($p.Estado) {
+            'confirmada'  { 'Hora: ' + $p.Fecha.ToString('HH:mm', $Script:Inv) }
+            'provisional' { 'Fecha y hora provisionales (' + $p.Fecha.ToString('HH:mm', $Script:Inv) + '): la federación aún no las ha confirmado' }
+            'sinhora'     { 'Hora: por confirmar' }
+            default       { 'Fecha y hora por confirmar: el día indicado es el de la jornada prevista' }
         }
         $desc = @(
             $juega,
@@ -603,7 +735,7 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
             "Local: $($p.Local)",
             "Visitante: $($p.Visitante)",
             "Pabellón: $(if ($p.Pabellon) { $p.Pabellon } else { 'por confirmar' })",
-            "Hora: $(Format-Hora $p)",
+            $cuando,
             '',
             "Datos de la Federación Galega de Voleibol ($Script:UrlFuente), actualizados el $actualizado. Los horarios pueden cambiar."
         ) -join "`n"
@@ -611,14 +743,16 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
         Add-LineaIcs $sb 'BEGIN:VEVENT'
         Add-LineaIcs $sb "UID:$($p.Uid)"
         Add-LineaIcs $sb "DTSTAMP:$sello"
-        if ($p.Estado -eq 'pendiente') {
-            Add-LineaIcs $sb ('DTSTART;VALUE=DATE:' + $p.Fecha.ToString('yyyyMMdd', $Script:Inv))
-            Add-LineaIcs $sb ('DTEND;VALUE=DATE:' + $p.Fecha.AddDays(1).ToString('yyyyMMdd', $Script:Inv))
-            Add-LineaIcs $sb 'TRANSP:TRANSPARENT'
-        } else {
+        Add-LineaIcs $sb "LAST-MODIFIED:$sello"
+        Add-LineaIcs $sb "SEQUENCE:$secuencia"
+        if (Test-ConHora $p) {
             Add-LineaIcs $sb ("DTSTART;TZID=$($Script:ZonaHoraria):" + $p.Fecha.ToString("yyyyMMdd'T'HHmmss", $Script:Inv))
             Add-LineaIcs $sb ("DTEND;TZID=$($Script:ZonaHoraria):" + $p.Fecha.AddMinutes($Duracion).ToString("yyyyMMdd'T'HHmmss", $Script:Inv))
             Add-LineaIcs $sb 'TRANSP:OPAQUE'
+        } else {
+            Add-LineaIcs $sb ('DTSTART;VALUE=DATE:' + $p.Fecha.ToString('yyyyMMdd', $Script:Inv))
+            Add-LineaIcs $sb ('DTEND;VALUE=DATE:' + $p.Fecha.AddDays(1).ToString('yyyyMMdd', $Script:Inv))
+            Add-LineaIcs $sb 'TRANSP:TRANSPARENT'
         }
         Add-LineaIcs $sb ('SUMMARY:' + (ConvertTo-TextoIcs $titulo))
         if ($p.Pabellon) { Add-LineaIcs $sb ('LOCATION:' + (ConvertTo-TextoIcs $p.Pabellon)) }
@@ -642,18 +776,21 @@ function ConvertTo-TextoXml([string]$Texto) {
 
 function Get-LetraColumna([int]$Indice) { return [string][char](65 + $Indice) }   # hasta 26 columnas
 
-function Save-Xlsx($Partidos, [string]$Ruta) {
+function Save-Xlsx($Partidos, [string]$Ruta, [datetime]$Generado, [string]$NombreClub) {
     Add-Type -AssemblyName System.IO.Compression
+    # E = texto normal, A = ajustar texto (columnas largas). La hora es la columna 2 (estilo propio).
     $columnas = @(
-        @{ T = 'Fecha';          A = 11 },
-        @{ T = 'Día';            A = 10 },
-        @{ T = 'Hora';           A = 17 },
-        @{ T = 'Categoría';      A = 16 },
-        @{ T = 'Competición';    A = 34 },
-        @{ T = 'Equipo local';   A = 36 },
-        @{ T = 'Equipo visitante'; A = 36 },
-        @{ T = 'Local / visitante'; A = 17 },
-        @{ T = 'Pabellón';       A = 44 }
+        @{ T = 'Fecha';             A = 11; E = 0 },
+        @{ T = 'Día';               A = 10; E = 0 },
+        @{ T = 'Hora';              A = 16; E = 0 },
+        @{ T = 'Equipo del club';   A = 22; E = 4 },
+        @{ T = 'Rival';             A = 34; E = 4 },
+        @{ T = 'Local / visitante'; A = 16; E = 0 },
+        @{ T = 'Categoría';         A = 13; E = 0 },
+        @{ T = 'Competición';       A = 30; E = 4 },
+        @{ T = 'Equipo local';      A = 32; E = 4 },
+        @{ T = 'Equipo visitante';  A = 32; E = 4 },
+        @{ T = 'Pabellón';          A = 38; E = 4 }
     )
     $ultima = Get-LetraColumna ($columnas.Count - 1)
     $filas = $Partidos.Count + 1
@@ -681,31 +818,35 @@ function Save-Xlsx($Partidos, [string]$Ruta) {
     $fila = 1
     foreach ($p in $Partidos) {
         $fila++
-        $cond = switch ($p.Condicion) { 'local' { 'Local' } 'visitante' { 'Visitante' } default { 'Derbi (los dos del club)' } }
+        $cond = switch ($p.Condicion) { 'local' { 'Local' } 'visitante' { 'Visitante' } default { 'Derbi' } }
         $valores = @(
             $null,
             $Script:Dias[[int]$p.Fecha.DayOfWeek],
             (Format-Hora $p),
+            ((@($p.Nuestros) | Sort-Object) -join ' / '),
+            $(if ($p.Rival) { $p.Rival } else { '(derbi)' }),
+            $cond,
             $p.Categoria,
             $p.Competicion,
             $p.Local,
             $p.Visitante,
-            $cond,
             $p.Pabellon
         )
         [void]$sb.Append("<row r=""$fila"">")
         $serial = $p.Fecha.Date.ToOADate().ToString($Script:Inv)
         [void]$sb.Append("<c r=""A$fila"" s=""1""><v>$serial</v></c>")
         for ($c = 1; $c -lt $valores.Count; $c++) {
-            $estilo = if ($c -eq 2 -and $p.Estado -ne 'confirmada') { 3 } else { 0 }
+            $estilo = if ($c -eq 2 -and $p.Estado -ne 'confirmada') { 3 } else { $columnas[$c].E }
             [void]$sb.Append((& $celdaTexto ((Get-LetraColumna $c) + $fila) $valores[$c] $estilo))
         }
         [void]$sb.Append('</row>')
     }
     [void]$sb.Append('</sheetData>')
     [void]$sb.Append("<autoFilter ref=""A1:$ultima$filas""/>")
-    [void]$sb.Append('<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>')
+    [void]$sb.Append('<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.6" header="0.3" footer="0.3"/>')
     [void]$sb.Append('<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>')
+    $pie = '&L&8' + $NombreClub + ' · generado el ' + $Generado.ToString('dd/MM/yyyy HH:mm', $Script:Inv) + ' · fuente: volei.gal&R&8Página &P de &N'
+    [void]$sb.Append('<headerFooter><oddFooter>' + (ConvertTo-TextoXml $pie) + '</oddFooter></headerFooter>')
     [void]$sb.Append('</worksheet>')
     $hoja = $sb.ToString()
 
@@ -714,7 +855,7 @@ function Save-Xlsx($Partidos, [string]$Ruta) {
         '_rels/.rels' = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'
         'xl/workbook.xml' = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Partidos" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">Partidos!$A$1:$' + $ultima + '$' + $filas + '</definedName><definedName name="_xlnm.Print_Titles" localSheetId="0">Partidos!$1:$1</definedName></definedNames></workbook>'
         'xl/_rels/workbook.xml.rels' = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'
-        'xl/styles.xml' = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font><font><i/><sz val="11"/><color rgb="FF9C5700"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0E4C92"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
+        'xl/styles.xml' = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font><font><i/><sz val="11"/><color rgb="FF9C5700"/><name val="Calibri"/><family val="2"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0E4C92"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top"/></xf><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
         'xl/worksheets/sheet1.xml' = $hoja
     }
 
@@ -732,15 +873,23 @@ function Save-Xlsx($Partidos, [string]$Ruta) {
             } finally { $zip.Dispose() }
         } finally { $fs.Dispose() }
     }
-    try {
-        & $escribir $Ruta
-        return $Ruta
-    } catch [IO.IOException] {
-        $alt = Get-RutaAlternativa $Ruta
-        & $escribir $alt
-        Write-Aviso "No se pudo sobrescribir $(Split-Path $Ruta -Leaf) (¿está abierto en Excel?). Guardado como $(Split-Path $alt -Leaf)."
-        return $alt
+    return (Save-Archivo $Ruta $escribir ' en Excel')
+}
+
+# --- Historial (para detectar cambios) ---------------------------------------------------------
+
+function Save-Historial($Partidos, [string]$Ruta, [string]$NombreClub, [string]$Temp) {
+    # Lista estable, sin fecha de generación: el archivo solo cambia cuando cambian los partidos.
+    $lineas = New-Object 'Collections.Generic.List[string]'
+    $lineas.Add("# Partidos de $NombreClub, temporada $Temp (Federación Galega de Voleibol)")
+    $lineas.Add('# fecha | hora | categoría | local - visitante | pabellón | competición')
+    foreach ($p in $Partidos) {
+        $lineas.Add(('{0} {1} | {2} | {3} | {4} - {5} | {6} | {7}' -f $Script:DiasCortos[[int]$p.Fecha.DayOfWeek],
+            $p.Fecha.ToString('yyyy-MM-dd', $Script:Inv), (Format-Hora $p), $p.Categoria, $p.Local, $p.Visitante, $p.Pabellon, $p.Competicion))
     }
+    $dir = Split-Path $Ruta -Parent
+    if ($dir) { [void](New-Item -ItemType Directory -Force -Path $dir) }
+    [IO.File]::WriteAllText($Ruta, (($lineas -join "`n") + "`n"), $Script:Utf8)
 }
 
 # --- HTML --------------------------------------------------------------------------------------
@@ -753,9 +902,8 @@ $Script:PlantillaHtml = @'
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>__TITULO__</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700|big-shoulders-display:700,800&amp;display=swap">
 <style>
 :root {
   --libre: #0A3A70;      /* zona libre alrededor de la pista */
@@ -768,8 +916,9 @@ $Script:PlantillaHtml = @'
   --tinta-2: #4A5A6E;
   --borde: #D5DDE8;
   --visitante: #5B6B7F;
-  --c-benjamin: #8E44AD; --c-alevin: #0E8A74; --c-infantil: #2474C9; --c-cadete: #C45100;
-  --c-juvenil: #C0392B;  --c-junior: #1E8449; --c-senior: #34495E;   --c-otra: #8A6D00;
+  --foco: #0E4C92;
+  --c-benjamin: #8E44AD; --c-alevin: #0B7361; --c-infantil: #2474C9; --c-cadete: #C45100;
+  --c-juvenil: #B0306A;  --c-junior: #1E8449; --c-senior: #34495E;   --c-otra: #8A6D00;
   --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
   --cond: 'Barlow Condensed', 'Arial Narrow', 'Segoe UI', sans-serif;
   --texto: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -777,15 +926,19 @@ $Script:PlantillaHtml = @'
 @media (prefers-color-scheme: dark) {
   :root {
     --fondo: #0A121D; --superficie: #111C2B; --tinta: #E6EDF5; --tinta-2: #9AABBF; --borde: #23344A; --visitante: #8C9BAE;
+    --foco: #FFC915;
     --c-benjamin: #C08BE0; --c-alevin: #3CC4A6; --c-infantil: #6AAAF0; --c-cadete: #F2994A;
-    --c-juvenil: #EF7568;  --c-junior: #5BCB86; --c-senior: #A9B8CB;  --c-otra: #D9B642;
+    --c-juvenil: #F27BB4;  --c-junior: #5BCB86; --c-senior: #A9B8CB;  --c-otra: #D9B642;
   }
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--fondo); color: var(--tinta); font: 400 16px/1.45 var(--texto); }
 a { color: inherit; }
-:focus-visible { outline: 3px solid var(--balon); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
+.cabecera :focus-visible { outline-color: var(--balon); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.solo-impresion { display: none; }
 .envoltura { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
 
 /* Cabecera: una pista vista desde arriba */
@@ -816,15 +969,16 @@ h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: 
 .boton:hover { background: rgba(255,255,255,.1); }
 .boton.principal { background: var(--balon); border-color: var(--balon); color: var(--balon-tinta); }
 .boton.principal:hover { background: #FFD84D; }
-.ayuda-cal { margin-top: 14px; font-size: .92rem; max-width: 70ch; }
+.ayuda-cal { margin-top: 14px; font-size: .92rem; max-width: 72ch; }
 .ayuda-cal summary { cursor: pointer; font: 600 .95rem/1.2 var(--cond); letter-spacing: .04em; text-transform: uppercase; opacity: .9; }
 .ayuda-cal ul { margin: 8px 0 0; padding-left: 20px; }
-.ayuda-cal li { margin: 4px 0; }
+.ayuda-cal li { margin: 5px 0; }
+.ayuda-cal code { font-size: .85em; word-break: break-all; background: rgba(255,255,255,.12); padding: 1px 4px; border-radius: 3px; }
 
 /* Filtros */
-.filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 12px 0; }
+.filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
 .fila-filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
-.equipos-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; scrollbar-width: thin; }
+.equipos-chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 6px 10px; margin: 0 -6px; scrollbar-width: thin; }
 .chip {
   --c: var(--c-otra); flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px;
   border-radius: 999px; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
@@ -832,8 +986,8 @@ h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: 
 }
 .chip::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
 .chip[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--superficie)); }
-.chip.todos { --c: var(--pista); }
 .chip.todos::before { display: none; }
+.chip.todos[aria-pressed="true"] { background: var(--pista); border-color: var(--pista); color: #fff; }
 .chip .cat-chip { font-weight: 500; color: var(--tinta-2); }
 .segmentado { display: inline-flex; border: 1.5px solid var(--borde); border-radius: 999px; overflow: hidden; background: var(--superficie); }
 .segmentado button {
@@ -841,17 +995,20 @@ h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: 
   font: 600 .92rem/1 var(--cond); letter-spacing: .05em; text-transform: uppercase;
 }
 .segmentado button[aria-pressed="true"] { background: var(--pista); color: #fff; }
+.segmentado button:focus-visible { outline-offset: -3px; }
 .oculto { display: none !important; }
 
 /* Lista */
 main { padding: 8px 0 40px; }
-.dia { margin-top: 26px; scroll-margin-top: 130px; }
-.dia-cabecera { display: flex; align-items: baseline; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--tinta); }
+.dia { margin-top: 26px; }
+.dia-cabecera { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--tinta); font: inherit; }
 .dia-num { font: 800 2.6rem/.8 var(--display); }
 .dia-nombre { font: 700 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; }
 .dia-mes { font: 500 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-2); }
 .dia-cuenta { margin-left: auto; font: 500 .95rem/1 var(--cond); color: var(--tinta-2); letter-spacing: .03em; }
-.dia.pasado { opacity: .62; }
+.dia.pasado .dia-cabecera { border-bottom-color: var(--borde); }
+.dia.pasado .dia-num, .dia.pasado .dia-nombre { color: var(--tinta-2); }
+.dia.pasado .partido { background: transparent; }
 
 .partido {
   --c: var(--c-otra); display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 16px; align-items: start;
@@ -879,7 +1036,7 @@ main { padding: 8px 0 40px; }
 
 /* Mes */
 .mes-barra { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
-.mes-titulo { font: 800 2rem/1 var(--display); text-transform: uppercase; }
+.mes-titulo { font: 800 2rem/1 var(--display); text-transform: uppercase; margin: 0; }
 .mes-nav { display: flex; gap: 8px; }
 .mes-nav button {
   width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
@@ -907,8 +1064,10 @@ main { padding: 8px 0 40px; }
 
 footer { border-top: 1px solid var(--borde); padding: 22px 0 40px; font-size: .9rem; color: var(--tinta-2); }
 footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta); margin: 0 0 10px; }
-.lista-ics { columns: 2 260px; padding: 0; margin: 0 0 20px; list-style: none; }
-.lista-ics li { break-inside: avoid; padding: 3px 0; }
+.lista-ics { columns: 2 300px; padding: 0; margin: 0 0 20px; list-style: none; }
+.lista-ics li { break-inside: avoid; padding: 4px 0 6px; }
+.lista-ics b { color: var(--tinta); font-weight: 600; }
+.lista-ics .sin { font-style: italic; }
 
 [data-cat="benjamin"] { --c: var(--c-benjamin); } [data-cat="alevin"] { --c: var(--c-alevin); }
 [data-cat="infantil"] { --c: var(--c-infantil); } [data-cat="cadete"] { --c: var(--c-cadete); }
@@ -928,13 +1087,13 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 }
 @media print {
   .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2 { display: none !important; }
+  .solo-impresion { display: block; margin: 6px 0 0; font-weight: 600; }
   body { background: #fff; color: #000; font-size: 12px; }
   .cabecera { background: none; color: #000; padding: 0; }
   .pista { background: none; border: 0; padding: 0 0 8px; }
   .pista::before, .pista::after { display: none; }
   .partido { break-inside: avoid; padding: 6px 8px; }
   .dia { break-inside: avoid-page; margin-top: 14px; }
-  .dia.pasado { opacity: 1; }
   .condicion.local, .condicion.derbi { background: none; color: #000; border-color: #000; }
 }
 </style>
@@ -946,24 +1105,27 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       <p class="antetitulo" id="antetitulo">Voleibol</p>
       <h1 id="club"></h1>
       <p class="resumen" id="resumen"></p>
+      <p class="solo-impresion" id="filtro-imp"></p>
       <div class="acciones">
         <a class="boton principal oculto" id="enlace-suscribir" href="#">Suscribirse al calendario</a>
         <a class="boton principal" id="enlace-ics" href="#">Añadir al calendario</a>
         <a class="boton" id="enlace-xlsx" href="#">Abrir en Excel</a>
-        <button class="boton" type="button" onclick="window.print()">Imprimir</button>
+        <button class="boton" type="button" id="imprimir">Imprimir</button>
       </div>
-      <details class="ayuda-cal">
+      <details class="ayuda-cal" id="ayuda">
         <summary>Cómo añadirlo al móvil o a Google Calendar</summary>
-        <ul class="oculto" id="ayuda-web">
-          <li><b>iPhone / Mac / Outlook:</b> toca «Suscribirse al calendario» y acepta. Los cambios de horario llegan solos.</li>
-          <li><b>Google Calendar (también Android):</b> abre <a id="enlace-google" href="#" target="_blank" rel="noopener">este enlace</a> en el ordenador con tu cuenta de Google y acepta. Google tarda unas horas en reflejar los cambios.</li>
-          <li>Si solo quieres los partidos de un equipo, usa su enlace al final de la página.</li>
+        <ul class="oculto" id="ayuda-pub">
+          <li><b>iPhone, iPad o Mac:</b> toca «Suscribirse al calendario» y acepta. Los cambios llegan solos.</li>
+          <li><b>Android o Google Calendar:</b> desde un <b>ordenador</b>, con la cuenta de Google del móvil, abre <a id="enlace-google" href="#" target="_blank" rel="noopener">este enlace de Google Calendar</a> y pulsa «Añadir». Aparecerá también en el móvil. Google vuelve a leer el calendario cuando quiere (puede tardar 12 horas o más): para cambios de última hora, mira esta página.</li>
+          <li><b>Outlook:</b> Agregar calendario › Desde Internet, y pega esta dirección: <code id="url-https"></code></li>
+          <li>Suscríbete una sola vez: no hace falta repetirlo. Si en vez de suscribirte descargas el .ics y lo importas, es una copia fija que no se actualiza.</li>
+          <li>Para un solo equipo, usa sus enlaces al final de la página.</li>
         </ul>
         <ul id="ayuda-local">
           <li><b>Google Calendar:</b> en el ordenador, Configuración › Importar y exportar › Importar, y elige el archivo <span class="nombre-ics"></span>. Mejor en un calendario nuevo solo para el voley.</li>
           <li><b>iPhone:</b> envíate el archivo .ics por correo o WhatsApp y ábrelo; toca «Añadir todo».</li>
           <li><b>Outlook:</b> haz doble clic en el archivo .ics.</li>
-          <li>Cuando la federación cambie horarios, vuelve a generar el calendario e impórtalo otra vez: los partidos se actualizan, no se duplican.</li>
+          <li>Importar crea una copia fija: si la federación cambia algo, borra ese calendario e impórtalo otra vez.</li>
         </ul>
       </details>
     </div>
@@ -987,7 +1149,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   </div>
 </nav>
 
-<main class="envoltura" id="contenido" aria-live="polite"></main>
+<p class="sr-only" id="estado" role="status" aria-live="polite"></p>
+<main class="envoltura" id="contenido"></main>
 
 <footer>
   <div class="envoltura">
@@ -1007,11 +1170,12 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   var SEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  var MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
+  function $(id) { return document.getElementById(id); }
   function dos(n) { return (n < 10 ? '0' : '') + n; }
   function iso(d) { return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); }
   function fechaDe(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -1020,10 +1184,13 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   var ahora = new Date();
   var hoy = iso(ahora);
   var horaAhora = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
-  function yaJugado(p) { return p.f < hoy || (p.f === hoy && p.h && p.h < horaAhora); }
+  function conHora(p) { return p.e === 'c' || p.e === 'p'; }
+  function yaJugado(p) { return p.f < hoy || (p.f === hoy && conHora(p) && p.h < horaAhora); }
 
-  // Nombres cortos de los equipos: se quita el principio común ("CLUB VOLEIBOL X ...").
+  // Equipos. Nombres cortos: se quita el principio común ("DOMPAVOLEI IF1" -> "IF1").
   var nombres = D.equipos.map(function (e) { return e.n; });
+  var conPartidos = D.equipos.filter(function (e) { return e.np > 0; });
+  var nombresConPartidos = conPartidos.map(function (e) { return e.n; });
   var prefijo = '';
   if (nombres.length > 1) {
     prefijo = nombres.reduce(function (a, b) { var i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); });
@@ -1032,82 +1199,114 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   }
   function corto(n) { return prefijo && n.indexOf(prefijo) === 0 ? n.slice(prefijo.length) : n; }
 
-  // Estado de los filtros (se recuerda en este navegador).
+  // Calendario publicado en internet (GitHub Pages): suscripción que se actualiza sola.
+  var enWeb = /^https?:$/.test(location.protocol);
+  var pub = enWeb
+    ? { base: location.protocol + '//' + location.host + location.pathname.replace(/[^\/]*$/, ''), ics: D.ics }
+    : (D.pub && D.pub.base ? D.pub : null);
+  var esAndroid = /Android/i.test(navigator.userAgent || '');
+  function urlHttps(rel) { return pub.base + encodeURI(rel); }
+  function urlWebcal(rel) { return urlHttps(rel).replace(/^https?:/, 'webcal:'); }
+  function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
+
+  // Filtros (se recuerdan en este navegador).
   var CLAVE = 'calendario-voley:' + D.club;
   var st = { eq: [], cond: 'todos', per: 'proximos', vista: 'lista', mes: null };
-  try { var g = JSON.parse(localStorage.getItem(CLAVE) || 'null'); if (g) { for (var k in g) st[k] = g[k]; } } catch (e) {}
-  st.eq = (st.eq || []).filter(function (n) { return nombres.indexOf(n) >= 0; });
-  function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify({ eq: st.eq, cond: st.cond, per: st.per, vista: st.vista })); } catch (e) {} }
+  try {
+    var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
+    if (g && typeof g === 'object') ['eq', 'cond', 'per', 'vista'].forEach(function (k) { if (g[k] != null) st[k] = g[k]; });
+  } catch (e) {}
+  if (!Array.isArray(st.eq)) st.eq = [];
+  st.eq = st.eq.filter(function (n) { return nombresConPartidos.indexOf(n) >= 0; });
+  if (['todos', 'local', 'visitante'].indexOf(st.cond) < 0) st.cond = 'todos';
+  if (['proximos', 'todo'].indexOf(st.per) < 0) st.per = 'proximos';
+  if (['lista', 'mes'].indexOf(st.vista) < 0) st.vista = 'lista';
+  var perElegido = st.per;   // el periodo que eligió la persona (saltar a un día pasado no lo cambia)
+  function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify({ eq: st.eq, cond: st.cond, per: perElegido, vista: st.vista })); } catch (e) {} }
 
   function nuestros(p) { var r = []; if (p.lo) r.push(p.l); if (p.vo) r.push(p.v); return r; }
+  function ladoOk(p) {
+    // Local/visitante se juzga para los equipos elegidos (en un derbi, cada uno juega de un lado).
+    if (st.cond === 'todos') return true;
+    var eqs = st.eq.length ? st.eq : null;
+    var esL = p.lo && (!eqs || eqs.indexOf(p.l) >= 0);
+    var esV = p.vo && (!eqs || eqs.indexOf(p.v) >= 0);
+    return st.cond === 'local' ? esL : esV;
+  }
   function filtrar(conPeriodo) {
     return D.partidos.filter(function (p) {
       if (conPeriodo && st.per === 'proximos' && p.f < hoy) return false;
-      if (st.cond === 'local' && p.cond === 'visitante') return false;
-      if (st.cond === 'visitante' && p.cond !== 'visitante') return false;
       if (st.eq.length && !nuestros(p).some(function (n) { return st.eq.indexOf(n) >= 0; })) return false;
-      return true;
+      return ladoOk(p);
     });
   }
 
   // Cabecera
   document.title = 'Partidos · ' + D.club + ' · ' + D.temporada;
-  document.getElementById('antetitulo').textContent = 'Voleibol · Temporada ' + D.temporada;
-  document.getElementById('club').textContent = D.club;
-  var enlIcs = document.getElementById('enlace-ics'); enlIcs.href = encodeURI(D.ics);
-  var enlXlsx = document.getElementById('enlace-xlsx'); enlXlsx.href = encodeURI(D.xlsx);
-  // Publicada en internet (p. ej. GitHub Pages): se ofrece la suscripción, que se actualiza sola.
-  var enWeb = /^https?:$/.test(location.protocol);
-  function urlSuscripcion(rel) {
-    return 'webcal://' + location.host + location.pathname.replace(/[^\/]*$/, '') + encodeURI(rel);
-  }
-  if (enWeb) {
-    var sus = document.getElementById('enlace-suscribir');
-    sus.href = urlSuscripcion(D.ics);
-    sus.classList.remove('oculto');
+  $('antetitulo').textContent = 'Voleibol · Temporada ' + D.temporada;
+  $('club').textContent = D.club;
+  var enlIcs = $('enlace-ics'), sus = $('enlace-suscribir'), ayuda = $('ayuda');
+  enlIcs.href = encodeURI(D.ics);
+  $('enlace-xlsx').href = encodeURI(D.xlsx);
+  $('imprimir').addEventListener('click', function () { window.print(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.nombre-ics'), function (el) { el.textContent = D.ics; });
+  if (pub) {
     enlIcs.textContent = 'Descargar .ics';
     enlIcs.classList.remove('principal');
-    document.getElementById('enlace-google').href = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlSuscripcion(D.ics));
-    document.getElementById('ayuda-web').classList.remove('oculto');
-    document.getElementById('ayuda-local').classList.add('oculto');
+    if (esAndroid) {
+      // Android no abre enlaces webcal: el botón explica cómo hacerlo con Google Calendar.
+      sus.textContent = 'Cómo añadirlo al móvil';
+      sus.href = '#ayuda';
+      sus.addEventListener('click', function (ev) { ev.preventDefault(); ayuda.open = true; ayuda.scrollIntoView({ block: 'nearest' }); });
+    } else {
+      sus.href = urlWebcal(pub.ics);
+    }
+    sus.classList.remove('oculto');
+    $('enlace-google').href = urlGoogle(pub.ics);
+    $('url-https').textContent = urlHttps(pub.ics);
+    $('ayuda-pub').classList.remove('oculto');
+    $('ayuda-local').classList.add('oculto');
   }
-  Array.prototype.forEach.call(document.querySelectorAll('.nombre-ics'), function (el) { el.textContent = D.ics; });
   (function () {
     var total = D.partidos.length;
-    var r = document.getElementById('resumen');
+    var r = $('resumen');
     if (!total) { r.textContent = 'Todavía no hay partidos publicados para esta temporada.'; return; }
     var prox = D.partidos.filter(function (p) { return !yaJugado(p); });
-    var txt = '<strong>' + total + '</strong> partidos · <strong>' + D.equipos.length + '</strong> equipos';
+    var txt = '<strong>' + plural(total, 'partido', 'partidos') + '</strong> · <strong>' + plural(conPartidos.length, 'equipo', 'equipos') + '</strong>';
     if (prox.length) {
       var p = prox[0], d = fechaDe(p.f);
-      txt += ' · Próximo: <strong>' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + (p.h ? ', ' + p.h : '') + '</strong>';
+      var cuando = p.e === 'x' ? ' (fecha por confirmar)' : (conHora(p) ? ', ' + p.h : '');
+      txt += ' · Próximo: <strong>' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + esc(cuando) + '</strong>';
     } else {
       txt += ' · No quedan partidos por jugar';
     }
     r.innerHTML = txt;
   })();
 
-  // Chips de equipos
-  var chips = document.getElementById('chips');
-  function pintarChips() {
-    var html = '<button type="button" class="chip todos" data-eq="" aria-pressed="' + (st.eq.length === 0) + '">Todos los equipos</button>';
-    D.equipos.forEach(function (e) {
-      html += '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" aria-pressed="' + (st.eq.indexOf(e.n) >= 0) +
-        '" title="' + esc(e.n) + '"><span>' + esc(corto(e.n)) + '</span> <span class="cat-chip">' + esc(e.cat) + '</span></button>';
+  // Chips de equipos: se crean una vez y luego solo cambia su estado (así no se pierde el foco).
+  var chips = $('chips');
+  if (conPartidos.length < 2) chips.classList.add('oculto');
+  chips.innerHTML = '<button type="button" class="chip todos" data-eq="">Todos los equipos</button>' + conPartidos.map(function (e) {
+    return '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" title="' + esc(e.n) + '"><span>' +
+      esc(corto(e.n)) + '</span> <span class="cat-chip">' + esc(e.cat) + '</span></button>';
+  }).join('');
+  function marcarChips() {
+    Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (b) {
+      var n = b.getAttribute('data-eq');
+      b.setAttribute('aria-pressed', String(n ? st.eq.indexOf(n) >= 0 : st.eq.length === 0));
     });
-    chips.innerHTML = html;
   }
   chips.addEventListener('click', function (ev) {
     var b = ev.target.closest('.chip'); if (!b) return;
     var n = b.getAttribute('data-eq');
     if (!n) st.eq = [];
     else { var i = st.eq.indexOf(n); if (i >= 0) st.eq.splice(i, 1); else st.eq.push(n); }
-    guardar(); pintarChips(); pintar();
+    guardar(); marcarChips(); pintar();
   });
   document.querySelector('.filtros').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b || b.classList.contains('chip')) return;
     if (b.dataset.vista) st.vista = b.dataset.vista;
-    if (b.dataset.per) st.per = b.dataset.per;
+    if (b.dataset.per) st.per = perElegido = b.dataset.per;
     if (b.dataset.cond) st.cond = b.dataset.cond;
     guardar(); pintar();
   });
@@ -1117,37 +1316,48 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       var on = (b.dataset.vista && b.dataset.vista === st.vista) || (b.dataset.per && b.dataset.per === st.per) || (b.dataset.cond && b.dataset.cond === st.cond);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    document.getElementById('seg-periodo').classList.toggle('oculto', st.vista === 'mes');
+    $('seg-periodo').classList.toggle('oculto', st.vista === 'mes');
   }
 
-  var main = document.getElementById('contenido');
+  var main = $('contenido');
 
-  function vacio(msg) {
-    var hayFiltros = st.eq.length || st.cond !== 'todos' || st.per !== 'todo';
-    return '<div class="vacio"><p>' + esc(msg) + '</p>' + (hayFiltros && D.partidos.length ? '<button type="button" class="boton claro" id="quitar">Ver todos los partidos</button>' : '') + '</div>';
+  function vacio(msg, boton) {
+    return '<div class="vacio"><p>' + esc(msg) + '</p>' + (boton ? '<button type="button" class="boton claro" id="quitar">' + esc(boton) + '</button>' : '') + '</div>';
+  }
+
+  function textoHora(p) {
+    if (p.e === 'x') return '<div class="hora pendiente">Fecha y hora por confirmar</div>';
+    if (p.e === 'h') return '<div class="hora pendiente">Hora por confirmar</div>';
+    return '<div class="hora">' + esc(p.h) + (p.e === 'p' ? '<small>Provisional</small>' : '') + '</div>';
   }
 
   function tarjeta(p, proximo) {
-    var hora = p.e === 'x'
-      ? '<div class="hora pendiente">Hora por confirmar</div>'
-      : '<div class="hora">' + esc(p.h) + (p.e === 'p' ? '<small>Provisional</small>' : '') + '</div>';
     var l = p.lo ? '<span>' + esc(p.l) + '</span>' : '<span class="rival">' + esc(p.l) + '</span>';
     var v = p.vo ? '<span>' + esc(p.v) + '</span>' : '<span class="rival">' + esc(p.v) + '</span>';
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
     var pab = p.pab
       ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', Galicia') + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
       : 'Pabellón por confirmar';
-    return '<article class="partido" data-cat="' + esc(p.ck) + '">' + hora +
+    return '<article class="partido" data-cat="' + esc(p.ck) + '">' + textoHora(p) +
       '<div><div class="categoria">' + esc(p.cat) + (proximo ? '<span class="proximo-marca">Próximo</span>' : '') + '</div>' +
       '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' +
       '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div></div>' +
-      '<span class="condicion ' + p.cond + '">' + cond + '</span></article>';
+      '<span class="condicion ' + esc(p.cond) + '">' + cond + '</span></article>';
   }
 
   function pintarLista() {
     var lista = filtrar(true);
-    if (!D.partidos.length) { main.innerHTML = vacio('Todavía no hay partidos publicados para esta temporada. La federación los va publicando poco a poco: vuelve a generar el calendario más adelante.'); return; }
-    if (!lista.length) { main.innerHTML = vacio(st.per === 'proximos' ? 'No quedan partidos por jugar con estos filtros.' : 'No hay partidos con estos filtros.'); return; }
+    if (!D.partidos.length) {
+      main.innerHTML = vacio('Todavía no hay partidos publicados para esta temporada. La federación los va publicando poco a poco.');
+      return 0;
+    }
+    if (!lista.length) {
+      var soloPeriodo = !st.eq.length && st.cond === 'todos' && st.per === 'proximos';
+      main.innerHTML = soloPeriodo
+        ? vacio('No quedan partidos por jugar esta temporada.', 'Ver toda la temporada')
+        : vacio('No hay partidos con estos filtros.', 'Ver todos los partidos');
+      return 0;
+    }
     var proximo = null;
     for (var i = 0; i < lista.length; i++) { if (!yaJugado(lista[i])) { proximo = lista[i]; break; } }
     var html = '', actual = null;
@@ -1157,32 +1367,36 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
         actual = p.f;
         var d = fechaDe(p.f), n = lista.filter(function (x) { return x.f === p.f; }).length;
         var nombre = p.f === hoy ? 'Hoy' : DIAS[d.getDay()];
-        html += '<section class="dia' + (p.f < hoy ? ' pasado' : '') + '" id="d-' + p.f + '"><div class="dia-cabecera">' +
+        html += '<section class="dia' + (p.f < hoy ? ' pasado' : '') + '" id="d-' + p.f + '"><h2 class="dia-cabecera" tabindex="-1">' +
           '<span class="dia-num">' + d.getDate() + '</span><span class="dia-nombre">' + nombre + '</span>' +
           '<span class="dia-mes">' + MESES[d.getMonth()] + (d.getFullYear() !== ahora.getFullYear() ? ' ' + d.getFullYear() : '') + '</span>' +
-          '<span class="dia-cuenta">' + n + (n === 1 ? ' partido' : ' partidos') + '</span></div>';
+          '<span class="dia-cuenta">' + plural(n, 'partido', 'partidos') + '</span></h2>';
       }
       html += tarjeta(p, p === proximo);
     });
     main.innerHTML = html + '</section>';
+    return lista.length;
   }
 
   function pintarMes() {
     var lista = filtrar(false);
-    if (!lista.length) { main.innerHTML = vacio(D.partidos.length ? 'No hay partidos con estos filtros.' : 'Todavía no hay partidos publicados para esta temporada.'); return; }
+    if (!lista.length) {
+      main.innerHTML = D.partidos.length ? vacio('No hay partidos con estos filtros.', 'Ver todos los partidos') : vacio('Todavía no hay partidos publicados para esta temporada.');
+      return 0;
+    }
     var meses = lista.map(function (p) { return p.f.slice(0, 7); }).filter(function (m, i, a) { return a.indexOf(m) === i; }).sort();
     var min = meses[0], max = meses[meses.length - 1];
     if (!st.mes || st.mes < min || st.mes > max) {
       st.mes = meses.filter(function (m) { return m >= hoy.slice(0, 7); })[0] || max;
     }
     var y = +st.mes.slice(0, 4), m = +st.mes.slice(5, 7) - 1;
-    var primero = new Date(y, m, 1);
-    var desplaz = (primero.getDay() + 6) % 7;
+    var desplaz = (new Date(y, m, 1).getDay() + 6) % 7;
     var inicio = new Date(y, m, 1 - desplaz);
     var celdas = Math.ceil((desplaz + new Date(y, m + 1, 0).getDate()) / 7) * 7;
     var porDia = {};
     lista.forEach(function (p) { (porDia[p.f] = porDia[p.f] || []).push(p); });
-    var html = '<div class="mes-barra"><div class="mes-titulo">' + MESES[m] + ' ' + y + '</div><div class="mes-nav">' +
+    var enMes = lista.filter(function (p) { return p.f.slice(0, 7) === st.mes; }).length;
+    var html = '<div class="mes-barra"><h2 class="mes-titulo">' + MESES[m] + ' ' + y + '</h2><div class="mes-nav">' +
       '<button type="button" id="mes-ant" aria-label="Mes anterior"' + (st.mes <= min ? ' disabled' : '') + '>‹</button>' +
       '<button type="button" id="mes-sig" aria-label="Mes siguiente"' + (st.mes >= max ? ' disabled' : '') + '>›</button></div></div>';
     html += '<div class="rejilla">' + SEM.map(function (s) { return '<div class="sem">' + s + '</div>'; }).join('');
@@ -1190,10 +1404,10 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
       var f = iso(d), ps = porDia[f] || [];
       var cls = 'celda' + (d.getMonth() !== m ? ' fuera-mes' : '') + (f === hoy ? ' hoy' : '') + (ps.length ? ' con-partidos' : '');
-      html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' + MESES[d.getMonth()] + ': ' + ps.length + ' partidos"' : '') + '>' +
+      html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' + MESES[d.getMonth()] + ': ' + plural(ps.length, 'partido', 'partidos') + '"' : '') + '>' +
         '<span class="num">' + d.getDate() + '</span>';
       ps.slice(0, 4).forEach(function (p) {
-        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v) + '"><b>' + (p.h ? esc(p.h) : '¿?') + '</b> ' +
+        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v) + '"><b>' + (conHora(p) ? esc(p.h) : '¿?') + '</b> ' +
           esc(nuestros(p).map(corto).join(' / ')) + '</span>';
       });
       if (ps.length > 4) html += '<span class="mas">+' + (ps.length - 4) + ' más</span>';
@@ -1201,28 +1415,42 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       html += '</div>';
     }
     main.innerHTML = html + '</div>';
-    function mover(delta) {
+    function mover(delta, id) {
       var nd = new Date(y, m + delta, 1);
       st.mes = nd.getFullYear() + '-' + dos(nd.getMonth() + 1);
-      pintar();
+      pintar(id);
     }
-    var a = document.getElementById('mes-ant'), s = document.getElementById('mes-sig');
-    if (a) a.onclick = function () { mover(-1); };
-    if (s) s.onclick = function () { mover(1); };
+    var a = $('mes-ant'), s = $('mes-sig');
+    if (a) a.onclick = function () { mover(-1, 'mes-ant'); };
+    if (s) s.onclick = function () { mover(1, 'mes-sig'); };
+    return enMes;
+  }
+
+  function anunciar(n) {
+    var partes = [st.eq.length ? 'Equipos: ' + st.eq.map(corto).join(', ') : 'Todos los equipos'];
+    if (st.vista === 'lista') partes.push(st.per === 'proximos' ? 'próximos partidos' : 'toda la temporada');
+    if (st.cond !== 'todos') partes.push(st.cond === 'local' ? 'solo como local' : 'solo como visitante');
+    $('estado').textContent = plural(n, 'partido', 'partidos') + ' · ' + partes.join(' · ');
+    $('filtro-imp').textContent = partes.join(' · ') + ' · actualizado el ' + D.generado;
   }
 
   function irADia(f) {
     st.vista = 'lista';
-    if (f < hoy) st.per = 'todo';
+    if (f < hoy) st.per = 'todo';   // solo para esta visita: no se guarda como preferencia
     guardar(); pintar();
-    var el = document.getElementById('d-' + f);
+    var el = $('d-' + f);
     if (!el) return;
     var barra = document.querySelector('.filtros');
     var tapa = getComputedStyle(barra).position === 'sticky' ? barra.offsetHeight : 0;
     window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset - tapa - 8);
+    var h = el.querySelector('.dia-cabecera');
+    if (h) h.focus({ preventScroll: true });
   }
   main.addEventListener('click', function (ev) {
-    if (ev.target.id === 'quitar') { st.eq = []; st.cond = 'todos'; st.per = 'todo'; guardar(); pintarChips(); pintar(); return; }
+    if (ev.target.id === 'quitar') {
+      st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
+      guardar(); marcarChips(); pintar(); return;
+    }
     var c = ev.target.closest('[data-ir]'); if (c) irADia(c.getAttribute('data-ir'));
   });
   main.addEventListener('keydown', function (ev) {
@@ -1230,22 +1458,29 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var c = ev.target.closest('[data-ir]'); if (c) { ev.preventDefault(); irADia(c.getAttribute('data-ir')); }
   });
 
-  function pintar() {
+  function pintar(foco) {
     marcarSegmentos();
-    if (st.vista === 'mes') pintarMes(); else pintarLista();
+    var n = st.vista === 'mes' ? pintarMes() : pintarLista();
+    anunciar(n);
+    if (foco) { var el = $(foco); if (el && !el.disabled) el.focus(); }
   }
 
-  // Pie: calendarios por equipo
+  // Pie: calendario de cada equipo
   var li = D.equipos.filter(function (e) { return e.ics; }).map(function (e) {
-    var href = enWeb ? urlSuscripcion(e.ics) : encodeURI(e.ics);
-    return '<li><a href="' + esc(href) + '">' + esc(e.n) + '</a> · ' + esc(e.cat) + '</li>';
+    var cab = '<b>' + esc(e.n) + '</b> · ' + esc(e.cat) + (e.np ? '' : ' <span class="sin">(aún sin partidos publicados)</span>');
+    if (pub) {
+      return '<li>' + cab + '<br><a href="' + esc(urlWebcal(e.ics)) + '">iPhone / Outlook</a> · <a href="' + esc(urlGoogle(e.ics)) +
+        '" target="_blank" rel="noopener">Google Calendar</a> · <a href="' + esc(urlHttps(e.ics)) + '">dirección</a></li>';
+    }
+    return '<li>' + cab + ' · <a href="' + esc(encodeURI(e.ics)) + '">archivo .ics</a></li>';
   });
-  if (li.length) document.getElementById('lista-ics').innerHTML = li.join('');
-  else document.getElementById('bloque-equipos').classList.add('oculto');
-  document.getElementById('pie').textContent = 'Datos de la Federación Galega de Voleibol (volei.gal · iSquad), actualizados el ' + D.generado +
-    '. Los horarios pueden cambiar: vuelve a generar el calendario antes de cada fin de semana.';
+  if (li.length) $('lista-ics').innerHTML = li.join('');
+  else $('bloque-equipos').classList.add('oculto');
+  $('pie').textContent = 'Datos de la Federación Galega de Voleibol (volei.gal · iSquad), actualizados el ' + D.generado + '. ' +
+    (enWeb ? 'Esta página se actualiza sola cada hora; los horarios pueden cambiar.' : 'Los horarios pueden cambiar: vuelve a generar el calendario antes de cada fin de semana.') +
+    ' Solo aparecen los partidos que publica la federación gallega.';
 
-  pintarChips();
+  marcarChips();
   pintar();
 })();
 </script>
@@ -1253,21 +1488,24 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 </html>
 '@
 
-function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [string]$Ics, [string]$Xlsx, [datetime]$Generado) {
-    $estado = @{ confirmada = 'c'; provisional = 'p'; pendiente = 'x' }
+function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [string]$Ics, [string]$Xlsx, [datetime]$Generado, [string]$UrlPublicada) {
+    $estado = @{ confirmada = 'c'; provisional = 'p'; sinhora = 'h'; pendiente = 'x' }
+    $pub = $null
+    if ($UrlPublicada -match '^(https?://.+/)([^/]+\.ics)$') { $pub = [ordered]@{ base = $Matches[1]; ics = $Matches[2] } }
     $datos = [ordered]@{
         club      = $NombreClub
         temporada = $Temp
         generado  = $Generado.ToString('dd/MM/yyyy HH:mm', $Script:Inv)
         ics       = $Ics
         xlsx      = $Xlsx
+        pub       = $pub
         equipos   = @($Equipos | ForEach-Object {
-            [ordered]@{ n = $_.Nombre; cat = $_.Categoria; ck = $_.ClaveCategoria; ics = $_.Ics }
+            [ordered]@{ n = $_.Nombre; cat = $_.Categoria; ck = $_.ClaveCategoria; ics = $_.Ics; np = @($_.Partidos).Count }
         })
         partidos  = @($Partidos | ForEach-Object {
             [ordered]@{
                 f    = $_.Fecha.ToString('yyyy-MM-dd', $Script:Inv)
-                h    = $(if ($_.Estado -eq 'pendiente') { '' } else { $_.Fecha.ToString('HH:mm', $Script:Inv) })
+                h    = $(if (Test-ConHora $_) { $_.Fecha.ToString('HH:mm', $Script:Inv) } else { '' })
                 e    = $estado[$_.Estado]
                 cat  = $_.Categoria
                 ck   = $_.ClaveCategoria
@@ -1282,32 +1520,16 @@ function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [stri
         })
     }
     $json = ConvertTo-Json -InputObject $datos -Depth 6 -Compress
-    # Dentro de <script> no puede aparecer "</script>" ni "<!--": se escapan todos los "<".
-    $json = $json.Replace('<', '<')
+    # Dentro de <script> no puede aparecer "</script>" ni "<!--": cada "<" se escribe con su escape JSON
+    # (barra invertida + u003c). Se construye por partes a propósito para que ningún editor lo convierta en "<".
+    $escapeMenor = ([string][char]92) + 'u003c'
+    $json = $json.Replace('<', $escapeMenor)
+    if ($json.IndexOf('<') -ge 0) { throw 'Error interno: quedan "<" sin escapar en los datos de la página.' }
     $titulo = [Net.WebUtility]::HtmlEncode("Partidos · $NombreClub · $Temp")
     return $Script:PlantillaHtml.Replace('__TITULO__', $titulo).Replace('__DATOS__', $json)
 }
 
 # --- Programa principal ------------------------------------------------------------------------
-
-function Get-RangoTemporada {
-    $hoy = (Get-Date).Date
-    $anio = if ($hoy.Month -ge 8) { $hoy.Year } else { $hoy.Year - 1 }
-    if ($Temporada) {
-        if ($Temporada -notmatch '^\s*(\d{4})') { throw "Temporada no válida: «$Temporada». Usa el formato 2026-27." }
-        $anio = [int]$Matches[1]
-    } elseif ($Desde) {
-        $d = Get-FechaParametro $Desde 'Desde'
-        $anio = if ($d.Month -ge 8) { $d.Year } else { $d.Year - 1 }
-    }
-    $inicio = New-Object DateTime($anio, 8, 1)
-    $fin = New-Object DateTime(($anio + 1), 7, 31)
-    if ($Desde) { $inicio = Get-FechaParametro $Desde 'Desde' }
-    if ($Hasta) { $fin = Get-FechaParametro $Hasta 'Hasta' }
-    if ($fin -lt $inicio) { throw 'La fecha «Hasta» es anterior a «Desde».' }
-    $etiqueta = '{0}/{1:00}' -f $anio, (($anio + 1) % 100)
-    return [pscustomobject]@{ Inicio = $inicio; Fin = $fin; Etiqueta = $etiqueta; Anio = $anio }
-}
 
 function Get-FechaParametro([string]$Valor, [string]$Nombre) {
     $d = [datetime]::MinValue
@@ -1317,92 +1539,114 @@ function Get-FechaParametro([string]$Valor, [string]$Nombre) {
     throw "Fecha «$Nombre» no válida: «$Valor». Usa el formato aaaa-mm-dd."
 }
 
-function Resolve-Clubs($Crudos, $Temp) {
-    # Devuelve los clubs (Id, Nombre) a usar: -Club, luego config.json y, si no hay, se pregunta.
-    $cfg = Read-Config
-
-    if ($Club) {
-        $catalogo = @(Get-CatalogoClubs $Crudos)
-        $elegidos = @()
-        foreach ($trozo in ($Club -split '[,;]')) {
-            $t = $trozo.Trim()
-            if (-not $t) { continue }
-            if ($t -match '^\d{5,}$') {
-                $c = @($catalogo | Where-Object { $_.Id -eq $t })
-                if ($c.Count) { $elegidos += $c[0] } else { $elegidos += [pscustomobject]@{ Id = $t; Nombre = "Club $t" } }
-                continue
-            }
-            $encontrados = @(Find-Clubs $catalogo $t)
-            if ($encontrados.Count -eq 1) { $elegidos += $encontrados[0] }
-            elseif ($encontrados.Count -eq 0) { throw "Ningún club ni equipo coincide con «$t». Usa -ListarClubs para ver los disponibles." }
-            elseif ($SinPreguntar) {
-                $nombres = ($encontrados | ForEach-Object { "    $($_.Id)  $($_.Nombre)" }) -join "`n"
-                throw "Hay varios clubs que coinciden con «$t»; indica el ID:`n$nombres"
-            } else {
-                $elegidos += @(Select-ClubInteractivo $encontrados $Temp '')
-            }
-        }
-        return ($elegidos | Sort-Object Id -Unique)
+function New-RangoTemporada([int]$Anio) {
+    $inicio = New-Object DateTime($Anio, 8, 1)
+    $fin = New-Object DateTime(($Anio + 1), 7, 31)
+    return [pscustomobject]@{
+        Anio = $Anio; Inicio = $inicio; Fin = $fin
+        Etiqueta = ('{0}/{1:00}' -f $Anio, (($Anio + 1) % 100))
+        Parcial = $false; Explicito = $false
     }
+}
 
-    if (-not $CambiarClub -and $cfg -and $cfg.clubs) {
-        $lista = @($cfg.clubs | Where-Object { $_.id } | ForEach-Object {
-            $nombre = if ($_.nombre) { [string]$_.nombre } else { "Club $($_.id)" }
-            [pscustomobject]@{ Id = [string]$_.id; Nombre = $nombre }
-        })
-        if ($lista.Count) { return $lista }
+function Get-RangoTemporada {
+    $dDesde = if ($Desde) { Get-FechaParametro $Desde 'Desde' } else { $null }
+    $dHasta = if ($Hasta) { Get-FechaParametro $Hasta 'Hasta' } else { $null }
+    if ($Temporada) {
+        if ($Temporada -notmatch '^\s*(\d{4})\s*(?:[-/]\s*(\d{2}|\d{4}))?\s*$') { throw "Temporada no válida: «$Temporada». Usa el formato 2026-27." }
+        $anio = [int]$Matches[1]
+        if ($Matches[2] -and ([int]$Matches[2] % 100) -ne (($anio + 1) % 100)) { throw "Temporada no válida: «$Temporada». El segundo año tiene que ser el siguiente (p. ej. 2026-27)." }
+        if ($anio -lt 2000 -or $anio -gt 2100) { throw "Temporada no válida: «$Temporada»." }
+    } elseif ($dDesde) { $anio = Get-AnioTemporada $dDesde }
+    elseif ($dHasta) { $anio = Get-AnioTemporada $dHasta }
+    else { $anio = Get-AnioTemporada (Get-Date) }
+
+    $rango = New-RangoTemporada $anio
+    $rango.Explicito = [bool]($Temporada -or $Desde -or $Hasta)
+    $temporadaIni = $rango.Inicio; $temporadaFin = $rango.Fin
+    if ($dDesde) { $rango.Inicio = $dDesde; $rango.Parcial = $true }
+    if ($dHasta) { $rango.Fin = $dHasta; $rango.Parcial = $true }
+    if ($rango.Inicio -lt $temporadaIni -or $rango.Fin -gt $temporadaFin) {
+        throw ("Las fechas tienen que estar dentro de la temporada {0} (del {1} al {2})." -f $rango.Etiqueta,
+            $temporadaIni.ToString('dd/MM/yyyy', $Script:Inv), $temporadaFin.ToString('dd/MM/yyyy', $Script:Inv))
     }
-
-    if ($SinPreguntar) { throw 'No hay ningún club configurado en config.json. Ejecuta sin -SinPreguntar o indica -Club.' }
-    $elegidos = @(Select-ClubInteractivo @(Get-CatalogoClubs $Crudos) $Temp '')
-    $dur = if ($cfg -and [int]$cfg.duracion_minutos -gt 0) { [int]$cfg.duracion_minutos } else { 120 }
-    Save-Config $elegidos $dur
-    Write-Host ''
-    Write-Host ("  Guardado en config.json: " + (($elegidos | ForEach-Object { $_.Nombre }) -join ' + ')) -ForegroundColor Green
-    return $elegidos
+    if ($rango.Fin -lt $rango.Inicio) {
+        throw ("La fecha final ({0}) es anterior a la inicial ({1})." -f $rango.Fin.ToString('dd/MM/yyyy', $Script:Inv), $rango.Inicio.ToString('dd/MM/yyyy', $Script:Inv))
+    }
+    return $rango
 }
 
 function Invoke-Principal {
     $generado = Get-Date
     $rango = Get-RangoTemporada
+    $cfg = Read-Config
 
     Write-Host ''
     Write-Host "  CALENDARIO DE VOLEIBOL · temporada $($rango.Etiqueta)" -ForegroundColor Cyan
     Write-Paso 'Descargando partidos de volei.gal...'
-    $crudos = @(Get-PartidosApi $rango.Inicio)
-    $finTexto = $rango.Fin.ToString('yyyy-MM-dd', $Script:Inv)
-    $enRango = @($crudos | Where-Object {
-        $f = [string]$_.fecha_calendario
-        -not $f -or [string]::CompareOrdinal($f, $finTexto) -le 0
+    # Se descarga también la temporada anterior: sirve para conocer todos los equipos del club y para
+    # no quedarse vacío en verano, antes de que la federación publique la temporada nueva.
+    $crudos = @(Get-PartidosApi (New-Object DateTime(($rango.Anio - 1), 8, 1)))
+    if ($crudos.Count -eq 0) {
+        throw 'La federación no ha devuelto ningún partido (ni de esta temporada ni de la anterior). Puede ser un fallo temporal de su web: inténtalo más tarde. No se ha cambiado ningún archivo.'
+    }
+    $iniTxt = (New-Object DateTime($rango.Anio, 8, 1)).ToString('yyyy-MM-dd', $Script:Inv)
+    $finTxt = (New-Object DateTime(($rango.Anio + 1), 7, 31)).ToString('yyyy-MM-dd', $Script:Inv)
+    $deTemporada = @($crudos | Where-Object {
+        $f = Get-FechaCruda $_
+        $f -and [string]::CompareOrdinal($f, $iniTxt) -ge 0 -and [string]::CompareOrdinal($f, $finTxt) -le 0
     })
-    Write-Paso ('{0} partidos publicados en Galicia desde el {1}.' -f $enRango.Count, $rango.Inicio.ToString('dd/MM/yyyy', $Script:Inv))
+    Write-Paso ('{0} partidos publicados en Galicia en la temporada {1}.' -f $deTemporada.Count, $rango.Etiqueta)
 
     if ($ListarClubs) {
-        Show-Catalogo @(Get-CatalogoClubs $enRango) $rango.Etiqueta
+        Show-Catalogo @(Get-CatalogoClubs $deTemporada $crudos) $rango.Etiqueta
         return
     }
 
-    $clubs = @(Resolve-Clubs $enRango $rango.Etiqueta)
+    $clubs = @(Resolve-Clubs $deTemporada $crudos $rango.Etiqueta $cfg)
     if (-not $clubs.Count) { throw 'No se ha elegido ningún club.' }
     $ids = New-Object 'Collections.Generic.HashSet[string]'
     foreach ($c in $clubs) { [void]$ids.Add([string]$c.Id) }
     $nombreClub = ($clubs | ForEach-Object { $_.Nombre }) -join ' + '
 
-    $cfg = Read-Config
-    $duracion = if ($DuracionMinutos -gt 0) { $DuracionMinutos } elseif ($cfg -and [int]$cfg.duracion_minutos -gt 0) { [int]$cfg.duracion_minutos } else { 120 }
+    $idsConPartidos = New-Object 'Collections.Generic.HashSet[string]'
+    foreach ($r in $crudos) { [void]$idsConPartidos.Add([string]$r.id_club_local); [void]$idsConPartidos.Add([string]$r.id_club_visitante) }
+    foreach ($c in $clubs) {
+        if (-not $idsConPartidos.Contains([string]$c.Id)) {
+            Write-Aviso "El club con ID $($c.Id) ($($c.Nombre)) no aparece en ningún partido de esta temporada ni de la anterior. Revisa el ID en config.json (-ListarClubs muestra los clubs)."
+        }
+    }
 
-    $partidos = @(ConvertTo-Partidos $enRango $ids $rango.Inicio $rango.Fin)
-    $equipos = @(Get-Equipos $partidos)
+    $duracion = if ($DuracionMinutos -gt 0) { $DuracionMinutos } else { Get-DuracionConfig $cfg }
+    $urlPublicada = if ($cfg -and $cfg.calendario_publicado) { [string]$cfg.calendario_publicado } else { '' }
+
+    $todos = @(ConvertTo-Partidos $crudos $ids)
+    $partidos = @($todos | Where-Object { $_.Fecha.Date -ge $rango.Inicio.Date -and $_.Fecha.Date -le $rango.Fin.Date })
+    $anteriores = @($todos | Where-Object { $_.Temporada -eq ($rango.Anio - 1) })
+    if (-not $rango.Explicito -and $partidos.Count -eq 0 -and $anteriores.Count -gt 0) {
+        Write-Aviso "Todavía no hay partidos de $nombreClub publicados para la temporada $($rango.Etiqueta)."
+        $rango = New-RangoTemporada ($rango.Anio - 1)
+        Write-Paso "Mientras tanto se genera el calendario de la temporada $($rango.Etiqueta)."
+        $partidos = $anteriores
+        $anteriores = @()
+    }
+    $equipos = @(Get-Equipos $partidos $anteriores)
 
     # Carpeta y nombres de archivo
     $carpetaSalida = if ($Salida) { Resolve-Ruta $Salida } else { Join-Path $Script:Carpeta 'calendario' }
     [void](New-Item -ItemType Directory -Force -Path $carpetaSalida)
     $etiquetaArchivo = $rango.Etiqueta.Replace('/', '-')
-    $base = if ($NombreBase) { Get-Slug $NombreBase } else { 'calendario-' + (Get-Slug ($clubs[0].Nombre)) + $(if ($clubs.Count -gt 1) { '-y-otros' } else { '' }) + "-$etiquetaArchivo" }
+    if ($NombreBase) {
+        $base = Get-Slug $NombreBase
+    } else {
+        $base = 'calendario-' + (Get-Slug ($clubs[0].Nombre)) + $(if ($clubs.Count -gt 1) { '-y-otros' } else { '' }) + "-$etiquetaArchivo"
+        if ($rango.Parcial) { $base += '-' + $rango.Inicio.ToString('yyyyMMdd', $Script:Inv) + '-' + $rango.Fin.ToString('yyyyMMdd', $Script:Inv) }
+    }
     $descripcion = "Partidos de $nombreClub (todas las categorías), temporada $($rango.Etiqueta). Fuente: Federación Galega de Voleibol."
 
-    # Un .ics por equipo
-    if (-not $SinEquipos -and $equipos.Count) {
+    # Un .ics por equipo (también para los equipos que aún no tienen partidos publicados)
+    $conEquipos = -not $SinEquipos -and -not $rango.Parcial -and $equipos.Count -gt 0
+    if ($conEquipos) {
         $carpetaEquipos = Join-Path $carpetaSalida 'equipos'
         [void](New-Item -ItemType Directory -Force -Path $carpetaEquipos)
         $usados = @{}
@@ -1410,47 +1654,61 @@ function Invoke-Principal {
             $slug = Get-Slug $e.Nombre
             if ($usados.ContainsKey($slug)) { $slug = "$slug-$(Get-Slug $e.Categoria)" }
             $usados[$slug] = $true
-            $contenido = New-Ics $e.Partidos "Voleibol · $($e.Nombre)" "Partidos de $($e.Nombre) ($($e.Categoria)), temporada $($rango.Etiqueta)." $duracion $generado
+            $contenido = New-Ics $e.Partidos "Voleibol · $($e.Nombre)" "Partidos de $($e.Nombre) ($($e.Categoria)), temporada $($rango.Etiqueta). Fuente: Federación Galega de Voleibol." $duracion $generado
             $ruta = Save-Texto (Join-Path $carpetaEquipos "$slug.ics") $contenido
             $e.Ics = 'equipos/' + (Split-Path $ruta -Leaf)
         }
     }
 
-    $rutaIcs = Save-Texto (Join-Path $carpetaSalida "$base.ics") (New-Ics $partidos "Voleibol · $nombreClub $($rango.Etiqueta)" $descripcion $duracion $generado)
-    $rutaXlsx = Save-Xlsx $partidos (Join-Path $carpetaSalida "$base.xlsx")
-    $html = New-Html $partidos $equipos $nombreClub $rango.Etiqueta (Split-Path $rutaIcs -Leaf) (Split-Path $rutaXlsx -Leaf) $generado
+    $rutaIcs = Save-Texto (Join-Path $carpetaSalida "$base.ics") (New-Ics $partidos "Voleibol · $nombreClub" $descripcion $duracion $generado)
+    $rutaXlsx = Save-Xlsx $partidos (Join-Path $carpetaSalida "$base.xlsx") $generado $nombreClub
+    $html = New-Html $partidos $equipos $nombreClub $rango.Etiqueta (Split-Path $rutaIcs -Leaf) (Split-Path $rutaXlsx -Leaf) $generado $urlPublicada
     $rutaHtml = Save-Texto (Join-Path $carpetaSalida "$base.html") $html
+    if ($Historial) { Save-Historial $partidos (Resolve-Ruta $Historial) $nombreClub $rango.Etiqueta }
 
     # Resumen en pantalla
-    $ahora = Get-Date
-    $proximos = @($partidos | Where-Object { $_.Fecha -ge $ahora.Date })
+    $hoy = (Get-Date).Date
+    $proximos = @($partidos | Where-Object { $_.Fecha -ge $hoy })
+    $conPartidos = @($equipos | Where-Object { @($_.Partidos).Count -gt 0 }).Count
     Write-Host ''
     Write-Host "  $nombreClub" -ForegroundColor White
     if (-not $partidos.Count) {
-        Write-Aviso "Todavía no hay partidos publicados de este club para la temporada $($rango.Etiqueta)."
-        Write-Paso 'La federación los va publicando poco a poco: vuelve a ejecutarlo más adelante.'
+        if ($rango.Parcial) {
+            Write-Aviso ('No hay partidos de este club entre el {0} y el {1}.' -f $rango.Inicio.ToString('dd/MM/yyyy', $Script:Inv), $rango.Fin.ToString('dd/MM/yyyy', $Script:Inv))
+        } else {
+            Write-Aviso "Todavía no hay partidos publicados de este club para la temporada $($rango.Etiqueta)."
+            Write-Paso 'La federación los va publicando poco a poco: vuelve a ejecutarlo más adelante.'
+        }
     } else {
-        Write-Paso ("{0} partidos ({1} por jugar) de {2} equipos." -f $partidos.Count, $proximos.Count, $equipos.Count)
+        Write-Paso ("{0} partidos ({1} por jugar) de {2} equipos." -f $partidos.Count, $proximos.Count, $conPartidos)
         $pendientes = @($proximos | Where-Object { $_.Estado -ne 'confirmada' }).Count
-        if ($pendientes) { Write-Paso "$pendientes partido(s) con la hora aún sin confirmar." }
+        if ($pendientes) { Write-Paso "$pendientes partido(s) con la fecha o la hora aún sin confirmar." }
         if ($proximos.Count) {
             Write-Host ''
             Write-Host '  Próximos partidos:' -ForegroundColor Cyan
             foreach ($p in ($proximos | Select-Object -First 12)) {
-                $hora = if ($p.Estado -eq 'pendiente') { '--:--' } else { $p.Fecha.ToString('HH:mm', $Script:Inv) }
-                $cond = $p.Condicion
-                Write-Host ('  {0,-10} {1,-6} {2,-14} {3} - {4}  [{5}]' -f (Format-FechaCorta $p.Fecha), $hora, $p.Categoria, $p.Local, $p.Visitante, $cond)
+                $hora = if (Test-ConHora $p) { $p.Fecha.ToString('HH:mm', $Script:Inv) } else { '--:--' }
+                Write-Host ('  {0,-10} {1,-6} {2,-14} {3} - {4}  [{5}]' -f (Format-FechaCorta $p.Fecha), $hora, $p.Categoria, $p.Local, $p.Visitante, $p.Condicion)
             }
             if ($proximos.Count -gt 12) { Write-Paso "... y $($proximos.Count - 12) más (míralos en la página HTML)." }
         }
     }
+    $sinPartidos = @($equipos | Where-Object { @($_.Partidos).Count -eq 0 })
+    if ($sinPartidos.Count -and $conEquipos) {
+        Write-Paso ('Equipos aún sin partidos publicados: ' + (($sinPartidos | ForEach-Object { $_.Nombre }) -join ', ') + '.')
+    }
 
+    $sep = [IO.Path]::DirectorySeparatorChar
     Write-Host ''
     Write-Host "  Archivos generados en: $carpetaSalida" -ForegroundColor Green
-    Write-Host "    $(Split-Path $rutaIcs -Leaf)   <- importar en Google Calendar / Outlook / móvil"
     Write-Host "    $(Split-Path $rutaHtml -Leaf)  <- abrir en el navegador (lista, mes, imprimir)"
+    Write-Host "    $(Split-Path $rutaIcs -Leaf)   <- calendario para importar (copia fija)"
     Write-Host "    $(Split-Path $rutaXlsx -Leaf)  <- Excel"
-    if (-not $SinEquipos -and $equipos.Count) { Write-Host "    equipos\  <- un calendario .ics por equipo ($($equipos.Count))" }
+    if ($conEquipos) { Write-Host "    equipos$sep  <- un calendario .ics por equipo ($($equipos.Count))" }
+    if ($urlPublicada) {
+        Write-Host ''
+        Write-Host "  Calendario en internet (se actualiza solo): $urlPublicada" -ForegroundColor Green
+    }
 
     if ($Abrir -and $env:OS -eq 'Windows_NT') {
         try { Invoke-Item -LiteralPath $rutaHtml } catch { Write-Aviso 'No se pudo abrir la página automáticamente.' }

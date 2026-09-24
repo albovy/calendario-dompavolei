@@ -1,17 +1,19 @@
-# Genera el calendario de Dompavolei varias veces al día y lo publica en GitHub Pages.
+# Genera el calendario de Dompavolei cada hora y lo publica en GitHub Pages.
 # Este archivo va en el repositorio como: .github/workflows/calendario.yml
 
 name: Calendario Dompavolei
 
 on:
   schedule:
-    - cron: '17 5,11,17 * * *'   # a las 7:17, 13:17 y 19:17 (hora de verano en Galicia)
+    - cron: '17 8-23 * * *'       # cada hora, de 8:17 a 23:17
+      timezone: 'Europe/Madrid'   # hora de Galicia, también en invierno
   workflow_dispatch:              # botón "Run workflow" para actualizar a mano
   push:
     branches: [main]
+    paths-ignore: ['historial/**']
 
 permissions:
-  contents: read
+  contents: write                 # para guardar el historial de cambios
   pages: write
   id-token: write
 
@@ -28,20 +30,45 @@ jobs:
     env:
       TZ: Europe/Madrid
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+
+      - id: pages
+        uses: actions/configure-pages@v6
 
       - name: Generar calendario
         shell: pwsh
-        run: ./calendario-voley.ps1 -SinPreguntar -Salida web -NombreBase calendario
+        run: ./calendario-voley.ps1 -SinPreguntar -Salida web -NombreBase calendario -Historial historial/partidos.txt
+
+      # Si la federación devolviera 0 partidos por un fallo, no se borra el calendario de los suscritos.
+      - name: Comprobar que no se publica un calendario vacío
+        run: |
+          nuevo=$(grep -c '^BEGIN:VEVENT' web/calendario.ics || true)
+          antes=$(curl -fsS "${{ steps.pages.outputs.base_url }}/calendario.ics" 2>/dev/null | grep -c '^BEGIN:VEVENT' || true)
+          echo "Partidos ahora: ${nuevo:-0} · publicados: ${antes:-0}"
+          if [ "${nuevo:-0}" -eq 0 ] && [ "${antes:-0}" -gt 0 ]; then
+            echo "::error::La federación ha devuelto 0 partidos del club y la web tiene ${antes}. No se publica."
+            exit 1
+          fi
 
       - name: Página de inicio
         run: cp web/calendario.html web/index.html
 
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: web
 
       - id: despliegue
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
+      # Guarda la lista de partidos solo cuando cambia. Deja un historial de cambios y mantiene el
+      # repositorio activo (GitHub pausa las tareas programadas tras 60 días sin commits).
+      - name: Guardar historial de cambios
+        continue-on-error: true
+        run: |
+          git add historial/partidos.txt
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Cambios en el calendario de la federación'
+            git push
+          fi
