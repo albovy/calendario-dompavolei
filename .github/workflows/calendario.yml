@@ -60,12 +60,14 @@ jobs:
       - id: despliegue
         uses: actions/deploy-pages@v5
 
-      # Guarda la lista de partidos solo cuando cambia. Deja un historial de cambios y mantiene el
-      # repositorio activo (GitHub pausa las tareas programadas tras 60 días sin commits).
+      # Guarda la lista de partidos (y los tiempos de viaje calculados) solo cuando cambian. Deja un
+      # historial de cambios y mantiene el repositorio activo (GitHub pausa las tareas programadas
+      # tras 60 días sin commits).
       - name: Guardar historial de cambios
         continue-on-error: true
         run: |
           git add historial/partidos.txt
+          [ -f pabellones.json ] && git add pabellones.json
           if ! git diff --cached --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

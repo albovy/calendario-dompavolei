@@ -89,7 +89,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'   # la barra de progreso hace muy lenta la descarga en PowerShell 5.1
 try {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    # Con "SystemDefault" (Windows 10/11 al día) Windows ya elige TLS 1.2/1.3: no se toca. En equipos
+    # antiguos se añaden TLS 1.2 y, si existe, TLS 1.3 (el servicio de rutas no acepta versiones viejas).
+    $protocolos = [Net.ServicePointManager]::SecurityProtocol
+    if ([int]$protocolos -ne 0) {
+        $protocolos = $protocolos -bor [Net.SecurityProtocolType]::Tls12
+        try { $protocolos = $protocolos -bor [Net.SecurityProtocolType]'Tls13' } catch { }
+        [Net.ServicePointManager]::SecurityProtocol = $protocolos
+    }
 } catch { }
 
 # --- Constantes --------------------------------------------------------------------------------
@@ -474,6 +481,7 @@ function Save-Config($Clubs, [int]$Duracion, $Cfg) {
         duracion_minutos = $Duracion
     }
     if ($Cfg -and $Cfg.calendario_publicado) { $nuevo.calendario_publicado = [string]$Cfg.calendario_publicado }
+    if ($Cfg -and $Cfg.salidas) { $nuevo.salidas = $Cfg.salidas }
     [IO.File]::WriteAllText($Script:RutaConfig, (ConvertTo-Json -InputObject $nuevo -Depth 4), $Script:Utf8)
 }
 
@@ -588,6 +596,17 @@ function ConvertTo-Partidos($Crudos, $IdsClub) {
             OrdenCategoria = $cat.Orden
             Pabellon       = $pab
             Uid            = ''
+            # Los rellena Add-Salidas si config.json tiene "salidas".
+            Inicio         = $fecha
+            Salida         = $null
+            Calentamiento  = $null
+            ViajeMin       = $null
+            ViajeFuente    = ''
+            EnCasa         = $false
+            Municipio      = ''
+            Km             = $null
+            Segundo        = $false
+            SalidaPrimero  = $null
         })
     }
     if ($sinFecha -gt 0) { Write-Aviso "$sinFecha partido(s) sin fecha no se han incluido." }
@@ -637,6 +656,273 @@ function Get-Equipos($Partidos, $Anteriores) {
     $equipos | Sort-Object OrdenCategoria, Categoria, Nombre
 }
 
+# --- Hora de salida (viaje en bus + calentamiento) ----------------------------------------------
+#
+# Con "salidas" en config.json, cada partido con hora lleva también la hora de salida en bus desde el
+# pabellón del club: salida = partido - calentamiento - viaje en bus. En casa, el evento empieza a la
+# hora de calentamiento. El pabellón de cada partido se localiza con las coordenadas que publica la
+# federación y el tiempo por carretera se calcula con OSRM (OpenStreetMap). Los resultados se guardan
+# en pabellones.json para no repetir consultas.
+
+$Script:RutaCachePabellones = Join-Path $Script:Carpeta 'pabellones.json'
+$Script:PalabrasGenericas = @('PISTA', 'PABELLON', 'PAVILLON', 'POLIDEPORTIVO', 'MUNICIPAL', 'CAMPO', 'CAMPO1', 'CENTRAL', 'ANEXO',
+    'PM', 'DE', 'DO', 'DA', 'DOS', 'DAS', 'DEL', 'LOS', 'LAS', 'LA', 'EL', 'O', 'A', 'OS', 'AS', 'E', 'Y')
+
+function ConvertTo-Numero($Valor, $Defecto) {
+    if ($null -eq $Valor -or [string]$Valor -eq '') { return $Defecto }
+    if ($Valor -is [ValueType]) { return [double]$Valor }
+    $n = 0.0
+    if ([double]::TryParse(([string]$Valor).Replace(',', '.'), [Globalization.NumberStyles]::Float, $Script:Inv, [ref]$n)) { return $n }
+    return $Defecto
+}
+
+function Get-ConfigSalidas($Cfg) {
+    if (-not $Cfg -or -not $Cfg.salidas) { return $null }
+    $s = $Cfg.salidas
+    $lat = ConvertTo-Numero $s.latitud $null
+    $lon = ConvertTo-Numero $s.longitud $null
+    if ($null -eq $lat -or $null -eq $lon) {
+        Write-Aviso 'config.json: faltan "latitud" y "longitud" del pabellón de salida; no se calculan las horas de salida.'
+        return $null
+    }
+    $manual = @{}
+    if ($s.tiempos_viaje_minutos) {
+        foreach ($p in $s.tiempos_viaje_minutos.PSObject.Properties) {
+            $m = ConvertTo-Numero $p.Value $null
+            if ($null -ne $m -and $m -ge 0) { $manual[(Get-Clave $p.Name)] = [int]$m }
+            else { Write-Aviso "config.json: el tiempo de viaje de «$($p.Name)» no es un número de minutos; se ignora." }
+        }
+    }
+    return [pscustomobject]@{
+        Origen        = $(if ($s.origen) { [string]$s.origen } else { 'el pabellón del club' })
+        Lat           = [double]$lat
+        Lon           = [double]$lon
+        Calentamiento = [int](ConvertTo-Numero $s.calentamiento_minutos 60)
+        FactorBus     = [double](ConvertTo-Numero $s.factor_bus 1.25)
+        Margen        = [int](ConvertTo-Numero $s.margen_minutos 0)
+        # El viaje se redondea hacia arriba y la salida hacia abajo (a cuartos de hora): siempre con margen.
+        RedondeoViaje = [Math]::Max(1, [int](ConvertTo-Numero $s.redondeo_viaje_minutos 15))
+        Redondeo      = [Math]::Max(1, [int](ConvertTo-Numero $s.redondeo_salida_minutos 15))
+        RadioCasaKm   = [double](ConvertTo-Numero $s.radio_casa_km 1)
+        Manual        = $manual
+    }
+}
+
+function Get-DistanciaKm([double]$Lat1, [double]$Lon1, [double]$Lat2, [double]$Lon2) {
+    $rad = [Math]::PI / 180
+    $dLat = ($Lat2 - $Lat1) * $rad
+    $dLon = ($Lon2 - $Lon1) * $rad
+    $a = [Math]::Pow([Math]::Sin($dLat / 2), 2) + [Math]::Cos($Lat1 * $rad) * [Math]::Cos($Lat2 * $rad) * [Math]::Pow([Math]::Sin($dLon / 2), 2)
+    return 2.0 * 6371.0 * [Math]::Asin([Math]::Min([double]1.0, [Math]::Sqrt($a)))
+}
+
+function Format-Duracion([int]$Minutos) {
+    $h = [Math]::Floor($Minutos / 60); $m = $Minutos % 60
+    if ($h -eq 0) { return "$m min" }
+    if ($m -eq 0) { return "$h h" }
+    return "$h h $m min"
+}
+
+function Read-CachePabellones {
+    $cache = @{}
+    if (Test-Path -LiteralPath $Script:RutaCachePabellones) {
+        try {
+            $obj = Get-Content -LiteralPath $Script:RutaCachePabellones -Raw -Encoding UTF8 | ConvertFrom-Json
+            foreach ($p in $obj.PSObject.Properties) { $cache[$p.Name] = $p.Value }
+        } catch { Write-Aviso 'pabellones.json no se puede leer; se volverán a calcular los viajes.' }
+    }
+    return $cache
+}
+
+function Save-CachePabellones($Cache) {
+    $ordenado = [ordered]@{}
+    foreach ($k in ($Cache.Keys | Sort-Object)) { $ordenado[$k] = $Cache[$k] }
+    [IO.File]::WriteAllText($Script:RutaCachePabellones, (ConvertTo-Json -InputObject $ordenado -Depth 4), $Script:Utf8)
+}
+
+function Get-CamposFederacion([datetime]$Desde) {
+    # Lista de pabellones de la federación (id, nombre, municipio).
+    try {
+        $json = Invoke-Isquad 'json/pabellones_consultas.php' @{
+            accion = 'obtener_pabellones'; id_ambito = $Script:Ambito; fecha_actual = $Desde.ToString('yyyy-MM-dd', $Script:Inv)
+        }
+        foreach ($c in @(($json | ConvertFrom-Json).data)) {
+            if (-not $c -or -not $c.id_campo) { continue }
+            $nombre = ConvertTo-UnaLinea $c.nombre
+            [pscustomobject]@{ Id = [string]$c.id_campo; Nombre = $nombre; Municipio = (ConvertTo-UnaLinea $c.municipio); Clave = (Get-Clave $nombre) }
+        }
+    } catch {
+        Write-Aviso 'No se pudo descargar la lista de pabellones de la federación; algunas horas de salida quedarán sin calcular.'
+    }
+}
+
+function Find-Campos([string]$Nombre, $Campos) {
+    # Pabellones de la federación que corresponden al nombre que aparece en el partido, del más probable al menos.
+    $clave = Get-Clave $Nombre
+    if (-not $clave) { return }
+    $exactos = @($Campos | Where-Object { $_.Clave -eq $clave })
+    if ($exactos.Count) { return $exactos }
+    $prefijos = @($Campos | Where-Object { $clave.StartsWith($_.Clave + ' ') -or $_.Clave.StartsWith($clave + ' ') } | Sort-Object { $_.Clave.Length } -Descending)
+    if ($prefijos.Count) { return $prefijos }
+    # Por palabras significativas (sin "PISTA", "PABELLÓN", números...).
+    $significativas = { param($k) @($k -split ' ' | Where-Object { $_ -and $_ -notmatch '^\d+$' -and $Script:PalabrasGenericas -notcontains $_ }) }
+    $mias = & $significativas $clave
+    if (-not $mias.Count) { return }
+    $puntuados = foreach ($c in $Campos) {
+        $suyas = & $significativas $c.Clave
+        if (-not $suyas.Count) { continue }
+        $comunes = @($mias | Where-Object { $suyas -contains $_ }).Count
+        $p = $comunes / [Math]::Max($mias.Count, $suyas.Count)
+        if ($p -ge 0.6) { [pscustomobject]@{ Campo = $c; P = $p } }
+    }
+    $puntuados | Sort-Object P -Descending | ForEach-Object { $_.Campo }
+}
+
+function Get-CoordenadasCampo([string]$Id) {
+    try {
+        $obj = Invoke-Isquad 'json/pabellones_consultas.php' @{ accion = 'obtener_info_campo'; id = $Id } | ConvertFrom-Json
+        $filas = $obj.data
+        if ($filas -is [string]) { $filas = $filas | ConvertFrom-Json }
+        foreach ($f in @($filas)) {
+            $lat = ConvertTo-Numero $f.latitud $null
+            $lon = ConvertTo-Numero $f.longitud $null
+            if ($null -ne $lat -and $null -ne $lon -and ($lat -ne 0 -or $lon -ne 0)) { return [pscustomobject]@{ Lat = $lat; Lon = $lon } }
+        }
+    } catch { }
+    return $null
+}
+
+function Get-RutaCoche([double]$Lat1, [double]$Lon1, [double]$Lat2, [double]$Lon2) {
+    # Tiempo en coche por carretera (OSRM, servidor público de OpenStreetMap: una consulta por segundo como mucho).
+    $url = 'https://router.project-osrm.org/route/v1/driving/{0},{1};{2},{3}?overview=false' -f `
+        $Lon1.ToString($Script:Inv), $Lat1.ToString($Script:Inv), $Lon2.ToString($Script:Inv), $Lat2.ToString($Script:Inv)
+    try {
+        Start-Sleep -Milliseconds 1100
+        $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 -UserAgent 'calendario-voley/1.0'
+        $obj = $Script:Utf8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
+        if ($obj.code -eq 'Ok' -and @($obj.routes).Count) {
+            $ruta = @($obj.routes)[0]
+            return [pscustomobject]@{ Km = [Math]::Round($ruta.distance / 1000, 1); Minutos = [int][Math]::Ceiling($ruta.duration / 60); Fuente = 'osrm' }
+        }
+    } catch { }
+    # Sin servicio de rutas: estimación a partir de la distancia en línea recta (se reintenta otro día).
+    $km = (Get-DistanciaKm $Lat1 $Lon1 $Lat2 $Lon2) * 1.35
+    return [pscustomobject]@{ Km = [Math]::Round($km, 1); Minutos = [int][Math]::Ceiling($km / 70 * 60); Fuente = 'estimado' }
+}
+
+function Resolve-Pabellones($Partidos, $Cfg, [datetime]$DesdeCampos) {
+    # Coordenadas y tiempo en coche desde el origen para cada pabellón de los partidos (con caché).
+    $cache = Read-CachePabellones
+    $origen = '{0},{1}' -f $Cfg.Lat.ToString($Script:Inv), $Cfg.Lon.ToString($Script:Inv)
+    $hoyTxt = (Get-Date).ToString('yyyy-MM-dd', $Script:Inv)
+    $campos = $null
+    $cambios = $false
+    foreach ($n in @($Partidos | Where-Object { $_.Pabellon -and (Test-ConHora $_) } | ForEach-Object { $_.Pabellon } | Sort-Object -Unique)) {
+        $e = $cache[$n]
+        if ($e -and $e.origen -eq $origen -and ($e.fuente -eq 'osrm' -or $e.fecha -eq $hoyTxt)) { continue }   # al día (o ya reintentado hoy)
+        $lat = $null; $lon = $null; $idCampo = ''; $municipio = ''
+        if ($e -and $null -ne $e.lat) {
+            $lat = [double]$e.lat; $lon = [double]$e.lon; $idCampo = [string]$e.id_campo; $municipio = [string]$e.municipio
+        } else {
+            if ($null -eq $campos) { $campos = @(Get-CamposFederacion $DesdeCampos) }
+            foreach ($c in @(Find-Campos $n $campos)) {
+                $coord = Get-CoordenadasCampo $c.Id
+                if ($coord) { $lat = $coord.Lat; $lon = $coord.Lon; $idCampo = $c.Id; $municipio = $c.Municipio; break }
+            }
+        }
+        if ($null -eq $lat) {
+            $cache[$n] = [ordered]@{ fuente = 'sin-datos'; origen = $origen; fecha = $hoyTxt }
+        } else {
+            $ruta = Get-RutaCoche $Cfg.Lat $Cfg.Lon $lat $lon
+            $cache[$n] = [ordered]@{
+                id_campo = $idCampo; municipio = $municipio; lat = $lat; lon = $lon
+                km = $ruta.Km; minutos_coche = $ruta.Minutos; fuente = $ruta.Fuente; origen = $origen; fecha = $hoyTxt
+            }
+        }
+        $cambios = $true
+    }
+    if ($cambios) {
+        try { Save-CachePabellones $cache } catch { Write-Aviso "No se pudo guardar pabellones.json: $($_.Exception.Message)" }
+    }
+    return $cache
+}
+
+function Add-Salidas($Partidos, $Pabellones, $Cfg) {
+    # Calcula calentamiento, viaje en bus y salida de cada partido con hora.
+    $primeros = @{}
+    foreach ($p in @($Partidos | Sort-Object Fecha)) {
+        if (-not (Test-ConHora $p)) { continue }
+        $e = if ($p.Pabellon) { $Pabellones[$p.Pabellon] } else { $null }
+        $viaje = $null; $casa = $false
+        if ($e -and $null -ne $e.lat) {
+            $p.Municipio = [string]$e.municipio
+            $p.Km = $e.km
+            if ((Get-DistanciaKm $Cfg.Lat $Cfg.Lon ([double]$e.lat) ([double]$e.lon)) -le $Cfg.RadioCasaKm) { $casa = $true }
+            elseif ($null -ne $e.minutos_coche) {
+                $viaje = [int]([Math]::Ceiling(([double]$e.minutos_coche) * $Cfg.FactorBus / $Cfg.RedondeoViaje) * $Cfg.RedondeoViaje)
+                $p.ViajeFuente = [string]$e.fuente
+            }
+        }
+        # Un tiempo puesto a mano en config.json manda sobre el calculado (0 = en casa).
+        $claveP = Get-Clave $p.Pabellon
+        foreach ($k in $Cfg.Manual.Keys) {
+            if ($claveP -and $k -and $claveP.Contains($k)) { $viaje = $Cfg.Manual[$k]; $casa = ($viaje -eq 0); $p.ViajeFuente = 'manual'; break }
+        }
+        $p.EnCasa = $casa
+        $p.ViajeMin = if ($casa) { $null } else { $viaje }
+        $p.Calentamiento = $p.Fecha.AddMinutes(-$Cfg.Calentamiento)
+
+        # Concentraciones: si el mismo equipo ya juega antes ese día en el mismo pabellón, no hay otra salida.
+        $grupo = '{0}|{1}|{2}' -f $p.Fecha.ToString('yyyyMMdd', $Script:Inv), ((@($p.Nuestros) | Sort-Object) -join '/'), $claveP
+        if ($primeros.ContainsKey($grupo)) {
+            $p.Segundo = $true
+            $p.SalidaPrimero = $primeros[$grupo]
+            $p.Inicio = $p.Fecha
+            continue
+        }
+        if ($casa) {
+            $p.Inicio = $p.Calentamiento
+        } elseif ($null -ne $viaje) {
+            $s = $p.Calentamiento.AddMinutes(-($viaje + $Cfg.Margen))
+            $s = $s.AddSeconds(-$s.Second).AddMinutes(-(($s.Hour * 60 + $s.Minute) % $Cfg.Redondeo))
+            $p.Salida = $s
+            $p.Inicio = $s
+        } else {
+            $p.Inicio = $p.Calentamiento
+        }
+        $primeros[$grupo] = $p
+    }
+}
+
+function Get-LineasSalida($P, $Cfg) {
+    # Líneas del detalle del evento con la salida, el viaje, el calentamiento y el partido.
+    if (-not $Cfg) { return }
+    if (-not (Test-ConHora $P)) { return 'La hora de salida se calculará cuando la federación publique la hora del partido.' }
+    $hm = { param($f) $f.ToString('HH:mm', $Script:Inv) }
+    if ($P.Segundo) {
+        $ref = $P.SalidaPrimero
+        $txt = '2º partido del día en este pabellón: se va con el primero'
+        if ($ref -and $ref.Salida) { $txt += ' (salida a las ' + (& $hm $ref.Salida) + ')' }
+        return @($txt, ('Partido: ' + (& $hm $P.Fecha)))
+    }
+    $lineas = @()
+    if ($P.EnCasa) {
+        $lineas += "En casa ($($Cfg.Origen))"
+    } elseif ($P.Salida) {
+        $lineas += "Salida en bus desde $($Cfg.Origen): " + (& $hm $P.Salida)
+        $donde = @()
+        if ($P.Municipio) { $donde += $P.Municipio }
+        if ($null -ne $P.Km) { $donde += ('{0} km' -f ([double]$P.Km).ToString('0', $Script:Inv)) }
+        $lineas += ('Viaje en bus: ' + (Format-Duracion $P.ViajeMin) + $(if ($P.ViajeFuente -eq 'manual') { '' } else { ' aprox.' }) +
+            $(if ($donde.Count) { ' (' + ($donde -join ', ') + ')' } else { '' }))
+    } else {
+        $lineas += 'Tiempo de viaje sin calcular para este pabellón (se puede poner a mano en config.json).'
+    }
+    $lineas += ('Calentamiento: ' + (& $hm $P.Calentamiento))
+    $lineas += ('Partido: ' + (& $hm $P.Fecha) + $(if ($P.Estado -eq 'provisional') { ' (provisional)' } else { '' }))
+    return $lineas
+}
+
 # --- ICS ---------------------------------------------------------------------------------------
 
 function ConvertTo-TextoIcs([string]$Texto) {
@@ -673,7 +959,7 @@ function Get-SufijoEstado($P) {
     }
 }
 
-function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [int]$Duracion, [datetime]$Generado) {
+function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [int]$Duracion, [datetime]$Generado, $Salidas) {
     $Partidos = @($Partidos)
     $sb = New-Object Text.StringBuilder
     $sello = $Generado.ToUniversalTime().ToString("yyyyMMdd'T'HHmmss'Z'", $Script:Inv)
@@ -716,7 +1002,12 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
 
     $actualizado = $Generado.ToString('dd/MM/yyyy HH:mm', $Script:Inv)
     foreach ($p in $Partidos) {
-        $titulo = "$($p.Categoria) · $($p.Local) - $($p.Visitante)" + (Get-SufijoEstado $p)
+        $conHora = Test-ConHora $p
+        $inicio = if ($conHora -and $p.Inicio) { $p.Inicio } else { $p.Fecha }
+        # El evento empieza a la hora de salida (o de calentamiento): el título lleva la hora del partido.
+        $titulo = $(if ($p.Salida) { [char]::ConvertFromUtf32(0x1F68C) + ' ' } else { '' }) + "$($p.Categoria) · $($p.Local) - $($p.Visitante)"
+        if ($conHora -and $inicio -ne $p.Fecha) { $titulo += ' · partido ' + $p.Fecha.ToString('HH:mm', $Script:Inv) }
+        $titulo += (Get-SufijoEstado $p)
         $juega = switch ($p.Condicion) {
             'local'     { "$($p.Local) juega como local" }
             'visitante' { "$($p.Visitante) juega como visitante" }
@@ -728,25 +1019,29 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
             'sinhora'     { 'Hora: por confirmar' }
             default       { 'Fecha y hora por confirmar: el día indicado es el de la jornada prevista' }
         }
-        $desc = @(
+        $lineasSalida = @(Get-LineasSalida $p $Salidas)
+        if ($lineasSalida.Count) { $lineasSalida += '' }
+        $desc = @(@($lineasSalida) + @(
             $juega,
             "Competición: $($p.Competicion)",
             "Categoría: $($p.Categoria)",
             "Local: $($p.Local)",
             "Visitante: $($p.Visitante)",
             "Pabellón: $(if ($p.Pabellon) { $p.Pabellon } else { 'por confirmar' })",
-            $cuando,
+            $(if ($Salidas -and $conHora) { $null } else { $cuando }),
             '',
             "Datos de la Federación Galega de Voleibol ($Script:UrlFuente), actualizados el $actualizado. Los horarios pueden cambiar."
-        ) -join "`n"
+        ) | Where-Object { $null -ne $_ }) -join "`n"
+        $lugar = $p.Pabellon
+        if ($lugar -and $p.Municipio -and (Get-Clave $lugar) -notmatch ('\b' + [regex]::Escape((Get-Clave $p.Municipio)) + '\b')) { $lugar += ", $($p.Municipio)" }
 
         Add-LineaIcs $sb 'BEGIN:VEVENT'
         Add-LineaIcs $sb "UID:$($p.Uid)"
         Add-LineaIcs $sb "DTSTAMP:$sello"
         Add-LineaIcs $sb "LAST-MODIFIED:$sello"
         Add-LineaIcs $sb "SEQUENCE:$secuencia"
-        if (Test-ConHora $p) {
-            Add-LineaIcs $sb ("DTSTART;TZID=$($Script:ZonaHoraria):" + $p.Fecha.ToString("yyyyMMdd'T'HHmmss", $Script:Inv))
+        if ($conHora) {
+            Add-LineaIcs $sb ("DTSTART;TZID=$($Script:ZonaHoraria):" + $inicio.ToString("yyyyMMdd'T'HHmmss", $Script:Inv))
             Add-LineaIcs $sb ("DTEND;TZID=$($Script:ZonaHoraria):" + $p.Fecha.AddMinutes($Duracion).ToString("yyyyMMdd'T'HHmmss", $Script:Inv))
             Add-LineaIcs $sb 'TRANSP:OPAQUE'
         } else {
@@ -755,7 +1050,7 @@ function New-Ics($Partidos, [string]$NombreCalendario, [string]$Descripcion, [in
             Add-LineaIcs $sb 'TRANSP:TRANSPARENT'
         }
         Add-LineaIcs $sb ('SUMMARY:' + (ConvertTo-TextoIcs $titulo))
-        if ($p.Pabellon) { Add-LineaIcs $sb ('LOCATION:' + (ConvertTo-TextoIcs $p.Pabellon)) }
+        if ($lugar) { Add-LineaIcs $sb ('LOCATION:' + (ConvertTo-TextoIcs $lugar)) }
         Add-LineaIcs $sb ('DESCRIPTION:' + (ConvertTo-TextoIcs $desc))
         Add-LineaIcs $sb ('CATEGORIES:' + (ConvertTo-TextoIcs $p.Categoria))
         Add-LineaIcs $sb ('STATUS:' + $(if ($p.Estado -eq 'confirmada') { 'CONFIRMED' } else { 'TENTATIVE' }))
@@ -776,21 +1071,41 @@ function ConvertTo-TextoXml([string]$Texto) {
 
 function Get-LetraColumna([int]$Indice) { return [string][char](65 + $Indice) }   # hasta 26 columnas
 
-function Save-Xlsx($Partidos, [string]$Ruta, [datetime]$Generado, [string]$NombreClub) {
+function Get-TextoSalida($P) {
+    if (-not (Test-ConHora $P)) { return '' }
+    if ($P.Segundo) { return '2º partido' }
+    if ($P.EnCasa) { return 'En casa' }
+    if ($P.Salida) { return $P.Salida.ToString('HH:mm', $Script:Inv) }
+    return 'Sin calcular'
+}
+
+function Save-Xlsx($Partidos, [string]$Ruta, [datetime]$Generado, [string]$NombreClub, $Salidas) {
     Add-Type -AssemblyName System.IO.Compression
-    # E = texto normal, A = ajustar texto (columnas largas). La hora es la columna 2 (estilo propio).
+    # T = título, A = ancho, E = estilo (0 normal, 1 fecha, 4 ajustar texto), V = valor de cada fila.
     $columnas = @(
-        @{ T = 'Fecha';             A = 11; E = 0 },
-        @{ T = 'Día';               A = 10; E = 0 },
-        @{ T = 'Hora';              A = 16; E = 0 },
-        @{ T = 'Equipo del club';   A = 22; E = 4 },
-        @{ T = 'Rival';             A = 34; E = 4 },
-        @{ T = 'Local / visitante'; A = 16; E = 0 },
-        @{ T = 'Categoría';         A = 13; E = 0 },
-        @{ T = 'Competición';       A = 30; E = 4 },
-        @{ T = 'Equipo local';      A = 32; E = 4 },
-        @{ T = 'Equipo visitante';  A = 32; E = 4 },
-        @{ T = 'Pabellón';          A = 38; E = 4 }
+        @{ T = 'Fecha';             A = 11; E = 1 },
+        @{ T = 'Día';               A = 10; E = 0; V = { param($p) $Script:Dias[[int]$p.Fecha.DayOfWeek] } }
+    )
+    if ($Salidas) {
+        $columnas += @(
+            @{ T = 'Salida (bus)';  A = 12; E = 0; V = { param($p) Get-TextoSalida $p } },
+            @{ T = 'Viaje en bus';  A = 13; E = 0; V = { param($p) if ($null -ne $p.ViajeMin -and -not $p.Segundo) { Format-Duracion $p.ViajeMin } else { '' } } },
+            @{ T = 'Calentamiento'; A = 14; E = 0; V = { param($p) if ($p.Calentamiento -and -not $p.Segundo) { $p.Calentamiento.ToString('HH:mm', $Script:Inv) } else { '' } } }
+        )
+    }
+    $columnas += @(
+        @{ T = $(if ($Salidas) { 'Partido' } else { 'Hora' }); A = 16; E = 0; Hora = $true; V = { param($p) Format-Hora $p } },
+        @{ T = 'Equipo del club';   A = 22; E = 4; V = { param($p) (@($p.Nuestros) | Sort-Object) -join ' / ' } },
+        @{ T = 'Rival';             A = 34; E = 4; V = { param($p) if ($p.Rival) { $p.Rival } else { '(derbi)' } } },
+        @{ T = 'Local / visitante'; A = 16; E = 0; V = { param($p) switch ($p.Condicion) { 'local' { 'Local' } 'visitante' { 'Visitante' } default { 'Derbi' } } } },
+        @{ T = 'Categoría';         A = 13; E = 0; V = { param($p) $p.Categoria } },
+        @{ T = 'Competición';       A = 30; E = 4; V = { param($p) $p.Competicion } },
+        @{ T = 'Pabellón';          A = 38; E = 4; V = { param($p) $p.Pabellon } }
+    )
+    if ($Salidas) { $columnas += @{ T = 'Municipio'; A = 18; E = 0; V = { param($p) $p.Municipio } } }
+    $columnas += @(
+        @{ T = 'Equipo local';      A = 32; E = 4; V = { param($p) $p.Local } },
+        @{ T = 'Equipo visitante';  A = 32; E = 4; V = { param($p) $p.Visitante } }
     )
     $ultima = Get-LetraColumna ($columnas.Count - 1)
     $filas = $Partidos.Count + 1
@@ -818,26 +1133,13 @@ function Save-Xlsx($Partidos, [string]$Ruta, [datetime]$Generado, [string]$Nombr
     $fila = 1
     foreach ($p in $Partidos) {
         $fila++
-        $cond = switch ($p.Condicion) { 'local' { 'Local' } 'visitante' { 'Visitante' } default { 'Derbi' } }
-        $valores = @(
-            $null,
-            $Script:Dias[[int]$p.Fecha.DayOfWeek],
-            (Format-Hora $p),
-            ((@($p.Nuestros) | Sort-Object) -join ' / '),
-            $(if ($p.Rival) { $p.Rival } else { '(derbi)' }),
-            $cond,
-            $p.Categoria,
-            $p.Competicion,
-            $p.Local,
-            $p.Visitante,
-            $p.Pabellon
-        )
         [void]$sb.Append("<row r=""$fila"">")
         $serial = $p.Fecha.Date.ToOADate().ToString($Script:Inv)
         [void]$sb.Append("<c r=""A$fila"" s=""1""><v>$serial</v></c>")
-        for ($c = 1; $c -lt $valores.Count; $c++) {
-            $estilo = if ($c -eq 2 -and $p.Estado -ne 'confirmada') { 3 } else { $columnas[$c].E }
-            [void]$sb.Append((& $celdaTexto ((Get-LetraColumna $c) + $fila) $valores[$c] $estilo))
+        for ($c = 1; $c -lt $columnas.Count; $c++) {
+            $col = $columnas[$c]
+            $estilo = if ($col.Hora -and $p.Estado -ne 'confirmada') { 3 } else { $col.E }
+            [void]$sb.Append((& $celdaTexto ((Get-LetraColumna $c) + $fila) ([string](& $col.V $p)) $estilo))
         }
         [void]$sb.Append('</row>')
     }
@@ -1017,6 +1319,11 @@ main { padding: 8px 0 40px; }
 .hora { font: 700 1.55rem/1 var(--cond); font-variant-numeric: tabular-nums; letter-spacing: .01em; padding-top: 2px; }
 .hora small { display: block; margin-top: 4px; font: 600 .78rem/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--c-cadete); }
 .hora.pendiente { font-size: .95rem; line-height: 1.1; text-transform: uppercase; letter-spacing: .05em; color: var(--c-cadete); padding-top: 4px; }
+.hora .etq { display: block; margin-bottom: 4px; font: 700 .72rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); }
+.hora .etq.bus { color: var(--pista); }
+@media (prefers-color-scheme: dark) { .hora .etq.bus { color: var(--balon); } }
+.hora small.partido-h { color: var(--tinta-2); font-weight: 600; letter-spacing: .03em; text-transform: none; font-size: .85rem; }
+.viaje { margin-top: 5px; font: 600 .95rem/1.3 var(--cond); letter-spacing: .02em; }
 .categoria { font: 700 .92rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
 .equipos { margin-top: 5px; font: 600 1.14rem/1.25 var(--cond); letter-spacing: .01em; }
 .equipos .vs { font-weight: 500; color: var(--tinta-2); margin: 0 6px; text-transform: lowercase; }
@@ -1275,7 +1582,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var txt = '<strong>' + plural(total, 'partido', 'partidos') + '</strong> · <strong>' + plural(conPartidos.length, 'equipo', 'equipos') + '</strong>';
     if (prox.length) {
       var p = prox[0], d = fechaDe(p.f);
-      var cuando = p.e === 'x' ? ' (fecha por confirmar)' : (conHora(p) ? ', ' + p.h : '');
+      var cuando = p.e === 'x' ? ' (fecha por confirmar)' : !conHora(p) ? '' :
+        (D.sal && p.s ? ' · salida ' + p.s + ' (partido ' + p.h + ')' : D.sal && p.casa ? ' · partido ' + p.h + ' (en casa)' : ', ' + p.h);
       txt += ' · Próximo: <strong>' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + esc(cuando) + '</strong>';
     } else {
       txt += ' · No quedan partidos por jugar';
@@ -1325,10 +1633,34 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     return '<div class="vacio"><p>' + esc(msg) + '</p>' + (boton ? '<button type="button" class="boton claro" id="quitar">' + esc(boton) + '</button>' : '') + '</div>';
   }
 
+  function duracion(min) {
+    var h = Math.floor(min / 60), m = min % 60;
+    return h ? h + ' h' + (m ? ' ' + m + ' min' : '') : m + ' min';
+  }
+  // Hora a la que empieza el día del equipo: salida en bus, calentamiento en casa o la del partido.
+  function horaInicio(p) {
+    if (!conHora(p)) return '';
+    if (D.sal && !p.seg) return p.s || p.ca || p.h;
+    return p.h;
+  }
   function textoHora(p) {
     if (p.e === 'x') return '<div class="hora pendiente">Fecha y hora por confirmar</div>';
     if (p.e === 'h') return '<div class="hora pendiente">Hora por confirmar</div>';
-    return '<div class="hora">' + esc(p.h) + (p.e === 'p' ? '<small>Provisional</small>' : '') + '</div>';
+    var prov = p.e === 'p' ? '<small>Provisional</small>' : '';
+    if (!D.sal) return '<div class="hora">' + esc(p.h) + prov + '</div>';
+    if (p.seg) return '<div class="hora"><span class="etq">2º partido</span>' + esc(p.h) + prov + '</div>';
+    var etq = p.s ? 'Salida' : 'Calentam.';
+    return '<div class="hora"><span class="etq' + (p.s ? ' bus' : '') + '">' + etq + '</span>' + esc(p.s || p.ca) +
+      '<small class="partido-h">Partido ' + esc(p.h) + '</small>' + prov + '</div>';
+  }
+  function textoViaje(p) {
+    if (!D.sal || !conHora(p)) return '';
+    var t;
+    if (p.seg) t = 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '');
+    else if (p.casa) t = 'En casa · calentamiento ' + p.ca;
+    else if (p.s) t = '🚌 ' + duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + p.mun : '') + ' · calentamiento ' + p.ca;
+    else t = 'Viaje sin calcular · calentamiento ' + p.ca;
+    return '<div class="viaje">' + esc(t) + '</div>';
   }
 
   function tarjeta(p, proximo) {
@@ -1336,11 +1668,11 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var v = p.vo ? '<span>' + esc(p.v) + '</span>' : '<span class="rival">' + esc(p.v) + '</span>';
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
     var pab = p.pab
-      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', Galicia') + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
+      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
       : 'Pabellón por confirmar';
     return '<article class="partido" data-cat="' + esc(p.ck) + '">' + textoHora(p) +
       '<div><div class="categoria">' + esc(p.cat) + (proximo ? '<span class="proximo-marca">Próximo</span>' : '') + '</div>' +
-      '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' +
+      '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' + textoViaje(p) +
       '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div></div>' +
       '<span class="condicion ' + esc(p.cond) + '">' + cond + '</span></article>';
   }
@@ -1407,7 +1739,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' + MESES[d.getMonth()] + ': ' + plural(ps.length, 'partido', 'partidos') + '"' : '') + '>' +
         '<span class="num">' + d.getDate() + '</span>';
       ps.slice(0, 4).forEach(function (p) {
-        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v) + '"><b>' + (conHora(p) ? esc(p.h) : '¿?') + '</b> ' +
+        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v + (conHora(p) ? ' · partido ' + p.h : '')) + '"><b>' +
+          (conHora(p) ? (p.s ? '🚌' : '') + esc(horaInicio(p)) : '¿?') + '</b> ' +
           esc(nuestros(p).map(corto).join(' / ')) + '</span>';
       });
       if (ps.length > 4) html += '<span class="mas">+' + (ps.length - 4) + ' más</span>';
@@ -1478,7 +1811,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   else $('bloque-equipos').classList.add('oculto');
   $('pie').textContent = 'Datos de la Federación Galega de Voleibol (volei.gal · iSquad), actualizados el ' + D.generado + '. ' +
     (enWeb ? 'Esta página se actualiza sola cada hora; los horarios pueden cambiar.' : 'Los horarios pueden cambiar: vuelve a generar el calendario antes de cada fin de semana.') +
-    ' Solo aparecen los partidos que publica la federación gallega.';
+    ' Solo aparecen los partidos que publica la federación gallega.' +
+    (D.sal ? ' Horas de salida desde ' + D.sal.origen + ': partido menos ' + D.sal.cal + ' min de calentamiento y el viaje en bus (tiempo por carretera de OpenStreetMap/OSRM, redondeado al alza).' : '');
 
   marcarChips();
   pintar();
@@ -1488,8 +1822,9 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 </html>
 '@
 
-function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [string]$Ics, [string]$Xlsx, [datetime]$Generado, [string]$UrlPublicada) {
+function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [string]$Ics, [string]$Xlsx, [datetime]$Generado, [string]$UrlPublicada, $Salidas) {
     $estado = @{ confirmada = 'c'; provisional = 'p'; sinhora = 'h'; pendiente = 'x' }
+    $hm = { param($f) if ($f) { ([datetime]$f).ToString('HH:mm', $Script:Inv) } else { '' } }
     $pub = $null
     if ($UrlPublicada -match '^(https?://.+/)([^/]+\.ics)$') { $pub = [ordered]@{ base = $Matches[1]; ics = $Matches[2] } }
     $datos = [ordered]@{
@@ -1499,6 +1834,7 @@ function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [stri
         ics       = $Ics
         xlsx      = $Xlsx
         pub       = $pub
+        sal       = $(if ($Salidas) { [ordered]@{ origen = $Salidas.Origen; cal = $Salidas.Calentamiento } } else { $null })
         equipos   = @($Equipos | ForEach-Object {
             [ordered]@{ n = $_.Nombre; cat = $_.Categoria; ck = $_.ClaveCategoria; ics = $_.Ics; np = @($_.Partidos).Count }
         })
@@ -1516,6 +1852,13 @@ function New-Html($Partidos, $Equipos, [string]$NombreClub, [string]$Temp, [stri
                 vo   = [bool]$_.EsVisitante
                 pab  = $_.Pabellon
                 cond = $_.Condicion
+                s    = (& $hm $_.Salida)
+                ca   = $(if ($_.Segundo) { '' } else { & $hm $_.Calentamiento })
+                vj   = $(if ($null -ne $_.ViajeMin -and -not $_.Segundo) { [int]$_.ViajeMin } else { 0 })
+                casa = [bool]$_.EnCasa
+                seg  = [bool]$_.Segundo
+                sp   = $(if ($_.SalidaPrimero) { & $hm $_.SalidaPrimero.Salida } else { '' })
+                mun  = [string]$_.Municipio
             }
         })
     }
@@ -1632,6 +1975,19 @@ function Invoke-Principal {
     }
     $equipos = @(Get-Equipos $partidos $anteriores)
 
+    # Horas de salida (si config.json tiene "salidas")
+    $salidas = Get-ConfigSalidas $cfg
+    if ($salidas -and $partidos.Count) {
+        Write-Paso "Calculando horas de salida desde $($salidas.Origen)..."
+        $pabellones = Resolve-Pabellones $partidos $salidas (New-Object DateTime(($rango.Anio - 1), 8, 1))
+        Add-Salidas $partidos $pabellones $salidas
+        $sinCalcular = @($partidos | Where-Object { (Test-ConHora $_) -and -not $_.EnCasa -and -not $_.Segundo -and $null -eq $_.ViajeMin } |
+            ForEach-Object { if ($_.Pabellon) { $_.Pabellon } else { '(sin pabellón)' } } | Sort-Object -Unique)
+        if ($sinCalcular.Count) {
+            Write-Aviso ('Sin tiempo de viaje para: ' + ($sinCalcular -join '; ') + '. Se puede poner a mano en config.json (salidas > tiempos_viaje_minutos).')
+        }
+    }
+
     # Carpeta y nombres de archivo
     $carpetaSalida = if ($Salida) { Resolve-Ruta $Salida } else { Join-Path $Script:Carpeta 'calendario' }
     [void](New-Item -ItemType Directory -Force -Path $carpetaSalida)
@@ -1654,15 +2010,15 @@ function Invoke-Principal {
             $slug = Get-Slug $e.Nombre
             if ($usados.ContainsKey($slug)) { $slug = "$slug-$(Get-Slug $e.Categoria)" }
             $usados[$slug] = $true
-            $contenido = New-Ics $e.Partidos "Voleibol · $($e.Nombre)" "Partidos de $($e.Nombre) ($($e.Categoria)), temporada $($rango.Etiqueta). Fuente: Federación Galega de Voleibol." $duracion $generado
+            $contenido = New-Ics $e.Partidos "Voleibol · $($e.Nombre)" "Partidos de $($e.Nombre) ($($e.Categoria)), temporada $($rango.Etiqueta). Fuente: Federación Galega de Voleibol." $duracion $generado $salidas
             $ruta = Save-Texto (Join-Path $carpetaEquipos "$slug.ics") $contenido
             $e.Ics = 'equipos/' + (Split-Path $ruta -Leaf)
         }
     }
 
-    $rutaIcs = Save-Texto (Join-Path $carpetaSalida "$base.ics") (New-Ics $partidos "Voleibol · $nombreClub" $descripcion $duracion $generado)
-    $rutaXlsx = Save-Xlsx $partidos (Join-Path $carpetaSalida "$base.xlsx") $generado $nombreClub
-    $html = New-Html $partidos $equipos $nombreClub $rango.Etiqueta (Split-Path $rutaIcs -Leaf) (Split-Path $rutaXlsx -Leaf) $generado $urlPublicada
+    $rutaIcs = Save-Texto (Join-Path $carpetaSalida "$base.ics") (New-Ics $partidos "Voleibol · $nombreClub" $descripcion $duracion $generado $salidas)
+    $rutaXlsx = Save-Xlsx $partidos (Join-Path $carpetaSalida "$base.xlsx") $generado $nombreClub $salidas
+    $html = New-Html $partidos $equipos $nombreClub $rango.Etiqueta (Split-Path $rutaIcs -Leaf) (Split-Path $rutaXlsx -Leaf) $generado $urlPublicada $salidas
     $rutaHtml = Save-Texto (Join-Path $carpetaSalida "$base.html") $html
     if ($Historial) { Save-Historial $partidos (Resolve-Ruta $Historial) $nombreClub $rango.Etiqueta }
 
@@ -1688,7 +2044,12 @@ function Invoke-Principal {
             Write-Host '  Próximos partidos:' -ForegroundColor Cyan
             foreach ($p in ($proximos | Select-Object -First 12)) {
                 $hora = if (Test-ConHora $p) { $p.Fecha.ToString('HH:mm', $Script:Inv) } else { '--:--' }
-                Write-Host ('  {0,-10} {1,-6} {2,-14} {3} - {4}  [{5}]' -f (Format-FechaCorta $p.Fecha), $hora, $p.Categoria, $p.Local, $p.Visitante, $p.Condicion)
+                $sal = ''
+                if ($salidas) {
+                    $t = Get-TextoSalida $p
+                    $sal = if ($p.Salida) { "salida $t" } elseif ($p.EnCasa) { 'en casa' } else { $t.ToLowerInvariant() }
+                }
+                Write-Host ('  {0,-10} {1,-6} {2,-13} {3,-12} {4} - {5}' -f (Format-FechaCorta $p.Fecha), $hora, $sal, $p.Categoria, $p.Local, $p.Visitante)
             }
             if ($proximos.Count -gt 12) { Write-Paso "... y $($proximos.Count - 12) más (míralos en la página HTML)." }
         }

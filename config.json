@@ -6,5 +6,17 @@
         }
     ],
     "duracion_minutos": 120,
-    "calendario_publicado": "https://albovy.github.io/calendario-dompavolei/calendario.ics"
+    "calendario_publicado": "https://albovy.github.io/calendario-dompavolei/calendario.ics",
+    "salidas": {
+        "origen": "Os Remedios",
+        "latitud": 42.3442759,
+        "longitud": -7.8713948,
+        "calentamiento_minutos": 60,
+        "factor_bus": 1.25,
+        "redondeo_viaje_minutos": 15,
+        "redondeo_salida_minutos": 15,
+        "margen_minutos": 0,
+        "tiempos_viaje_minutos": {
+        }
+    }
 }

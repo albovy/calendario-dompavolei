@@ -1,0 +1,57 @@
+{
+    "A PINGUELA - PISTA 1":  {
+                                 "id_campo":  "68",
+                                 "municipio":  "MONFORTE DE LEMOS",
+                                 "lat":  42.51356,
+                                 "lon":  -7.5242499999999994,
+                                 "km":  46.1,
+                                 "minutos_coche":  42,
+                                 "fuente":  "osrm",
+                                 "origen":  "42.3442759,-7.8713948",
+                                 "fecha":  "2026-09-24"
+                             },
+    "CARBALLO CALERO - PISTA CENTRAL":  {
+                                            "id_campo":  "30",
+                                            "municipio":  "CARBALLO",
+                                            "lat":  43.2172814,
+                                            "lon":  -8.696862,
+                                            "km":  151.1,
+                                            "minutos_coche":  120,
+                                            "fuente":  "osrm",
+                                            "origen":  "42.3442759,-7.8713948",
+                                            "fecha":  "2026-09-24"
+                                        },
+    "PABELLÓN COLEGIO SAN NARCISO - PISTA 1":  {
+                                                   "id_campo":  "151",
+                                                   "municipio":  "MARÍN",
+                                                   "lat":  42.3889848,
+                                                   "lon":  -8.7077729,
+                                                   "km":  103.7,
+                                                   "minutos_coche":  85,
+                                                   "fuente":  "osrm",
+                                                   "origen":  "42.3442759,-7.8713948",
+                                                   "fecha":  "2026-09-24"
+                                               },
+    "POLIDEPORTIVO DE LOS INSTITUTOS, PISTA 2":  {
+                                                     "id_campo":  "171",
+                                                     "municipio":  "LUGO",
+                                                     "lat":  43.0065845,
+                                                     "lon":  -7.5574764000000014,
+                                                     "km":  92.6,
+                                                     "minutos_coche":  73,
+                                                     "fuente":  "osrm",
+                                                     "origen":  "42.3442759,-7.8713948",
+                                                     "fecha":  "2026-09-24"
+                                                 },
+    "POLIDEPORTIVO TORRES COLOMER PISTA 1":  {
+                                                 "id_campo":  "142",
+                                                 "municipio":  "PALMEIRA",
+                                                 "lat":  42.581729,
+                                                 "lon":  -8.9609354,
+                                                 "km":  160.4,
+                                                 "minutos_coche":  111,
+                                                 "fuente":  "osrm",
+                                                 "origen":  "42.3442759,-7.8713948",
+                                                 "fecha":  "2026-09-24"
+                                             }
+}
