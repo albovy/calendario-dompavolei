@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>__TITULO__</title>
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700|big-shoulders-display:700,800&amp;display=swap">
+<style>
+:root {
+  --libre: #0A3A70;      /* zona libre alrededor de la pista */
+  --pista: #0E4C92;      /* azul de pista */
+  --balon: #FFC915;      /* amarillo balón: solo para lo más importante */
+  --balon-tinta: #2A2100;
+  --fondo: #EDF1F6;
+  --superficie: #FFFFFF;
+  --tinta: #0B1726;
+  --tinta-2: #4A5A6E;
+  --borde: #D5DDE8;
+  --visitante: #5B6B7F;
+  --foco: #0E4C92;
+  --c-benjamin: #8E44AD; --c-alevin: #0B7361; --c-infantil: #2474C9; --c-cadete: #C45100;
+  --c-juvenil: #B0306A;  --c-junior: #1E8449; --c-senior: #34495E;   --c-otra: #8A6D00;
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --cond: 'Barlow Condensed', 'Arial Narrow', 'Segoe UI', sans-serif;
+  --texto: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0A121D; --superficie: #111C2B; --tinta: #E6EDF5; --tinta-2: #9AABBF; --borde: #23344A; --visitante: #8C9BAE;
+    --foco: #FFC915;
+    --c-benjamin: #C08BE0; --c-alevin: #3CC4A6; --c-infantil: #6AAAF0; --c-cadete: #F2994A;
+    --c-juvenil: #F27BB4;  --c-junior: #5BCB86; --c-senior: #A9B8CB;  --c-otra: #D9B642;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font: 400 16px/1.45 var(--texto); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
+.cabecera :focus-visible { outline-color: var(--balon); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.solo-impresion { display: none; }
+.envoltura { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
+
+/* Cabecera: una pista vista desde arriba */
+.cabecera { background: var(--libre); color: #fff; padding: 22px 0 26px; }
+.pista {
+  position: relative; background: var(--pista); border: 2px solid rgba(255,255,255,.55);
+  padding: 26px 28px 24px; overflow: hidden;
+}
+.pista::before, .pista::after { content: ''; position: absolute; top: 0; bottom: 0; pointer-events: none; }
+.pista::before {  /* líneas de ataque */
+  left: 33.333%; right: 33.333%;
+  border-left: 2px solid rgba(255,255,255,.22); border-right: 2px solid rgba(255,255,255,.22);
+}
+.pista::after {   /* la red */
+  left: calc(50% - 2px); width: 4px; background: rgba(255,255,255,.42);
+}
+.pista > * { position: relative; z-index: 1; }
+.antetitulo { font: 600 .95rem/1 var(--cond); letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin: 0 0 10px; }
+h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 0; max-width: 16ch; }
+.resumen { margin: 14px 0 0; font: 500 1.05rem/1.4 var(--cond); letter-spacing: .02em; }
+.resumen strong { font-weight: 700; }
+.acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.boton {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border-radius: 999px;
+  font: 600 1rem/1 var(--cond); letter-spacing: .04em; text-transform: uppercase; text-decoration: none;
+  border: 2px solid rgba(255,255,255,.75); color: #fff; background: transparent; cursor: pointer;
+}
+.boton:hover { background: rgba(255,255,255,.1); }
+.boton.principal { background: var(--balon); border-color: var(--balon); color: var(--balon-tinta); }
+.boton.principal:hover { background: #FFD84D; }
+.ayuda-cal { margin-top: 14px; font-size: .92rem; max-width: 72ch; }
+.ayuda-cal summary { cursor: pointer; font: 600 .95rem/1.2 var(--cond); letter-spacing: .04em; text-transform: uppercase; opacity: .9; }
+.ayuda-cal ul { margin: 8px 0 0; padding-left: 20px; }
+.ayuda-cal li { margin: 5px 0; }
+.ayuda-cal code { font-size: .85em; word-break: break-all; background: rgba(255,255,255,.12); padding: 1px 4px; border-radius: 3px; }
+
+/* Filtros */
+.filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
+.fila-filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.equipos-chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 6px 10px; margin: 0 -6px; scrollbar-width: thin; }
+.chip {
+  --c: var(--c-otra); flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px;
+  border-radius: 999px; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
+  font: 600 .95rem/1 var(--cond); letter-spacing: .02em; cursor: pointer; white-space: nowrap;
+}
+.chip::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.chip[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--superficie)); }
+.chip.todos::before { display: none; }
+.chip.todos[aria-pressed="true"] { background: var(--pista); border-color: var(--pista); color: #fff; }
+.chip .cat-chip { font-weight: 500; color: var(--tinta-2); }
+.segmentado { display: inline-flex; border: 1.5px solid var(--borde); border-radius: 999px; overflow: hidden; background: var(--superficie); }
+.segmentado button {
+  border: 0; background: transparent; color: var(--tinta-2); padding: 0 14px; min-height: 34px; cursor: pointer;
+  font: 600 .92rem/1 var(--cond); letter-spacing: .05em; text-transform: uppercase;
+}
+.segmentado button[aria-pressed="true"] { background: var(--pista); color: #fff; }
+.segmentado button:focus-visible { outline-offset: -3px; }
+.oculto { display: none !important; }
+
+/* Lista */
+main { padding: 8px 0 40px; }
+.dia { margin-top: 26px; }
+.dia-cabecera { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--tinta); font: inherit; }
+.dia-num { font: 800 2.6rem/.8 var(--display); }
+.dia-nombre { font: 700 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; }
+.dia-mes { font: 500 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-2); }
+.dia-cuenta { margin-left: auto; font: 500 .95rem/1 var(--cond); color: var(--tinta-2); letter-spacing: .03em; }
+.dia.pasado .dia-cabecera { border-bottom-color: var(--borde); }
+.dia.pasado .dia-num, .dia.pasado .dia-nombre { color: var(--tinta-2); }
+.dia.pasado .partido { background: transparent; }
+
+.partido {
+  --c: var(--c-otra); display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 16px; align-items: start;
+  padding: 14px 14px 14px 12px; border-bottom: 1px solid var(--borde); border-left: 5px solid var(--c); background: var(--superficie);
+}
+.hora { font: 700 1.55rem/1 var(--cond); font-variant-numeric: tabular-nums; letter-spacing: .01em; padding-top: 2px; }
+.hora small { display: block; margin-top: 4px; font: 600 .78rem/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--c-cadete); }
+.hora.pendiente { font-size: .95rem; line-height: 1.1; text-transform: uppercase; letter-spacing: .05em; color: var(--c-cadete); padding-top: 4px; }
+.hora .etq { display: block; margin-bottom: 4px; font: 700 .72rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); }
+.hora .etq.bus { color: var(--pista); }
+@media (prefers-color-scheme: dark) { .hora .etq.bus { color: var(--balon); } }
+.hora small.partido-h { color: var(--tinta-2); font-weight: 600; letter-spacing: .03em; text-transform: none; font-size: .85rem; }
+.viaje { margin-top: 5px; font: 600 .95rem/1.3 var(--cond); letter-spacing: .02em; }
+.boton-bus {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; min-height: 34px; padding: 0 14px; border-radius: 999px;
+  background: var(--pista); color: #fff; text-decoration: none; font: 700 .88rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+}
+.boton-bus:hover { background: var(--libre); }
+.categoria { font: 700 .92rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
+.equipos { margin-top: 5px; font: 600 1.14rem/1.25 var(--cond); letter-spacing: .01em; }
+.equipos .vs { font-weight: 500; color: var(--tinta-2); margin: 0 6px; text-transform: lowercase; }
+.equipos .rival { font-weight: 500; color: var(--tinta-2); }
+.detalle { margin-top: 5px; font-size: .9rem; color: var(--tinta-2); }
+.detalle a { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 2px; }
+.condicion {
+  align-self: center; font: 700 .82rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 999px; border: 1.5px solid var(--visitante); color: var(--visitante); white-space: nowrap;
+}
+.condicion.local, .condicion.derbi { background: var(--pista); border-color: var(--pista); color: #fff; }
+.proximo-marca {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; padding: 3px 8px 3px 5px; border-radius: 999px;
+  background: var(--balon); color: var(--balon-tinta); font: 700 .75rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; vertical-align: 2px;
+}
+.proximo-marca::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0 22%, transparent 23%), #E0A800; }
+
+/* Mes */
+.mes-barra { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
+.mes-titulo { font: 800 2rem/1 var(--display); text-transform: uppercase; margin: 0; }
+.mes-nav { display: flex; gap: 8px; }
+.mes-nav button {
+  width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
+  font: 700 1.2rem/1 var(--cond); cursor: pointer;
+}
+.mes-nav button:disabled { opacity: .35; cursor: default; }
+.rejilla { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--borde); border-left: 1px solid var(--borde); }
+.rejilla .sem { font: 700 .8rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); padding: 8px 6px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
+.celda { min-height: 104px; padding: 6px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); background: var(--superficie); }
+.celda.fuera-mes { background: transparent; }
+.celda.con-partidos { cursor: pointer; }
+.celda.con-partidos:hover { background: color-mix(in srgb, var(--pista) 7%, var(--superficie)); }
+.celda .num { font: 700 1.05rem/1 var(--cond); }
+.celda.hoy .num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--balon); color: var(--balon-tinta); }
+.mini { --c: var(--c-otra); display: block; margin-top: 4px; padding: 2px 5px; border-left: 3px solid var(--c); font: 600 .8rem/1.2 var(--cond); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini b { font-variant-numeric: tabular-nums; }
+.mas { display: block; margin-top: 4px; font: 600 .78rem/1 var(--cond); color: var(--tinta-2); }
+.puntos { display: none; gap: 3px; flex-wrap: wrap; margin-top: 6px; }
+.puntos i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+
+.vacio { margin: 40px 0; padding: 28px; border: 2px dashed var(--borde); text-align: center; color: var(--tinta-2); }
+.vacio button { margin-top: 12px; }
+.boton.claro { border-color: var(--pista); color: var(--pista); }
+@media (prefers-color-scheme: dark) { .boton.claro { border-color: var(--tinta-2); color: var(--tinta); } }
+
+footer { border-top: 1px solid var(--borde); padding: 22px 0 40px; font-size: .9rem; color: var(--tinta-2); }
+footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta); margin: 0 0 10px; }
+.lista-ics { columns: 2 300px; padding: 0; margin: 0 0 20px; list-style: none; }
+.lista-ics li { break-inside: avoid; padding: 4px 0 6px; }
+.lista-ics b { color: var(--tinta); font-weight: 600; }
+.lista-ics .sin { font-style: italic; }
+
+[data-cat="benjamin"] { --c: var(--c-benjamin); } [data-cat="alevin"] { --c: var(--c-alevin); }
+[data-cat="infantil"] { --c: var(--c-infantil); } [data-cat="cadete"] { --c: var(--c-cadete); }
+[data-cat="juvenil"]  { --c: var(--c-juvenil); }  [data-cat="junior"] { --c: var(--c-junior); }
+[data-cat="senior"]   { --c: var(--c-senior); }   [data-cat="otra"]   { --c: var(--c-otra); }
+
+@media (max-width: 640px) {
+  .filtros { position: static; }
+  .pista { padding: 20px 18px; }
+  .partido { grid-template-columns: 64px 1fr; }
+  .hora { font-size: 1.3rem; }
+  .condicion { grid-column: 2; justify-self: start; margin-top: 6px; }
+  .celda { min-height: 58px; padding: 4px; }
+  .mini, .mas { display: none; }
+  .puntos { display: flex; }
+  .dia-num { font-size: 2.2rem; }
+}
+@media print {
+  .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus { display: none !important; }
+  .solo-impresion { display: block; margin: 6px 0 0; font-weight: 600; }
+  body { background: #fff; color: #000; font-size: 12px; }
+  .cabecera { background: none; color: #000; padding: 0; }
+  .pista { background: none; border: 0; padding: 0 0 8px; }
+  .pista::before, .pista::after { display: none; }
+  .partido { break-inside: avoid; padding: 6px 8px; }
+  .dia { break-inside: avoid-page; margin-top: 14px; }
+  .condicion.local, .condicion.derbi { background: none; color: #000; border-color: #000; }
+}
+</style>
+</head>
+<body>
+<header class="cabecera">
+  <div class="envoltura">
+    <div class="pista">
+      <p class="antetitulo" id="antetitulo">Voleibol</p>
+      <h1 id="club"></h1>
+      <p class="resumen" id="resumen"></p>
+      <p class="solo-impresion" id="filtro-imp"></p>
+      <div class="acciones">
+        <a class="boton principal oculto" id="enlace-suscribir" href="#">Suscribirse al calendario</a>
+        <a class="boton principal" id="enlace-ics" href="#">Añadir al calendario</a>
+        <a class="boton" id="enlace-xlsx" href="#">Abrir en Excel</a>
+        <button class="boton" type="button" id="imprimir">Imprimir</button>
+      </div>
+      <details class="ayuda-cal" id="ayuda">
+        <summary>Cómo añadirlo al móvil o a Google Calendar</summary>
+        <ul class="oculto" id="ayuda-pub">
+          <li><b>iPhone, iPad o Mac:</b> toca «Suscribirse al calendario» y acepta. Los cambios llegan solos.</li>
+          <li><b>Android o Google Calendar:</b> desde un <b>ordenador</b>, con la cuenta de Google del móvil, abre <a id="enlace-google" href="#" target="_blank" rel="noopener">este enlace de Google Calendar</a> y pulsa «Añadir». Aparecerá también en el móvil. Google vuelve a leer el calendario cuando quiere (puede tardar 12 horas o más): para cambios de última hora, mira esta página.</li>
+          <li><b>Outlook:</b> Agregar calendario › Desde Internet, y pega esta dirección: <code id="url-https"></code></li>
+          <li>Suscríbete una sola vez: no hace falta repetirlo. Si en vez de suscribirte descargas el .ics y lo importas, es una copia fija que no se actualiza.</li>
+          <li>Para un solo equipo, usa sus enlaces al final de la página.</li>
+        </ul>
+        <ul id="ayuda-local">
+          <li><b>Google Calendar:</b> en el ordenador, Configuración › Importar y exportar › Importar, y elige el archivo <span class="nombre-ics"></span>. Mejor en un calendario nuevo solo para el voley.</li>
+          <li><b>iPhone:</b> envíate el archivo .ics por correo o WhatsApp y ábrelo; toca «Añadir todo».</li>
+          <li><b>Outlook:</b> haz doble clic en el archivo .ics.</li>
+          <li>Importar crea una copia fija: si la federación cambia algo, borra ese calendario e impórtalo otra vez.</li>
+        </ul>
+      </details>
+    </div>
+  </div>
+</header>
+
+<nav class="filtros" aria-label="Filtros">
+  <div class="envoltura">
+    <div class="equipos-chips" id="chips" role="group" aria-label="Equipos"></div>
+    <div class="fila-filtros">
+      <div class="segmentado" role="group" aria-label="Vista">
+        <button type="button" data-vista="lista">Lista</button><button type="button" data-vista="mes">Mes</button>
+      </div>
+      <div class="segmentado" role="group" aria-label="Periodo" id="seg-periodo">
+        <button type="button" data-per="proximos">Próximos</button><button type="button" data-per="todo">Toda la temporada</button>
+      </div>
+      <div class="segmentado" role="group" aria-label="Local o visitante">
+        <button type="button" data-cond="todos">Todos</button><button type="button" data-cond="local">Local</button><button type="button" data-cond="visitante">Visitante</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<p class="sr-only" id="estado" role="status" aria-live="polite"></p>
+<main class="envoltura" id="contenido"></main>
+
+<footer>
+  <div class="envoltura">
+    <div id="bloque-equipos">
+      <h2>Calendario de cada equipo</h2>
+      <ul class="lista-ics" id="lista-ics"></ul>
+    </div>
+    <p id="pie"></p>
+  </div>
+</footer>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+(function () {
+  'use strict';
+  var D = JSON.parse(document.getElementById('datos').textContent);
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var SEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+  function $(id) { return document.getElementById(id); }
+  function dos(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); }
+  function fechaDe(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var ahora = new Date();
+  var hoy = iso(ahora);
+  var horaAhora = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
+  function conHora(p) { return p.e === 'c' || p.e === 'p'; }
+  function yaJugado(p) { return p.f < hoy || (p.f === hoy && conHora(p) && p.h < horaAhora); }
+
+  // Equipos. Nombres cortos: se quita el principio común ("DOMPAVOLEI IF1" -> "IF1").
+  var nombres = D.equipos.map(function (e) { return e.n; });
+  var conPartidos = D.equipos.filter(function (e) { return e.np > 0; });
+  var nombresConPartidos = conPartidos.map(function (e) { return e.n; });
+  var prefijo = '';
+  if (nombres.length > 1) {
+    prefijo = nombres.reduce(function (a, b) { var i = 0; while (i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0, i); });
+    prefijo = prefijo.slice(0, prefijo.lastIndexOf(' ') + 1);
+    if (prefijo.length < 3 || nombres.some(function (n) { return n.length <= prefijo.length; })) prefijo = '';
+  }
+  function corto(n) { return prefijo && n.indexOf(prefijo) === 0 ? n.slice(prefijo.length) : n; }
+
+  // Calendario publicado en internet (GitHub Pages): suscripción que se actualiza sola.
+  var enWeb = /^https?:$/.test(location.protocol);
+  var pub = enWeb
+    ? { base: location.protocol + '//' + location.host + location.pathname.replace(/[^\/]*$/, ''), ics: D.ics }
+    : (D.pub && D.pub.base ? D.pub : null);
+  var esAndroid = /Android/i.test(navigator.userAgent || '');
+  function urlHttps(rel) { return pub.base + encodeURI(rel); }
+  function urlWebcal(rel) { return urlHttps(rel).replace(/^https?:/, 'webcal:'); }
+  function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
+
+  // Filtros (se recuerdan en este navegador).
+  var CLAVE = 'calendario-voley:' + D.club;
+  var st = { eq: [], cond: 'todos', per: 'proximos', vista: 'lista', mes: null };
+  try {
+    var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
+    if (g && typeof g === 'object') ['eq', 'cond', 'per', 'vista'].forEach(function (k) { if (g[k] != null) st[k] = g[k]; });
+  } catch (e) {}
+  if (!Array.isArray(st.eq)) st.eq = [];
+  st.eq = st.eq.filter(function (n) { return nombresConPartidos.indexOf(n) >= 0; });
+  if (['todos', 'local', 'visitante'].indexOf(st.cond) < 0) st.cond = 'todos';
+  if (['proximos', 'todo'].indexOf(st.per) < 0) st.per = 'proximos';
+  if (['lista', 'mes'].indexOf(st.vista) < 0) st.vista = 'lista';
+  var perElegido = st.per;   // el periodo que eligió la persona (saltar a un día pasado no lo cambia)
+  function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify({ eq: st.eq, cond: st.cond, per: perElegido, vista: st.vista })); } catch (e) {} }
+
+  function nuestros(p) { var r = []; if (p.lo) r.push(p.l); if (p.vo) r.push(p.v); return r; }
+  function ladoOk(p) {
+    // Local/visitante se juzga para los equipos elegidos (en un derbi, cada uno juega de un lado).
+    if (st.cond === 'todos') return true;
+    var eqs = st.eq.length ? st.eq : null;
+    var esL = p.lo && (!eqs || eqs.indexOf(p.l) >= 0);
+    var esV = p.vo && (!eqs || eqs.indexOf(p.v) >= 0);
+    return st.cond === 'local' ? esL : esV;
+  }
+  function filtrar(conPeriodo) {
+    return D.partidos.filter(function (p) {
+      if (conPeriodo && st.per === 'proximos' && p.f < hoy) return false;
+      if (st.eq.length && !nuestros(p).some(function (n) { return st.eq.indexOf(n) >= 0; })) return false;
+      return ladoOk(p);
+    });
+  }
+
+  // Cabecera
+  document.title = 'Partidos · ' + D.club + ' · ' + D.temporada;
+  $('antetitulo').textContent = 'Voleibol · Temporada ' + D.temporada;
+  $('club').textContent = D.club;
+  var enlIcs = $('enlace-ics'), sus = $('enlace-suscribir'), ayuda = $('ayuda');
+  enlIcs.href = encodeURI(D.ics);
+  $('enlace-xlsx').href = encodeURI(D.xlsx);
+  $('imprimir').addEventListener('click', function () { window.print(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.nombre-ics'), function (el) { el.textContent = D.ics; });
+  if (pub) {
+    enlIcs.textContent = 'Descargar .ics';
+    enlIcs.classList.remove('principal');
+    if (esAndroid) {
+      // Android no abre enlaces webcal: el botón explica cómo hacerlo con Google Calendar.
+      sus.textContent = 'Cómo añadirlo al móvil';
+      sus.href = '#ayuda';
+      sus.addEventListener('click', function (ev) { ev.preventDefault(); ayuda.open = true; ayuda.scrollIntoView({ block: 'nearest' }); });
+    } else {
+      sus.href = urlWebcal(pub.ics);
+    }
+    sus.classList.remove('oculto');
+    $('enlace-google').href = urlGoogle(pub.ics);
+    $('url-https').textContent = urlHttps(pub.ics);
+    $('ayuda-pub').classList.remove('oculto');
+    $('ayuda-local').classList.add('oculto');
+  }
+  (function () {
+    var total = D.partidos.length;
+    var r = $('resumen');
+    if (!total) { r.textContent = 'Todavía no hay partidos publicados para esta temporada.'; return; }
+    var prox = D.partidos.filter(function (p) { return !yaJugado(p); });
+    var txt = '<strong>' + plural(total, 'partido', 'partidos') + '</strong> · <strong>' + plural(conPartidos.length, 'equipo', 'equipos') + '</strong>';
+    if (prox.length) {
+      var p = prox[0], d = fechaDe(p.f);
+      var cuando = p.e === 'x' ? ' (fecha por confirmar)' : !conHora(p) ? '' :
+        (D.sal && p.s ? ' · salida ' + p.s + ' (partido ' + p.h + ')' : D.sal && p.casa ? ' · partido ' + p.h + ' (en casa)' : ', ' + p.h);
+      txt += ' · Próximo: <strong>' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + esc(cuando) + '</strong>';
+    } else {
+      txt += ' · No quedan partidos por jugar';
+    }
+    r.innerHTML = txt;
+  })();
+
+  // Chips de equipos: se crean una vez y luego solo cambia su estado (así no se pierde el foco).
+  var chips = $('chips');
+  if (conPartidos.length < 2) chips.classList.add('oculto');
+  chips.innerHTML = '<button type="button" class="chip todos" data-eq="">Todos los equipos</button>' + conPartidos.map(function (e) {
+    return '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" title="' + esc(e.n) + '"><span>' +
+      esc(corto(e.n)) + '</span> <span class="cat-chip">' + esc(e.cat) + '</span></button>';
+  }).join('');
+  function marcarChips() {
+    Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (b) {
+      var n = b.getAttribute('data-eq');
+      b.setAttribute('aria-pressed', String(n ? st.eq.indexOf(n) >= 0 : st.eq.length === 0));
+    });
+  }
+  chips.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.chip'); if (!b) return;
+    var n = b.getAttribute('data-eq');
+    if (!n) st.eq = [];
+    else { var i = st.eq.indexOf(n); if (i >= 0) st.eq.splice(i, 1); else st.eq.push(n); }
+    guardar(); marcarChips(); pintar();
+  });
+  document.querySelector('.filtros').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b || b.classList.contains('chip')) return;
+    if (b.dataset.vista) st.vista = b.dataset.vista;
+    if (b.dataset.per) st.per = perElegido = b.dataset.per;
+    if (b.dataset.cond) st.cond = b.dataset.cond;
+    guardar(); pintar();
+  });
+
+  function marcarSegmentos() {
+    Array.prototype.forEach.call(document.querySelectorAll('.segmentado button'), function (b) {
+      var on = (b.dataset.vista && b.dataset.vista === st.vista) || (b.dataset.per && b.dataset.per === st.per) || (b.dataset.cond && b.dataset.cond === st.cond);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    $('seg-periodo').classList.toggle('oculto', st.vista === 'mes');
+  }
+
+  var main = $('contenido');
+
+  function vacio(msg, boton) {
+    return '<div class="vacio"><p>' + esc(msg) + '</p>' + (boton ? '<button type="button" class="boton claro" id="quitar">' + esc(boton) + '</button>' : '') + '</div>';
+  }
+
+  function duracion(min) {
+    var h = Math.floor(min / 60), m = min % 60;
+    return h ? h + ' h' + (m ? ' ' + m + ' min' : '') : m + ' min';
+  }
+  // Hora a la que empieza el día del equipo: salida en bus, calentamiento en casa o la del partido.
+  function horaInicio(p) {
+    if (!conHora(p)) return '';
+    if (D.sal && !p.seg) return p.s || p.ca || p.h;
+    return p.h;
+  }
+  function textoHora(p) {
+    if (p.e === 'x') return '<div class="hora pendiente">Fecha y hora por confirmar</div>';
+    if (p.e === 'h') return '<div class="hora pendiente">Hora por confirmar</div>';
+    var prov = p.e === 'p' ? '<small>Provisional</small>' : '';
+    if (!D.sal) return '<div class="hora">' + esc(p.h) + prov + '</div>';
+    if (p.seg) return '<div class="hora"><span class="etq">2º partido</span>' + esc(p.h) + prov + '</div>';
+    var etq = p.s ? 'Salida' : 'Calentam.';
+    return '<div class="hora"><span class="etq' + (p.s ? ' bus' : '') + '">' + etq + '</span>' + esc(p.s || p.ca) +
+      '<small class="partido-h">Partido ' + esc(p.h) + '</small>' + prov + '</div>';
+  }
+  function textoViaje(p) {
+    if (!D.sal || !conHora(p)) return '';
+    var t;
+    if (p.seg) t = 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '');
+    else if (p.casa) t = 'En casa · calentamiento ' + p.ca;
+    else if (p.s) t = '🚌 ' + duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + p.mun : '') + ' · calentamiento ' + p.ca;
+    else t = 'Viaje sin calcular · calentamiento ' + p.ca;
+    return '<div class="viaje">' + esc(t) + '</div>';
+  }
+
+  // Botón "Pedir bus": abre el correo con la petición ya redactada para la empresa de autobuses.
+  function hm(min) { return dos(Math.floor(min / 60) % 24) + ':' + dos(min % 60); }
+  function aMin(h) { var t = h.split(':'); return +t[0] * 60 + +t[1]; }
+  function mismoEquipo(a, b) { return nuestros(a).join('/') === nuestros(b).join('/'); }
+  function enlaceBus(p) {
+    if (!D.bus || !p.s || yaJugado(p)) return '';
+    var grupo = D.partidos.filter(function (x) { return x.f === p.f && x.pab === p.pab && conHora(x) && mismoEquipo(x, p); });
+    var ult = grupo[grupo.length - 1];
+    var d = fechaDe(p.f);
+    var fecha = DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+    var equipo = nuestros(p).join(' y ');
+    var fin = aMin(ult.h) + (D.bus.dur || 120);
+    var llegada = Math.ceil((fin + (p.vj || 0)) / 15) * 15;
+    var info = (D.pabs && D.pabs[p.pab]) || {};
+    var destino = p.pab + (info.dir ? ' (' + info.dir + ')' : (p.mun ? ' (' + p.mun + ')' : ''));
+    var partidos = grupo.map(function (x) { return x.h + ' contra ' + (x.lo && x.vo ? 'otro equipo del club' : x.lo ? x.v : x.l); });
+    var l = [
+      'Hola:', '',
+      'Queremos pedir un autobús para el equipo ' + equipo + ' (' + p.cat + '):', '',
+      '- Día: ' + fecha,
+      '- Salida: a las ' + p.s + ' desde ' + D.bus.origen + (D.bus.dirOrigen ? ' (' + D.bus.dirOrigen + ')' : ''),
+      '- Destino: ' + destino,
+      '- ' + (grupo.length > 1 ? 'Partidos: ' : 'Partido: ') + partidos.join('; '),
+      '- Regreso: al terminar' + (grupo.length > 1 ? ' el último partido' : ' el partido') + ', hacia las ' + hm(fin) +
+        '; llegada aproximada a ' + D.bus.origen + ' a las ' + hm(llegada),
+      '- Plazas: ' + (D.bus.plazas || '__')
+    ];
+    D.partidos.forEach(function (o) {
+      if (o !== p && o.f === p.f && o.pab === p.pab && o.s && !mismoEquipo(o, p)) {
+        l.push('', 'Ese día también viaja ' + nuestros(o).join(' y ') + ' al mismo pabellón (salida ' + o.s + '): se podría compartir el autobús.');
+      }
+    });
+    l.push('', 'Muchas gracias.');
+    if (D.bus.firma) l.push(D.bus.firma);
+    var asunto = 'Autobús ' + equipo + ' · ' + DIAS[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' · salida ' + p.s;
+    var para = (D.bus.para || '').split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(',');
+    var q = [];
+    if (D.bus.cc) q.push('cc=' + D.bus.cc.split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(','));
+    q.push('subject=' + encodeURIComponent(asunto));
+    q.push('body=' + encodeURIComponent(l.join('\n').replace(/\n/g, '\r\n')));
+    return '<a class="boton-bus" href="' + esc('mailto:' + para + '?' + q.join('&')) + '">✉ Pedir bus</a>';
+  }
+
+  function tarjeta(p, proximo) {
+    var l = p.lo ? '<span>' + esc(p.l) + '</span>' : '<span class="rival">' + esc(p.l) + '</span>';
+    var v = p.vo ? '<span>' + esc(p.v) + '</span>' : '<span class="rival">' + esc(p.v) + '</span>';
+    var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
+    var pab = p.pab
+      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
+      : 'Pabellón por confirmar';
+    return '<article class="partido" data-cat="' + esc(p.ck) + '">' + textoHora(p) +
+      '<div><div class="categoria">' + esc(p.cat) + (proximo ? '<span class="proximo-marca">Próximo</span>' : '') + '</div>' +
+      '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' + textoViaje(p) +
+      '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div>' + enlaceBus(p) + '</div>' +
+      '<span class="condicion ' + esc(p.cond) + '">' + cond + '</span></article>';
+  }
+
+  function pintarLista() {
+    var lista = filtrar(true);
+    if (!D.partidos.length) {
+      main.innerHTML = vacio('Todavía no hay partidos publicados para esta temporada. La federación los va publicando poco a poco.');
+      return 0;
+    }
+    if (!lista.length) {
+      var soloPeriodo = !st.eq.length && st.cond === 'todos' && st.per === 'proximos';
+      main.innerHTML = soloPeriodo
+        ? vacio('No quedan partidos por jugar esta temporada.', 'Ver toda la temporada')
+        : vacio('No hay partidos con estos filtros.', 'Ver todos los partidos');
+      return 0;
+    }
+    var proximo = null;
+    for (var i = 0; i < lista.length; i++) { if (!yaJugado(lista[i])) { proximo = lista[i]; break; } }
+    var html = '', actual = null;
+    lista.forEach(function (p) {
+      if (p.f !== actual) {
+        if (actual) html += '</section>';
+        actual = p.f;
+        var d = fechaDe(p.f), n = lista.filter(function (x) { return x.f === p.f; }).length;
+        var nombre = p.f === hoy ? 'Hoy' : DIAS[d.getDay()];
+        html += '<section class="dia' + (p.f < hoy ? ' pasado' : '') + '" id="d-' + p.f + '"><h2 class="dia-cabecera" tabindex="-1">' +
+          '<span class="dia-num">' + d.getDate() + '</span><span class="dia-nombre">' + nombre + '</span>' +
+          '<span class="dia-mes">' + MESES[d.getMonth()] + (d.getFullYear() !== ahora.getFullYear() ? ' ' + d.getFullYear() : '') + '</span>' +
+          '<span class="dia-cuenta">' + plural(n, 'partido', 'partidos') + '</span></h2>';
+      }
+      html += tarjeta(p, p === proximo);
+    });
+    main.innerHTML = html + '</section>';
+    return lista.length;
+  }
+
+  function pintarMes() {
+    var lista = filtrar(false);
+    if (!lista.length) {
+      main.innerHTML = D.partidos.length ? vacio('No hay partidos con estos filtros.', 'Ver todos los partidos') : vacio('Todavía no hay partidos publicados para esta temporada.');
+      return 0;
+    }
+    var meses = lista.map(function (p) { return p.f.slice(0, 7); }).filter(function (m, i, a) { return a.indexOf(m) === i; }).sort();
+    var min = meses[0], max = meses[meses.length - 1];
+    if (!st.mes || st.mes < min || st.mes > max) {
+      st.mes = meses.filter(function (m) { return m >= hoy.slice(0, 7); })[0] || max;
+    }
+    var y = +st.mes.slice(0, 4), m = +st.mes.slice(5, 7) - 1;
+    var desplaz = (new Date(y, m, 1).getDay() + 6) % 7;
+    var inicio = new Date(y, m, 1 - desplaz);
+    var celdas = Math.ceil((desplaz + new Date(y, m + 1, 0).getDate()) / 7) * 7;
+    var porDia = {};
+    lista.forEach(function (p) { (porDia[p.f] = porDia[p.f] || []).push(p); });
+    var enMes = lista.filter(function (p) { return p.f.slice(0, 7) === st.mes; }).length;
+    var html = '<div class="mes-barra"><h2 class="mes-titulo">' + MESES[m] + ' ' + y + '</h2><div class="mes-nav">' +
+      '<button type="button" id="mes-ant" aria-label="Mes anterior"' + (st.mes <= min ? ' disabled' : '') + '>‹</button>' +
+      '<button type="button" id="mes-sig" aria-label="Mes siguiente"' + (st.mes >= max ? ' disabled' : '') + '>›</button></div></div>';
+    html += '<div class="rejilla">' + SEM.map(function (s) { return '<div class="sem">' + s + '</div>'; }).join('');
+    for (var i = 0; i < celdas; i++) {
+      var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+      var f = iso(d), ps = porDia[f] || [];
+      var cls = 'celda' + (d.getMonth() !== m ? ' fuera-mes' : '') + (f === hoy ? ' hoy' : '') + (ps.length ? ' con-partidos' : '');
+      html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' + MESES[d.getMonth()] + ': ' + plural(ps.length, 'partido', 'partidos') + '"' : '') + '>' +
+        '<span class="num">' + d.getDate() + '</span>';
+      ps.slice(0, 4).forEach(function (p) {
+        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v + (conHora(p) ? ' · partido ' + p.h : '')) + '"><b>' +
+          (conHora(p) ? (p.s ? '🚌' : '') + esc(horaInicio(p)) : '¿?') + '</b> ' +
+          esc(nuestros(p).map(corto).join(' / ')) + '</span>';
+      });
+      if (ps.length > 4) html += '<span class="mas">+' + (ps.length - 4) + ' más</span>';
+      if (ps.length) html += '<span class="puntos">' + ps.map(function (p) { return '<i data-cat="' + esc(p.ck) + '"></i>'; }).join('') + '</span>';
+      html += '</div>';
+    }
+    main.innerHTML = html + '</div>';
+    function mover(delta, id) {
+      var nd = new Date(y, m + delta, 1);
+      st.mes = nd.getFullYear() + '-' + dos(nd.getMonth() + 1);
+      pintar(id);
+    }
+    var a = $('mes-ant'), s = $('mes-sig');
+    if (a) a.onclick = function () { mover(-1, 'mes-ant'); };
+    if (s) s.onclick = function () { mover(1, 'mes-sig'); };
+    return enMes;
+  }
+
+  function anunciar(n) {
+    var partes = [st.eq.length ? 'Equipos: ' + st.eq.map(corto).join(', ') : 'Todos los equipos'];
+    if (st.vista === 'lista') partes.push(st.per === 'proximos' ? 'próximos partidos' : 'toda la temporada');
+    if (st.cond !== 'todos') partes.push(st.cond === 'local' ? 'solo como local' : 'solo como visitante');
+    $('estado').textContent = plural(n, 'partido', 'partidos') + ' · ' + partes.join(' · ');
+    $('filtro-imp').textContent = partes.join(' · ') + ' · actualizado el ' + D.generado;
+  }
+
+  function irADia(f) {
+    st.vista = 'lista';
+    if (f < hoy) st.per = 'todo';   // solo para esta visita: no se guarda como preferencia
+    guardar(); pintar();
+    var el = $('d-' + f);
+    if (!el) return;
+    var barra = document.querySelector('.filtros');
+    var tapa = getComputedStyle(barra).position === 'sticky' ? barra.offsetHeight : 0;
+    window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset - tapa - 8);
+    var h = el.querySelector('.dia-cabecera');
+    if (h) h.focus({ preventScroll: true });
+  }
+  main.addEventListener('click', function (ev) {
+    if (ev.target.id === 'quitar') {
+      st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
+      guardar(); marcarChips(); pintar(); return;
+    }
+    var c = ev.target.closest('[data-ir]'); if (c) irADia(c.getAttribute('data-ir'));
+  });
+  main.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    var c = ev.target.closest('[data-ir]'); if (c) { ev.preventDefault(); irADia(c.getAttribute('data-ir')); }
+  });
+
+  function pintar(foco) {
+    marcarSegmentos();
+    var n = st.vista === 'mes' ? pintarMes() : pintarLista();
+    anunciar(n);
+    if (foco) { var el = $(foco); if (el && !el.disabled) el.focus(); }
+  }
+
+  // Pie: calendario de cada equipo
+  var li = D.equipos.filter(function (e) { return e.ics; }).map(function (e) {
+    var cab = '<b>' + esc(e.n) + '</b> · ' + esc(e.cat) + (e.np ? '' : ' <span class="sin">(aún sin partidos publicados)</span>');
+    if (pub) {
+      return '<li>' + cab + '<br><a href="' + esc(urlWebcal(e.ics)) + '">iPhone / Outlook</a> · <a href="' + esc(urlGoogle(e.ics)) +
+        '" target="_blank" rel="noopener">Google Calendar</a> · <a href="' + esc(urlHttps(e.ics)) + '">dirección</a></li>';
+    }
+    return '<li>' + cab + ' · <a href="' + esc(encodeURI(e.ics)) + '">archivo .ics</a></li>';
+  });
+  if (li.length) $('lista-ics').innerHTML = li.join('');
+  else $('bloque-equipos').classList.add('oculto');
+  $('pie').textContent = 'Datos de la Federación Galega de Voleibol (volei.gal · iSquad), actualizados el ' + D.generado + '. ' +
+    (enWeb ? 'Esta página se actualiza sola cada hora; los horarios pueden cambiar.' : 'Los horarios pueden cambiar: vuelve a generar el calendario antes de cada fin de semana.') +
+    ' Solo aparecen los partidos que publica la federación gallega.' +
+    (D.sal ? ' Horas de salida desde ' + D.sal.origen + ': partido menos ' + D.sal.cal + ' min de calentamiento y el viaje en bus (tiempo por carretera de OpenStreetMap/OSRM, redondeado al alza).' : '');
+
+  marcarChips();
+  pintar();
+})();
+</script>
+</body>
+</html>

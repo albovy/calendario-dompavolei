@@ -1,5 +1,6 @@
 # Genera el calendario de Dompavolei cada hora y lo publica en GitHub Pages.
 # Este archivo va en el repositorio como: .github/workflows/calendario.yml
+# Versión en JavaScript (src/main.js, Node.js): sustituye a calendario-voley.ps1.
 
 name: Calendario Dompavolei
 
@@ -35,9 +36,13 @@ jobs:
       - id: pages
         uses: actions/configure-pages@v6
 
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # src/main.js no tiene dependencias: no hace falta npm install.
       - name: Generar calendario
-        shell: pwsh
-        run: ./calendario-voley.ps1 -SinPreguntar -Salida web -NombreBase calendario -Historial historial/partidos.txt
+        run: node src/main.js --salida web --nombre-base calendario --historial historial/partidos.txt
 
       # Si la federación devolviera 0 partidos por un fallo, no se borra el calendario de los suscritos.
       - name: Comprobar que no se publica un calendario vacío
