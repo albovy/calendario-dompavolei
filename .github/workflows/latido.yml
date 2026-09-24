@@ -3,6 +3,7 @@ name: Prueba de programación
 on:
   schedule:
     - cron: '*/5 * * * *'
+    - cron: '40 17 * * *'   # prueba a una hora concreta
   workflow_dispatch:
 permissions:
   contents: read
