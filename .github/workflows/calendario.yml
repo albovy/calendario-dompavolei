@@ -6,8 +6,10 @@ name: Calendario Dompavolei
 
 on:
   schedule:
-    - cron: '17 8-23 * * *'       # cada hora, de 8:17 a 23:17
-      timezone: 'Europe/Madrid'   # hora de Galicia, también en invierno
+    # Cada hora en punto y 17 (hora UTC, la zona de siempre de GitHub): de 8:17 a 0:17 en horario de
+    # verano y de 7:17 a 23:17 en invierno, hora de Galicia. Sin "timezone:", que es más reciente y
+    # daba problemas para programar las ejecuciones.
+    - cron: '17 6-22 * * *'
   workflow_dispatch:              # botón "Run workflow" para actualizar a mano
   push:
     branches: [main]
