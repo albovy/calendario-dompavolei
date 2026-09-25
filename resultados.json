@@ -1,0 +1,548 @@
+{
+ "temporada": 2026,
+ "clubs": [
+  "206572580"
+ ],
+ "competiciones": {
+  "TORNEO APERTURA CADETE F": {
+   "id": "1509",
+   "torneos": [
+    "3802",
+    "3805",
+    "3804",
+    "3803",
+    "4309",
+    "4310",
+    "4311",
+    "4312",
+    "3801",
+    "3806",
+    "3807",
+    "3808",
+    "4056",
+    "4057",
+    "4058",
+    "4059",
+    "4049",
+    "4050",
+    "4051",
+    "4052",
+    "4053",
+    "4054"
+   ],
+   "revisado": "2026-09-25 11:16"
+  },
+  "TORNEO APERTURA INFANTIL F": {
+   "id": "1511",
+   "torneos": [
+    "3818",
+    "3821",
+    "3820",
+    "3819",
+    "4306",
+    "4307",
+    "4308",
+    "3817",
+    "3822",
+    "3823",
+    "3824",
+    "4061",
+    "4062",
+    "4063",
+    "4064"
+   ],
+   "revisado": "2026-09-25 11:16"
+  },
+  "TORNEO APERTURA XUVENIL F": {
+   "id": "1507",
+   "torneos": [
+    "3786",
+    "3789",
+    "3788",
+    "3787",
+    "4225",
+    "4226",
+    "4227",
+    "4228",
+    "3785",
+    "3790",
+    "3791",
+    "3792",
+    "4091",
+    "4092",
+    "4093",
+    "4094"
+   ],
+   "revisado": "2026-09-25 11:16"
+  }
+ },
+ "grupos": {
+  "3788": {
+   "competicion": "TORNEO APERTURA XUVENIL F",
+   "id_competicion": "1507",
+   "nombre": "SEGUNDA FASE - GRUPO 3",
+   "equipos": [
+    "DOMPAVOLEI XF1"
+   ],
+   "consultado": "2026-09-25 11:16",
+   "terminado": false,
+   "firma": "0854810f250c0326",
+   "firma_clasificacion": "0854810f250c0326",
+   "partidos": [
+    {
+     "local": "CV CIUDAD DE A CORUÑA JF B",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-09-26",
+     "hora": "11:30",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "RIBEIRA SACRA A",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-09-26",
+     "hora": "13:00",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "CV CIUDAD DE A CORUÑA JF B",
+     "dia": "2026-10-04",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "RIBEIRA SACRA A",
+     "dia": "2026-10-04",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 1,
+     "equipo": "DOMPAVOLEI XF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 2,
+     "equipo": "CV CIUDAD DE A CORUÑA JF B",
+     "club": "206572595",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 3,
+     "equipo": "RIBEIRA SACRA A",
+     "club": "206572586",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "3818": {
+   "competicion": "TORNEO APERTURA INFANTIL F",
+   "id_competicion": "1511",
+   "nombre": "SEGUNDA FASE - GRUPO 1",
+   "equipos": [
+    "DOMPAVOLEI IF1"
+   ],
+   "consultado": "2026-09-25 11:16",
+   "terminado": false,
+   "firma": "e4200373ab060ff2",
+   "firma_clasificacion": "e4200373ab060ff2",
+   "partidos": [
+    {
+     "local": "SEI SAN NARCISO IF",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-09-26",
+     "hora": "10:00",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "CV OLEIROS IFA",
+     "dia": "2026-09-26",
+     "hora": "11:30",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV OLEIROS IFA",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-10-03",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "SEI SAN NARCISO IF",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-10-03",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 1,
+     "equipo": "CV OLEIROS IFA",
+     "club": "206572590",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 2,
+     "equipo": "DOMPAVOLEI IF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 3,
+     "equipo": "SEI SAN NARCISO IF",
+     "club": "206572677",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "4056": {
+   "competicion": "TORNEO APERTURA CADETE F",
+   "id_competicion": "1509",
+   "nombre": "PRIMERA FASE - GRUPO E",
+   "equipos": [
+    "DOMPAVOLEI CF1"
+   ],
+   "consultado": "2026-09-25 11:16",
+   "terminado": true,
+   "firma": "4f5688ed88857f34",
+   "firma_clasificacion": "4f5688ed88857f34",
+   "partidos": [
+    {
+     "local": "CLUB VOLEIBOL SANTIAGO",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-09-19",
+     "hora": "11:30",
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      2
+     ],
+     "sets": [
+      [
+       25,
+       16
+      ],
+      [
+       23,
+       25
+      ],
+      [
+       24,
+       26
+      ],
+      [
+       27,
+       25
+      ],
+      [
+       15,
+       8
+      ]
+     ]
+    },
+    {
+     "local": "PANADERIA ROISER XIRIA VOLEII",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-09-19",
+     "hora": "13:00",
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      1
+     ],
+     "sets": [
+      [
+       25,
+       8
+      ],
+      [
+       25,
+       20
+      ],
+      [
+       19,
+       25
+      ],
+      [
+       25,
+       4
+      ]
+     ]
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 1,
+     "equipo": "PANADERIA ROISER XIRIA VOLEII",
+     "club": "206572607",
+     "pt": 6,
+     "pj": 2,
+     "pg": 2,
+     "pp": 0,
+     "sf": 6,
+     "sc": 1
+    },
+    {
+     "pos": 2,
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 2,
+     "pj": 2,
+     "pg": 1,
+     "pp": 1,
+     "sf": 3,
+     "sc": 5
+    },
+    {
+     "pos": 3,
+     "equipo": "DOMPAVOLEI CF1",
+     "club": "206572580",
+     "pt": 1,
+     "pj": 2,
+     "pg": 0,
+     "pp": 2,
+     "sf": 3,
+     "sc": 6
+    }
+   ]
+  },
+  "4064": {
+   "competicion": "TORNEO APERTURA INFANTIL F",
+   "id_competicion": "1511",
+   "nombre": "PRIMERA FASE - GRUPO H",
+   "equipos": [
+    "DOMPAVOLEI IF1"
+   ],
+   "consultado": "2026-09-25 11:16",
+   "terminado": true,
+   "firma": "e0df43d9b483a5be",
+   "firma_clasificacion": "e0df43d9b483a5be",
+   "partidos": [
+    {
+     "local": "EMEVÉ COLEXIO SAN LORENZO IF",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-09-19",
+     "hora": "10:00",
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       24,
+       26
+      ],
+      [
+       23,
+       25
+      ],
+      [
+       20,
+       25
+      ]
+     ]
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "CLUB VOLEIBOL PONTEVEDRA IF2",
+     "dia": "2026-09-19",
+     "hora": "11:30",
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       18
+      ],
+      [
+       25,
+       22
+      ],
+      [
+       25,
+       11
+      ]
+     ]
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 1,
+     "equipo": "DOMPAVOLEI IF1",
+     "club": "206572580",
+     "pt": 6,
+     "pj": 2,
+     "pg": 2,
+     "pp": 0,
+     "sf": 6,
+     "sc": 0
+    },
+    {
+     "pos": 2,
+     "equipo": "EMEVÉ COLEXIO SAN LORENZO IF",
+     "club": "206572578",
+     "pt": 3,
+     "pj": 2,
+     "pg": 1,
+     "pp": 1,
+     "sf": 3,
+     "sc": 4
+    },
+    {
+     "pos": 3,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA IF2",
+     "club": "206572577",
+     "pt": 0,
+     "pj": 2,
+     "pg": 0,
+     "pp": 2,
+     "sf": 1,
+     "sc": 6
+    }
+   ]
+  },
+  "4311": {
+   "competicion": "TORNEO APERTURA CADETE F",
+   "id_competicion": "1509",
+   "nombre": "SEGUNDA FASE - GRUPO 7",
+   "equipos": [
+    "DOMPAVOLEI CF1"
+   ],
+   "consultado": "2026-09-25 11:16",
+   "terminado": false,
+   "firma": "20f968637de8ad2d",
+   "firma_clasificacion": "20f968637de8ad2d",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "PESCADOR XAV SANXENXO",
+     "dia": "2026-09-27",
+     "hora": "11:30",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "XUVENIL TEIS B",
+     "dia": "2026-10-04",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "dia": "2026-10-04",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 1,
+     "equipo": "DOMPAVOLEI CF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 2,
+     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "club": "206572608",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 3,
+     "equipo": "PESCADOR XAV SANXENXO",
+     "club": "206572588",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 4,
+     "equipo": "XUVENIL TEIS B",
+     "club": "206572585",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  }
+ }
+}
