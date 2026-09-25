@@ -16,6 +16,7 @@
   --balon: #FFC915;      /* amarillo balón: solo para lo más importante */
   --balon-tinta: #2A2100;
   --fondo: #EDF1F6;
+  --barra: var(--fondo); /* barra de pestañas y filtros */
   --superficie: #FFFFFF;
   --tinta: #0B1726;
   --tinta-2: #4A5A6E;
@@ -30,11 +31,12 @@
   --texto: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 /* Modo oscuro: paleta «Night Winter» (#141c33 #2f456f #5374ac #8bafd0 #eff5fa), elegida por el club.
-   La superficie de las tarjetas es un paso entre las dos primeras. */
+   La superficie de las tarjetas es un paso entre las dos primeras; la barra de pestañas y filtros, un
+   poco más oscura que el fondo para que se distinga. */
 @media (prefers-color-scheme: dark) {
   :root {
     --libre: #141c33; --pista: #2f456f; --activo: #5374ac; --activo-2: #2f456f;
-    --fondo: #141c33; --superficie: #1c2744; --tinta: #eff5fa; --tinta-2: #8bafd0; --borde: #2f456f; --visitante: #8bafd0;
+    --fondo: #141c33; --barra: #0b1020; --superficie: #1c2744; --tinta: #eff5fa; --tinta-2: #8bafd0; --borde: #2f456f; --visitante: #8bafd0;
     --foco: #FFC915;
     --gana: #5BCB86; --pierde: #F2877E;
     --c-benjamin: #C08BE0; --c-alevin: #3CC4A6; --c-infantil: #6AAAF0; --c-cadete: #F2994A;
@@ -86,7 +88,7 @@ h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: 
 .ayuda-cal code { font-size: .85em; word-break: break-all; background: rgba(255,255,255,.12); padding: 1px 4px; border-radius: 3px; }
 
 /* Filtros */
-.filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
+.filtros { position: sticky; top: 0; z-index: 5; background: var(--barra); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
 .fila-filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
 .pestanas { display: flex; gap: 4px; margin-bottom: 4px; border-bottom: 1.5px solid var(--borde); }
 .pestanas button {
