@@ -2,13 +2,12 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { codificarHtml, crearHtml } from '../src/html.js';
 import { fechaPared } from '../src/util.js';
 
 // Sin CR, como la lee html.js (Git puede sacarla con CRLF en Windows).
 const PLANTILLA = readFileSync(new URL('../src/plantilla.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-const RUTA_PS1 = new URL('../calendario-voley.ps1', import.meta.url);
 const INICIO_DATOS = '<script id="datos" type="application/json">';
 const BARRA = String.fromCharCode(92);
 const SEPARADOR_LINEA = String.fromCharCode(0x2028);
@@ -62,14 +61,11 @@ const SALIDAS = {
   redondeoViaje: 15, redondeo: 15, radioCasaKm: 1, manual: new Map(),
 };
 
-test('plantilla.html es la copia exacta del here-string $Script:PlantillaHtml', { skip: !existsSync(RUTA_PS1) }, () => {
-  const lineas = readFileSync(RUTA_PS1, 'utf8').split(/\r?\n/);
-  const ini = lineas.findIndex((l) => l.endsWith("$Script:PlantillaHtml = @'"));
-  const fin = lineas.indexOf("'@", ini + 1);
-  assert.ok(ini >= 0 && fin > ini);
-  assert.equal(PLANTILLA, lineas.slice(ini + 1, fin).join('\n'));
+test('plantilla.html: un solo __TITULO__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
   assert.equal(veces(PLANTILLA, '__TITULO__'), 1);
   assert.equal(veces(PLANTILLA, '__DATOS__'), 1);
+  const codigo = PLANTILLA.slice(PLANTILLA.lastIndexOf('<script>') + '<script>'.length, PLANTILLA.lastIndexOf('</script>'));
+  assert.doesNotThrow(() => new Function(codigo));
 });
 
 test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
@@ -114,7 +110,7 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   }));
   const d = datosDe(html);
 
-  assert.deepEqual(Object.keys(d), ['club', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos']);
+  assert.deepEqual(Object.keys(d), ['club', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas']);
   assert.equal(d.club, 'DOMPAVOLEI');
   assert.equal(d.temporada, '2026/27');
   assert.equal(d.generado, '24/09/2026 09:05');
@@ -136,21 +132,22 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
     { n: 'DOMPAVOLEI SM', cat: 'Senior M', ck: 'senior', ics: '', np: 0 },
   ]);
   assert.deepEqual(Object.keys(d.partidos[0]),
-    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun']);
+    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun', 'r']);
   const comun = { cat: 'Infantil F', ck: 'infantil', comp: 'LIGA INFANTIL F' };
   assert.deepEqual(d.partidos, [
     { f: '2026-10-03', h: '17:30', e: 'c', ...comun, l: 'CV VIGO', v: 'DOMPAVOLEI IF1', lo: false, vo: true,
-      pab: 'PAV. DAS TRAVESAS', cond: 'visitante', s: '14:45', ca: '16:00', vj: 75, casa: false, seg: false, sp: '', mun: 'Vigo' },
+      pab: 'PAV. DAS TRAVESAS', cond: 'visitante', s: '14:45', ca: '16:00', vj: 75, casa: false, seg: false, sp: '', mun: 'Vigo', r: null },
     // 2º partido del día en el mismo pabellón: sin calentamiento ni viaje propios; la salida es la del primero.
     { f: '2026-10-03', h: '19:00', e: 'c', ...comun, l: 'DOMPAVOLEI IF1', v: 'CV TRAVESAS', lo: true, vo: false,
-      pab: 'PAV. DAS TRAVESAS', cond: 'local', s: '', ca: '', vj: 0, casa: false, seg: true, sp: '14:45', mun: 'Vigo' },
+      pab: 'PAV. DAS TRAVESAS', cond: 'local', s: '', ca: '', vj: 0, casa: false, seg: true, sp: '14:45', mun: 'Vigo', r: null },
     { f: '2026-10-10', h: '', e: 'h', ...comun, l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false,
-      pab: 'SIN DATOS', cond: 'local', s: '', ca: '', vj: 0, casa: false, seg: false, sp: '', mun: '' },
+      pab: 'SIN DATOS', cond: 'local', s: '', ca: '', vj: 0, casa: false, seg: false, sp: '', mun: '', r: null },
     { f: '2026-10-17', h: '', e: 'x', cat: 'Cadete F', ck: 'cadete', comp: 'COPA', l: 'DOMPAVOLEI CF1', v: 'DOMPAVOLEI IF1',
-      lo: true, vo: true, pab: '', cond: 'derbi', s: '', ca: '', vj: 0, casa: false, seg: false, sp: '', mun: '' },
+      lo: true, vo: true, pab: '', cond: 'derbi', s: '', ca: '', vj: 0, casa: false, seg: false, sp: '', mun: '', r: null },
     { f: '2026-10-24', h: '12:00', e: 'p', ...comun, l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false,
-      pab: 'PM A PINGUELA', cond: 'local', s: '', ca: '10:30', vj: 0, casa: true, seg: false, sp: '', mun: 'Monforte de Lemos' },
+      pab: 'PM A PINGUELA', cond: 'local', s: '', ca: '10:30', vj: 0, casa: true, seg: false, sp: '', mun: 'Monforte de Lemos', r: null },
   ]);
+  assert.deepEqual(d.clas, []);
 
   // Fuera de __TITULO__ y __DATOS__, la página es la plantilla sin tocar.
   const [antes, resto] = PLANTILLA.split('__TITULO__');
@@ -174,7 +171,7 @@ test('crearHtml: sin salidas, sin pabellones y sin dirección publicada', () => 
 test('crearHtml: los valores que faltan salen como null, sin perder la propiedad', () => {
   const p = partido({ estado: 'rara', categoria: undefined, municipio: undefined });
   const d = datosDe(crearHtml(opciones({ partidos: [p] })));
-  assert.equal(Object.keys(d.partidos[0]).length, 19);
+  assert.equal(Object.keys(d.partidos[0]).length, 20);
   assert.equal(d.partidos[0].e, null);
   assert.equal(d.partidos[0].cat, null);
   assert.equal(d.partidos[0].mun, '');
@@ -252,4 +249,20 @@ test('codificarHtml como WebUtility.HtmlEncode de .NET', () => {
   const suelto = String.fromCharCode(0xD83C);
   assert.equal(codificarHtml(`${suelto}x`), `${String.fromCharCode(0xFFFD)}x`);
   assert.equal(codificarHtml(null), '');
+});
+
+test('crearHtml: resultados de los partidos y clasificaciones', () => {
+  const p = partido({ resultado: { marcador: [3, 1], sets: [[25, 20], [20, 25], [25, 18], [25, 22]] } });
+  const clas = [{
+    equipo: 'DOMPAVOLEI IF1', competicion: 'TORNEO APERTURA INFANTIL F', grupo: 'PRIMERA FASE - GRUPO H',
+    url: 'https://resultadosvoleibol.isquad.es/clasificacion.php?id=4064', actualizado: fechaPared(2026, 9, 26, 0, 30),
+    filas: [{ pos: 1, equipo: 'DOMPAVOLEI IF1', club: '206572580', pt: 6, pj: 2, pg: 2, pp: 0, sf: 6, sc: 0, nuestro: true }],
+  }];
+  const d = datosDe(crearHtml(opciones({ partidos: [p, partido()], clasificaciones: clas })));
+  assert.deepEqual(d.partidos.map((x) => x.r), [{ m: [3, 1], s: [[25, 20], [20, 25], [25, 18], [25, 22]] }, null]);
+  assert.deepEqual(d.clas, [{
+    eq: 'DOMPAVOLEI IF1', comp: 'TORNEO APERTURA INFANTIL F', g: 'PRIMERA FASE - GRUPO H',
+    url: 'https://resultadosvoleibol.isquad.es/clasificacion.php?id=4064', act: '26/09 00:30',
+    filas: [{ p: 1, n: 'DOMPAVOLEI IF1', pt: 6, pj: 2, pg: 2, pp: 0, sf: 6, sc: 0, o: true }],
+  }]);
 });

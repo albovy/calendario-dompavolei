@@ -1,11 +1,13 @@
-// Página HTML con los partidos (lista, vista mensual, filtros, imprimir). Es la traducción de New-Html
-// de calendario-voley.ps1: la plantilla (plantilla.html) no cambia y los partidos van dentro, en JSON.
+// Página HTML con los partidos (lista, vista mensual, clasificaciones, filtros, imprimir): la plantilla
+// (plantilla.html) con los datos dentro, en JSON. Nació como traducción de New-Html de
+// calendario-voley.ps1; desde septiembre de 2026 enseña también resultados y clasificaciones, que el
+// .ps1 no tiene.
 
 import { readFileSync } from 'node:fs';
 import { conHora } from './partidos.js';
 import { aEntero, claveSinCaja, fmt, hora, ordenarUnicos, txt } from './util.js';
 
-// Copia exacta del here-string $Script:PlantillaHtml del .ps1, con __TITULO__ y __DATOS__.
+// La página, con __TITULO__ y __DATOS__ (salió del here-string $Script:PlantillaHtml del .ps1).
 // Sin CR: aunque Git la saque con CRLF en Windows, la página sale igual que en GitHub Actions.
 const PLANTILLA = readFileSync(new URL('./plantilla.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
@@ -58,8 +60,9 @@ function datosPabellones(partidos, pabellones) {
 
 // generado: { pared, utc } (o directamente el Date de pared). salidas: el de configSalidas o null.
 // pabellones: la caché de resolverPabellones o null. pedirBus: el de configPedirBus o null.
+// clasificaciones: las de clasificaciones() de resultados.js.
 export function crearHtml({ partidos, equipos, nombreClub, temporada, ics, xlsx, generado, urlPublicada,
-  salidas, pabellones, pedirBus, duracion }) {
+  salidas, pabellones, pedirBus, duracion, clasificaciones = [] }) {
   const pared = generado instanceof Date ? generado : generado.pared;
   const bus = pedirBus ? { ...pedirBus, dur: aEntero(duracion) } : null;
   const pub = RE_PUBLICADA.exec(txt(urlPublicada));
@@ -96,6 +99,15 @@ export function crearHtml({ partidos, equipos, nombreClub, temporada, ics, xlsx,
       seg: Boolean(p.segundo),
       sp: p.salidaPrimero ? hora(p.salidaPrimero.salida) : '',
       mun: txt(p.municipio),
+      r: p.resultado ? { m: p.resultado.marcador, s: p.resultado.sets } : null,
+    })),
+    clas: clasificaciones.map((c) => ({
+      eq: c.equipo,
+      comp: c.competicion,
+      g: c.grupo,
+      url: c.url,
+      act: c.actualizado ? fmt(c.actualizado, 'dd/MM HH:mm') : '',
+      filas: c.filas.map((f) => ({ p: f.pos, n: f.equipo, pt: f.pt, pj: f.pj, pg: f.pg, pp: f.pp, sf: f.sf, sc: f.sc, o: Boolean(f.nuestro) })),
     })),
   };
   // Como ConvertTo-Json: lo que falta sale como null (JSON.stringify quitaría la propiedad).
