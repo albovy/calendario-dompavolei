@@ -9,7 +9,13 @@
 // cuando hace falta (gruposAConsultar); todo se guarda en resultados.json. Nunca se descargan actas,
 // previos ni plantillas: solo nombres de equipos y marcadores (en los equipos hay menores).
 
-import { clave, comoLista, esObjeto, leerJson, txt, unaLinea } from './util.js';
+import { conHora } from './partidos.js';
+import {
+  clave, comoLista, esObjeto, fechaValida, fmt, leerJson, sha1, soloDia, sumarDias, sumarMinutos, txt, unaLinea,
+} from './util.js';
+
+const HORAS_REPASO = 20;    // cada cuánto se repasan un grupo sin terminar y la lista de grupos
+const DIAS_ESPERA = 14;     // días que se insiste cada hora en un resultado que no llega
 
 // --- Lectura de las páginas de iSquad ------------------------------------------------------------
 
@@ -172,4 +178,117 @@ export function leerClasificacion(html) {
     });
   }
   return filas;
+}
+
+// --- Emparejado y qué consultar ------------------------------------------------------------------
+
+// Marcas de tiempo de resultados.json: "aaaa-mm-dd HH:mm", hora de Galicia.
+function marca(d) { return fmt(d, 'yyyy-MM-dd HH:mm'); }
+
+function leerMarca(texto) {
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(txt(texto));
+  return m ? fechaValida(...m.slice(1).map(Number)) : null;
+}
+
+// Horas desde una marca (Infinity si no hay).
+function horasDesde(texto, ahora) {
+  const d = leerMarca(texto);
+  return d ? (ahora - d) / 3600000 : Infinity;
+}
+
+export function finalizado(fila) {
+  return /^finalizado$/i.test(txt(fila?.estado).trim()) && Array.isArray(fila.marcador);
+}
+
+// Grupos de la caché de una competición: [[torneo, grupo], ...].
+function gruposDe(cache, competicion) {
+  const k = clave(competicion);
+  return Object.entries(cache.grupos).filter(([, g]) => clave(g.competicion) === k);
+}
+
+// Apunta los grupos en los que juega el club (lista de leerGrupos). esNuestro(nombre, club).
+export function anotarGrupos(cache, competicion, idCompeticion, lista, esNuestro) {
+  for (const gr of lista) {
+    const nuestros = gr.equipos.filter((e) => esNuestro(e.nombre, e.club)).map((e) => e.nombre).sort();
+    if (!nuestros.length) continue;
+    cache.grupos[gr.torneo] ??= {
+      competicion, id_competicion: idCompeticion, nombre: '', equipos: [], consultado: '', terminado: false,
+      firma: '', firma_clasificacion: '', partidos: [], clasificacion: null,
+    };
+    cache.grupos[gr.torneo].nombre = gr.nombre;
+    cache.grupos[gr.torneo].equipos = nuestros;
+  }
+}
+
+// Apunta los partidos del grupo (filas de leerResultados): los del club, si ya se ha jugado todo y una
+// firma de todos (si cambia, cambia la clasificación).
+export function anotarResultados(g, filas, esNuestro, ahora) {
+  g.consultado = marca(ahora);
+  g.terminado = filas.length > 0 && filas.every(finalizado);
+  g.firma = sha1(filas.map((f) => [f.local, f.visitante, f.dia, f.estado, f.marcador ? f.marcador.join('-') : ''].join('|')).join('\n')).slice(0, 16);
+  g.partidos = filas
+    .filter((f) => esNuestro(f.local, f.clubLocal) || esNuestro(f.visitante, f.clubVisitante))
+    .map(({ local, visitante, dia, hora, estado, marcador, sets }) => ({ local, visitante, dia, hora, estado, marcador, sets }));
+}
+
+// Fila de la federación de un partido de la agenda: mismo local, mismo visitante y mismo día en un grupo
+// de su competición; si la federación le cambió el día, el mismo cruce si solo hay uno.
+// Devuelve { torneo, fila } o null.
+export function buscarFila(p, grupos) {
+  const comp = clave(p.competicion);
+  const local = clave(p.local);
+  const visitante = clave(p.visitante);
+  const dia = fmt(p.fecha, 'yyyy-MM-dd');
+  const mismoDia = [];
+  const cruce = [];
+  for (const [torneo, g] of Object.entries(grupos)) {
+    if (clave(g.competicion) !== comp) continue;
+    for (const fila of comoLista(g.partidos ?? [])) {
+      if (clave(fila.local) !== local || clave(fila.visitante) !== visitante) continue;
+      (fila.dia === dia ? mismoDia : cruce).push({ torneo, fila });
+    }
+  }
+  if (mismoDia.length) return mismoDia[0];
+  return cruce.length === 1 ? cruce[0] : null;
+}
+
+// ¿Tendría que tener ya resultado? Empezó hace más de 2 horas (sin hora: desde el día siguiente) y
+// hace como mucho 14 días.
+export function esperaResultado(p, ahora) {
+  const fin = conHora(p) ? sumarMinutos(p.fecha, 120) : sumarDias(soloDia(p.fecha), 1);
+  return fin <= ahora && sumarDias(soloDia(p.fecha), DIAS_ESPERA + 1) > ahora;
+}
+
+// Competiciones de los partidos que aún no tienen número (o que no estaban en el árbol hace un día).
+export function competicionesSinNumero(cache, partidos, ahora) {
+  return [...new Set(partidos.map((p) => p.competicion))].filter((nombre) => {
+    const c = cache.competiciones[nombre];
+    return !c || (!c.id && horasDesde(c.revisado, ahora) >= HORAS_REPASO);
+  });
+}
+
+// Qué hay que consultar: { descubrir: competiciones cuya lista de grupos hay que mirar, grupos: torneos }.
+export function gruposAConsultar(cache, partidos, ahora) {
+  const descubrir = new Set();
+  const grupos = new Set();
+  for (const p of partidos) {
+    const c = cache.competiciones[p.competicion];
+    if (!c?.id) continue;
+    const e = buscarFila(p, cache.grupos);
+    // Partido que no está en ningún grupo conocido (p. ej. empieza la segunda fase): se mira la lista
+    // de grupos de su competición, como mucho una vez cada 20 horas.
+    if (!e && horasDesde(c.revisado, ahora) >= HORAS_REPASO) descubrir.add(p.competicion);
+    if (esperaResultado(p, ahora) && !(e && finalizado(e.fila))) {
+      if (e) grupos.add(e.torneo);
+      else for (const [t, g] of gruposDe(cache, p.competicion)) if (!g.terminado) grupos.add(t);
+    }
+  }
+  // Grupos nunca consultados y repaso diario de los que tienen partidos por jugar (la clasificación
+  // también cambia con los partidos de los rivales).
+  const competiciones = new Set(partidos.map((p) => clave(p.competicion)));
+  for (const [t, g] of Object.entries(cache.grupos)) {
+    if (!competiciones.has(clave(g.competicion))) continue;
+    if (!g.consultado || (!g.terminado && horasDesde(g.consultado, ahora) >= HORAS_REPASO)) grupos.add(t);
+  }
+  return { descubrir, grupos };
 }
