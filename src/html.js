@@ -70,7 +70,7 @@ function datosPabellones(partidos, pabellones) {
 // generado: { pared, utc } (o directamente el Date de pared). salidas: el de configSalidas o null.
 // pabellones: la caché de resolverPabellones o null. pedirBus: el de configPedirBus o null.
 // clasificaciones: las de clasificaciones() de resultados.js.
-function datosPagina({ partidos, equipos, nombreClub, temporada, ics, xlsx, generado, urlPublicada,
+function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ics, xlsx, generado, urlPublicada,
   salidas, pabellones, pedirBus, duracion, clasificaciones = [] }) {
   const pared = generado instanceof Date ? generado : generado.pared;
   const bus = pedirBus ? { ...pedirBus, dur: aEntero(duracion) } : null;
@@ -79,6 +79,7 @@ function datosPagina({ partidos, equipos, nombreClub, temporada, ics, xlsx, gene
   const mensajes = mensajesWhatsApp(partidos, { salidas, pedirBus, duracion: aEntero(duracion) || 120, pabellones, hoy: pared });
   const datos = {
     club: txt(nombreClub),
+    corto: txt(nombreCorto),
     temporada: txt(temporada),
     generado: fmt(pared, 'dd/MM/yyyy HH:mm'),
     ics: txt(ics),

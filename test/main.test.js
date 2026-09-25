@@ -124,8 +124,9 @@ test('temporada y fechas', () => {
 });
 
 test('clubs: config.json, --club por ID o por nombre, y nombres ambiguos', async () => {
-  const cfg = { clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }, { id: '', nombre: 'sin id' }, { id: 123 }] };
-  assert.deepEqual(await resolverClubs('', [], [], cfg), [{ id: DOMPA, nombre: 'DOMPAVOLEI' }, { id: '123', nombre: 'Club 123' }]);
+  const cfg = { clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: ' Dompa ' }, { id: '', nombre: 'sin id' }, { id: 123 }] };
+  // nombre_corto (opcional): «DOMPA INFANTIL» en la página nueva.
+  assert.deepEqual(await resolverClubs('', [], [], cfg), [{ id: DOMPA, nombre: 'DOMPAVOLEI', corto: 'Dompa' }, { id: '123', nombre: 'Club 123' }]);
   await assert.rejects(resolverClubs('', [], [], null), /No hay ningún club configurado en config.json/);
 
   const crudos = [
@@ -153,7 +154,7 @@ test('clubs: config.json, --club por ID o por nombre, y nombres ambiguos', async
 
 test('config.json: los nombres no distinguen mayúsculas, como en ConvertFrom-Json', async () => {
   const dir = carpetaConConfig({
-    Clubs: [{ ID: DOMPA, Nombre: 'DOMPAVOLEI' }],
+    Clubs: [{ ID: DOMPA, Nombre: 'DOMPAVOLEI', NOMBRE_CORTO: 'Dompa' }],
     SALIDAS: {
       Origen: 'Os Remedios', Latitud: 42.3442759, LONGITUD: -7.8713948,
       Tiempos_Viaje_Minutos: { 'Pazo dos Deportes': 40, Malo: 'mucho' },
@@ -162,7 +163,7 @@ test('config.json: los nombres no distinguen mayúsculas, como en ConvertFrom-Js
   });
   try {
     const cfg = leerConfig(join(dir, 'config.json'));
-    assert.deepEqual(await resolverClubs('', [], [], cfg), [{ id: DOMPA, nombre: 'DOMPAVOLEI' }]);
+    assert.deepEqual(await resolverClubs('', [], [], cfg), [{ id: DOMPA, nombre: 'DOMPAVOLEI', corto: 'Dompa' }]);
     const [salidas, avisos] = await enSilencio(() => configSalidas(cfg));
     assert.deepEqual([salidas.origen, salidas.lat, salidas.lon, [...salidas.manual]],
       ['Os Remedios', 42.3442759, -7.8713948, [['PAZO DOS DEPORTES', 40]]]);

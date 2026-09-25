@@ -117,8 +117,11 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   }));
   const d = datosDe(html);
 
-  assert.deepEqual(Object.keys(d), ['club', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas']);
+  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas']);
   assert.equal(d.club, 'DOMPAVOLEI');
+  // Nombre corto del club (config.json › nombre_corto) para «DOMPA INFANTIL» en la página nueva; sin él, ''.
+  assert.equal(d.corto, '');
+  assert.equal(datosDe(crearHtml(opciones({ nombreCorto: 'Dompa' }))).corto, 'Dompa');
   assert.equal(d.temporada, '2026/27');
   assert.equal(d.generado, '24/09/2026 09:05');
   assert.equal(d.ics, 'calendario-dompavolei-2026-27.ics');
@@ -164,7 +167,7 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   const titulo = 'Partidos &#183; DOMPAVOLEI &#183; 2026/27';
   assert.equal(html, antes + titulo + medio + jsonDe(html) + despues);
   // Sin espacios: como ConvertTo-Json -Compress.
-  assert.ok(jsonDe(html).startsWith('{"club":"DOMPAVOLEI","temporada":"2026/27","generado":"24/09/2026 09:05",'));
+  assert.ok(jsonDe(html).startsWith('{"club":"DOMPAVOLEI","corto":"","temporada":"2026/27","generado":"24/09/2026 09:05",'));
 });
 
 test('crearHtml: sin salidas, sin pabellones y sin dirección publicada', () => {

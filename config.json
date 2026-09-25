@@ -2,7 +2,8 @@
     "clubs": [
         {
             "id": "206572580",
-            "nombre": "DOMPAVOLEI"
+            "nombre": "DOMPAVOLEI",
+            "nombre_corto": "Dompa"
         }
     ],
     "duracion_minutos": 120,

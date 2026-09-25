@@ -167,13 +167,59 @@ test('salidas: una fila por partido; el 2.º partido del día va en su propia fi
   assert.deepEqual(lista.map((f) => f.i), [0, 1]);
   assert.equal(columnaHora(lista[0]), 'Salida 07:15 partido 10:00');
   assert.equal(columnaHora(lista[1]), '2.º partido 11:30 bus de 07:15');
-  assert.match(lista[1].html, /vs CV OLEIROS IFA/);
+  assert.deepEqual(equipos(lista[1].html).map((e) => e.nombre), ['DOMPAVOLEI INFANTIL', 'CV OLEIROS IFA']);
 });
 
-test('salidas: entre el código del equipo y el destino, un icono de ubicación («IF1 en MARÍN», no «IF1 MARÍN»)', () => {
+// Los dos equipos de una fila, en orden (local, visitante): [{ nombre, nuestro, tanteo }].
+function equipos(htmlFila) {
+  return [...htmlFila.matchAll(/<div class="eq (nuestro|rival)">([\s\S]*?)<\/div>/g)].map((m) => ({
+    nombre: texto((/<span class="nom">([\s\S]*?)<\/span>/.exec(m[2]) || [])[1] || ''),
+    nuestro: m[1] === 'nuestro',
+    tanteo: (/<b class="tanteo">(\d+)<\/b>/.exec(m[2]) || [])[1] || '',
+  }));
+}
+
+test('salidas: los dos equipos uno debajo del otro, primero el local; el nuestro en negrita con el punto de su color', () => {
+  const partidos = [
+    partido({ l: 'SEI SAN NARCISO IF', v: 'DOMPAVOLEI IF1', lo: false, vo: true, cond: 'visitante' }),
+    partido({ f: '2026-09-27', l: 'DOMPAVOLEI IF1', v: 'CV OLEIROS IFA', lo: true, vo: false, cond: 'local' }),
+    partido({ f: '2026-09-28', l: 'DOMPAVOLEI CF1', v: 'DOMPAVOLEI IF1', lo: true, vo: true, cond: 'derbi' }),
+  ];
+  const d = datos(partidos, { sal: SAL, corto: 'Dompa' });
+  d.equipos.push({ n: 'DOMPAVOLEI CF1', cat: 'Cadete F', ck: 'cadete', ics: '', np: 1 });
+  const html = abrirPagina(d).contenido.innerHTML;
+  const nombres = (i) => equipos(fila(html, i).html).map((e) => (e.nuestro ? `*${e.nombre}*` : e.nombre));
+  assert.deepEqual(nombres(0), ['SEI SAN NARCISO IF', '*DOMPA INFANTIL*']);   // de visitante: en segundo lugar
+  assert.deepEqual(nombres(1), ['*DOMPA INFANTIL*', 'CV OLEIROS IFA']);
+  assert.deepEqual(nombres(2), ['*DOMPA CADETE*', '*DOMPA INFANTIL*']);
+  // El nuestro lleva el punto de su color; el rival, un hueco del mismo ancho para que los nombres queden en columna.
+  assert.match(fila(html, 0).html, /<div class="eq rival"><span class="punto hueco" aria-hidden="true"><\/span><span class="nom">SEI SAN NARCISO IF<\/span><\/div>/);
+  assert.match(fila(html, 0).html, /<div class="eq nuestro"><span class="punto" aria-hidden="true"><\/span><span class="sr-only">contra <\/span><span class="nom">DOMPA INFANTIL<\/span><\/div>/);
+});
+
+test('salidas: el nombre de cada equipo, con la F o la M solo si hay los dos sexos y con número solo si hay varios de la categoría', () => {
+  const equiposClub = [
+    ['DOMPAVOLEI IF1', 'Infantil F', 'infantil'], ['DOMPAVOLEI IF2', 'Infantil F', 'infantil'], ['DOMPAVOLEI CF1', 'Cadete F', 'cadete'],
+    ['DOMPAVOLEI XF1', 'Juvenil F', 'juvenil'], ['DOMPAVOLEI SF1', 'Senior F', 'senior'], ['DOMPAVOLEI SM1', 'Senior M', 'senior'],
+    ['DOMPAVOLEI SM2', 'Senior M', 'senior'], ['DOMPA LAGOAS', 'Cadete F', 'cadete'],
+  ];
+  const partidos = equiposClub.map(([n, cat, ck], i) => partido({ f: `2026-10-${String(i + 1).padStart(2, '0')}`, v: n, cat, ck }));
+  const d = datos(partidos, { sal: SAL, corto: 'Dompa' });
+  d.equipos = equiposClub.map(([n, cat, ck]) => ({ n, cat, ck, ics: '', np: 1 }));
+  const html = abrirPagina(d).contenido.innerHTML;
+  const nuestro = (i) => equipos(fila(html, i).html).find((e) => e.nuestro).nombre;
+  assert.deepEqual(equiposClub.map((_, i) => nuestro(i)), [
+    'DOMPA INFANTIL 1', 'DOMPA INFANTIL 2', 'DOMPA CADETE', 'DOMPA JUVENIL', 'DOMPA SENIOR F', 'DOMPA SENIOR M 1', 'DOMPA SENIOR M 2',
+    'DOMPA LAGOAS',   // no sigue el patrón de código (IF1, CF2…): tal cual
+  ]);
+  // Sin nombre corto en config.json, el del club.
+  const sinCorto = abrirPagina(datos([partido({ v: 'DOMPAVOLEI IF1' })])).contenido.innerHTML;
+  assert.equal(equipos(fila(sinCorto, 0).html).find((e) => e.nuestro).nombre, 'DOMPAVOLEI INFANTIL');
+});
+
+test('salidas: debajo de los equipos, adónde se va (icono de ubicación) y la píldora local/visitante', () => {
   const html = abrirPagina(datos([partido({ s: '07:15', vj: 105, mun: 'MARÍN' })], { sal: SAL })).contenido.innerHTML;
-  // El icono va oculto para los lectores de pantalla, que oyen «IF1 en MARÍN».
-  assert.match(html, /<span class="cod">(?:DOMPAVOLEI )?IF1<\/span><span class="sr-only"> en <\/span><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"\/><\/svg><span class="lugar">MARÍN<\/span>/);
+  assert.match(html, /<div class="dest"><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"\/><\/svg><span class="sr-only">En <\/span><span class="lugar">MARÍN<\/span><span class="cond visitante">Visitante<\/span><\/div>/);
   assert.match(PLANTILLA, /<symbol id="i-lugar"/);
 });
 
@@ -241,7 +287,7 @@ test('salidas: local o visitante siempre a la vista, también en lo ya jugado y 
   for (const f of filas(html)) assert.match(f.html, /<span class="cond (local|visitante|derbi)">/);
 });
 
-test('salidas: código del equipo sin el prefijo y destino (municipio, o el pabellón en casa); en un derbi, los dos códigos', () => {
+test('salidas: destino (municipio, o el pabellón en casa) y píldora local / visitante / derbi', () => {
   const partidos = [
     partido({ s: '07:15', mun: 'MARÍN', pab: 'PABELLÓN COLEGIO SAN NARCISO - PISTA 1' }),
     partido({ f: '2026-09-27', casa: true, mun: 'OURENSE', pab: 'ANEXO OS REMEDIOS - PISTA 1', l: 'DOMPAVOLEI IF1', v: 'XUVENIL TEIS B', lo: true, vo: false, cond: 'local' }),
@@ -253,16 +299,12 @@ test('salidas: código del equipo sin el prefijo y destino (municipio, o el pabe
   d.equipos.push({ n: 'DOMPAVOLEI CF1', cat: 'Cadete F', ck: 'cadete', ics: '', np: 1 });
   const html = abrirPagina(d).contenido.innerHTML;
   const destino = (i) => texto(/<div class="dest">([\s\S]*?)<\/div>/.exec(fila(html, i).html)[1]);
-  // «en» es el texto para lectores de pantalla que acompaña al icono de ubicación.
-  assert.equal(destino(0), 'IF1 en MARÍN');
-  assert.equal(destino(1), 'IF1 en ANEXO OS REMEDIOS');
-  assert.equal(destino(2), 'IF1 en POLIDEPORTIVO TORRES COLOMER');
-  assert.equal(destino(3), 'IF1 en Pabellón por confirmar');
-  assert.equal(destino(4), 'CF1 · IF1 en LUGO');
-  assert.match(fila(html, 0).html, /<div class="rival">vs CV RIVAL<\/div>/);
-  assert.match(fila(html, 1).html, /<div class="rival">vs XUVENIL TEIS B<\/div>/);
-  assert.match(fila(html, 4).html, /<div class="rival">vs IF1<\/div>/);
-  assert.match(fila(html, 0).html, /<div class="sub">Infantil F <span class="cond/);
+  // «En» es el texto para lectores de pantalla que acompaña al icono de ubicación.
+  assert.equal(destino(0), 'En MARÍN Visitante');
+  assert.equal(destino(1), 'En ANEXO OS REMEDIOS Local');
+  assert.equal(destino(2), 'En POLIDEPORTIVO TORRES COLOMER Visitante');
+  assert.equal(destino(3), 'En Pabellón por confirmar Visitante');
+  assert.equal(destino(4), 'En LUGO Derbi');
 });
 
 test('salidas: «PRÓXIMA SALIDA» solo en la primera salida en bus por jugar de las que se ven', () => {
@@ -299,8 +341,11 @@ test('salidas: resultado desde el lado del club («Ganado 3-0» con los sets dad
     partido({ f: '2026-09-20', l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false, cond: 'local', r: { m: [2, 3], s: [[25, 20], [20, 25], [25, 18], [22, 25], [10, 15]] } }),
   ];
   const html = abrirPagina(datos(partidos, { sal: SAL }), { almacen: conFiltros({ per: 'todo' }) }).contenido.innerHTML;
-  assert.match(fila(html, 0).html, /<div class="res gana">Ganado 3-0<small>26-24 · 25-23 · 25-20<\/small><\/div>/);
-  assert.match(fila(html, 1).html, /<div class="res pierde">Perdido 2-3<small>25-20 · 20-25 · 25-18 · 22-25 · 10-15<\/small><\/div>/);
+  // Como un marcador: los sets de cada equipo en su línea (local arriba) y, debajo, ganado o perdido con los sets.
+  assert.deepEqual(equipos(fila(html, 0).html).map((e) => [e.nombre, e.tanteo]), [['CV RIVAL', '0'], ['DOMPAVOLEI INFANTIL', '3']]);
+  assert.deepEqual(equipos(fila(html, 1).html).map((e) => [e.nombre, e.tanteo]), [['DOMPAVOLEI INFANTIL', '2'], ['CV RIVAL', '3']]);
+  assert.match(fila(html, 0).html, /<div class="res gana">Ganado<small>26-24 · 25-23 · 25-20<\/small><\/div>/);
+  assert.match(fila(html, 1).html, /<div class="res pierde">Perdido<small>25-20 · 20-25 · 25-18 · 22-25 · 10-15<\/small><\/div>/);
 });
 
 // --- Botones -------------------------------------------------------------------------------------------

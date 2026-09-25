@@ -243,7 +243,7 @@ export function mostrarCatalogo(lista, temporada) {
 }
 
 export async function resolverClubs(textoClub, crudosTemporada, crudosTodos, cfg) {
-  // Devuelve los clubs ({ id, nombre }) a usar: los de --club o, si no, los de config.json.
+  // Devuelve los clubs ({ id, nombre[, corto] }) a usar: los de --club o, si no, los de config.json.
   if (textoClub) {
     const catalogo = await catalogoClubs(crudosTemporada, crudosTodos);
     const elegidos = [];
@@ -270,7 +270,10 @@ export async function resolverClubs(textoClub, crudosTemporada, crudosTodos, cfg
 
   const lista = comoLista(cfg?.clubs ?? [])
     .filter((c) => c?.id)
-    .map((c) => ({ id: txt(c.id), nombre: c.nombre ? txt(c.nombre) : `Club ${c.id}` }));
+    .map((c) => ({
+      id: txt(c.id), nombre: c.nombre ? txt(c.nombre) : `Club ${c.id}`,
+      ...(txt(c.nombre_corto).trim() ? { corto: txt(c.nombre_corto).trim() } : {}),
+    }));
   if (lista.length) return lista;
   throw new Error('No hay ningún club configurado en config.json. Indica el club con --club.');
 }
@@ -384,6 +387,8 @@ export async function principal(args, ahora = new Date()) {
   if (!clubs.length) throw new Error('No se ha elegido ningún club.');
   const ids = new Set(clubs.map((c) => txt(c.id)));
   const nombreClub = clubs.map((c) => c.nombre).join(' + ');
+  // «DOMPA INFANTIL» en la página nueva; con varios clubs no hay un nombre corto que valga.
+  const nombreCorto = clubs.length === 1 ? txt(clubs[0].corto) : '';
 
   const anteriorCrudos = await temporadaAnterior({
     rango, ids, ruta: rutas.temporadaAnterior, guardar: !rango.explicito,
@@ -483,7 +488,7 @@ export async function principal(args, ahora = new Date()) {
     crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
   const opcionesHtml = {
-    partidos, equipos, nombreClub, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
+    partidos, equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
   };
   writeFileSync(join(carpetaSalida, archivoHtml), crearHtml(opcionesHtml), 'utf8');

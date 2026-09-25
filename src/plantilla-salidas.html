@@ -178,14 +178,20 @@ main { display: block; padding-bottom: 32px; }
 .hora .pend { display: block; margin-top: 4px; font: 600 16px/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--ambar); }
 .hora .pend:first-child { margin-top: 0; }
 .info { min-width: 0; }
-/* Equipo, icono de ubicación y destino en una línea; si el destino es largo, se parte él (el icono no se queda solo). */
-.dest { display: flex; align-items: baseline; gap: 0 6px; min-width: 0; }
-.dest .hacia { flex: none; align-self: center; color: var(--tinta2); }
-.cod { font: 700 18px/1.1 var(--cond); letter-spacing: .02em; }
-.lugar { min-width: 0; font: 600 18px/1.1 var(--cond); letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
-.proxm { display: block; margin-top: 4px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--agua); }
-.rival { margin-top: 4px; font: 500 15px/1.3 var(--txt); overflow-wrap: anywhere; }
-.sub { margin-top: 3px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font: 400 15px/1.3 var(--txt); color: var(--tinta2); }
+/* Los dos equipos, uno debajo del otro como en un marcador: el nuestro en negrita con el punto de su color;
+   el rival en gris, con un hueco del mismo ancho; si ya se jugó, los sets de cada uno a la derecha. */
+.eqs { display: grid; gap: 3px; }
+.eq { display: flex; align-items: baseline; gap: 7px; min-width: 0; font: 500 17px/1.2 var(--cond); letter-spacing: .02em; color: var(--tinta2); }
+.eq.nuestro { font-weight: 700; color: var(--tinta); }
+.eq .punto { align-self: center; }
+.eq .punto.hueco { background: none; }
+.eq .nom { min-width: 0; overflow-wrap: anywhere; }
+.eq .tanteo { margin-left: auto; padding-left: 8px; font: 700 18px/1 var(--cond); font-variant-numeric: tabular-nums; }
+/* Debajo, adónde se va (con su icono) y la píldora local / visitante. */
+.dest { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
+.dest .hacia { flex: none; color: var(--tinta2); }
+.lugar { min-width: 0; margin-right: 4px; font: 600 15px/1.2 var(--cond); letter-spacing: .05em; text-transform: uppercase; color: var(--tinta2); overflow-wrap: anywhere; }
+.proxm { display: block; margin: 0 0 5px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--agua); }
 .cond {
   padding: 5px 8px; border-radius: 999px; border: 1.5px solid var(--tinta2); color: var(--tinta2); white-space: nowrap;
   font: 700 12px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
@@ -449,6 +455,32 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   }
   function corto(n) { return prefijo && n.indexOf(prefijo) === 0 ? n.slice(prefijo.length) : n; }
 
+  // Nombre de cada equipo del club en las filas: el nombre corto del club (config.json › nombre_corto) y la
+  // categoría, «DOMPA INFANTIL». La F o la M solo si el club tiene esa categoría en los dos sexos
+  // («DOMPA SENIOR F» / «DOMPA SENIOR M»), y un número solo si hay varios equipos de la misma
+  // («DOMPA CADETE 1», «DOMPA CADETE 2»; el número es el del código, IF1 -> 1). Un equipo cuyo nombre no
+  // acaba en un código (p. ej. «DOMPA LAGOAS») se queda como está.
+  var NOMBRES = (function () {
+    var club = String(D.corto || D.club).toUpperCase();
+    var info = D.equipos.map(function (e) {
+      var codigo = /^.+\s([A-Z]{1,4})(\d*)$/.exec(String(e.n));
+      var cat = /^(.*?)\s+([FM])$/i.exec(String(e.cat || '').trim());
+      return {
+        n: e.n, vale: Boolean(codigo && e.cat), num: codigo ? codigo[2] : '',
+        base: (cat ? cat[1] : String(e.cat || '')).toUpperCase(), sexo: cat ? cat[2].toUpperCase() : ''
+      };
+    }).filter(function (x) { return x.vale; });
+    var nombres = {};
+    info.forEach(function (x) {
+      var dosSexos = info.some(function (y) { return y.base === x.base && y.sexo !== x.sexo; });
+      var grupo = info.filter(function (y) { return y.base === x.base && (!dosSexos || y.sexo === x.sexo); });
+      var num = grupo.length > 1 ? ' ' + (x.num || String(grupo.indexOf(x) + 1)) : '';
+      nombres[x.n] = club + ' ' + x.base + (dosSexos && x.sexo ? ' ' + x.sexo : '') + num;
+    });
+    return nombres;
+  })();
+  function nombreEquipo(n) { return propia(NOMBRES, n) ? NOMBRES[n] : n; }
+
   // Calendario publicado en internet (GitHub Pages): suscripción que se actualiza sola.
   var enWeb = /^https?:$/.test(location.protocol);
   var pub = enWeb
@@ -649,8 +681,6 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     if (p.casa && p.pab) return pabCorto(p.pab);
     return p.mun || pabCorto(p.pab);
   }
-  // El rival; en un derbi, el otro equipo del club (el visitante).
-  function rival(p) { return p.lo && p.vo ? corto(p.v) : p.lo ? p.v : p.l; }
 
   function icono(id, tam) { return '<svg width="' + (tam || 15) + '" height="' + (tam || 15) + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
@@ -785,13 +815,26 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
 
   // Marcador del lado del club (en los partidos de visitante se da la vuelta; en un derbi, local-visitante).
   function delClub(p, par) { return p.vo && !p.lo ? [par[1], par[0]] : par; }
+  // Debajo de los equipos (que ya llevan cada uno sus sets ganados): ganado o perdido, y los sets desde
+  // nuestro lado.
   function textoResultado(p) {
     var m = delClub(p, p.r.m);
     var sets = p.r.s.map(function (s) { return delClub(p, s).join('-'); }).join(' · ');
     var derbi = p.cond === 'derbi';
     var cls = derbi ? 'derbi' : m[0] > m[1] ? 'gana' : 'pierde';
     var txt = derbi ? 'Resultado' : m[0] > m[1] ? 'Ganado' : 'Perdido';
-    return '<div class="res ' + cls + '">' + txt + ' ' + m[0] + '-' + m[1] + (sets ? '<small>' + esc(sets) + '</small>' : '') + '</div>';
+    return '<div class="res ' + cls + '">' + txt + (sets ? '<small>' + esc(sets) + '</small>' : '') + '</div>';
+  }
+
+  // Una línea de equipo, como en un marcador: el nuestro en negrita con el punto del color de su
+  // categoría; el rival, con un hueco del mismo ancho para que los nombres queden en columna. Si ya se
+  // jugó, a la derecha los sets que ganó. segundo: es la línea del visitante («contra» para los lectores).
+  function lineaEquipo(nombre, esNuestro, tanteo, segundo) {
+    return '<div class="eq ' + (esNuestro ? 'nuestro' : 'rival') + '">' +
+      '<span class="punto' + (esNuestro ? '' : ' hueco') + '" aria-hidden="true"></span>' +
+      (segundo ? '<span class="sr-only">contra </span>' : '') +
+      '<span class="nom">' + esc(esNuestro ? nombreEquipo(nombre) : nombre) + '</span>' +
+      (tanteo !== '' ? '<b class="tanteo">' + tanteo + '</b>' : '') + '</div>';
   }
 
   // Una línea del detalle: su icono y el contenido (ya en HTML).
@@ -813,20 +856,21 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.
   function filaPartido(p, marca) {
     var i = D.partidos.indexOf(p), jug = jugado(p);
-    var cod = nuestros(p).map(corto).join(' · '), riv = rival(p);
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
     var acc = botonesWhatsApp(p, i) + enlaceBus(p);
+    var local = p.lo ? nombreEquipo(p.l) : p.l, visit = p.vo ? nombreEquipo(p.v) : p.v;
     return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-cat="' + esc(p.ck) + '" data-i="' + i + '">' +
       columnaHora(p, jug) +
-      // Entre el equipo y el destino, un icono de ubicación: «IF1 en MARÍN», no el «infantil de Marín».
-      '<div class="info"><div class="dest"><span class="cod">' + esc(cod) + '</span><span class="sr-only"> en </span>' +
-      '<svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
-      '<span class="lugar">' + esc(destino(p)) + '</span></div>' +
-      (marca ? '<span class="proxm">' + marca + '</span>' : '') +
-      '<div class="rival">vs ' + esc(riv) + '</div>' +
-      '<div class="sub">' + esc(p.cat) + ' <span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +
+      '<div class="info">' + (marca ? '<span class="proxm">' + marca + '</span>' : '') +
+      // Los dos equipos, uno debajo del otro y en el orden del partido: primero el local. De visitante,
+      // el nuestro va en segundo lugar.
+      '<div class="eqs">' + lineaEquipo(p.l, p.lo, p.r ? p.r.m[0] : '', false) + lineaEquipo(p.v, p.vo, p.r ? p.r.m[1] : '', true) + '</div>' +
+      // Adónde se va, con un icono de ubicación, y la píldora local / visitante.
+      '<div class="dest"><svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
+      '<span class="sr-only">En </span><span class="lugar">' + esc(destino(p)) + '</span>' +
+      '<span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +
       (p.r ? textoResultado(p) : '') + '</div>' +
-      '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + cod + ' contra ' + riv) + '">' +
+      '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + local + ' contra ' + visit) + '">' +
       icono('i-flecha', 16) + '</button>' +
       (acc ? '<div class="acc">' + acc + '</div>' : '') + detalle(p, i) + '</article>';
   }
