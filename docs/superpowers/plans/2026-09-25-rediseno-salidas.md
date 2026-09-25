@@ -53,8 +53,7 @@ repositorio (reescribe cachés): para probar con datos reales, copiar `config.js
   2.º PARTIDO, EN CASA, PARTIDO, HORA POR CONFIRMAR, FECHA Y HORA POR CONFIRMAR, provisional, SALIÓ), la
   píldora LOCAL/VISITANTE/DERBI en todas, «PRÓXIMA SALIDA» solo en la primera salida por jugar, botones
   (`boton-wa copiar` con `data-i`, `boton-wa wa` a api.whatsapp.com, `boton-bus`) solo donde tocan,
-  «Ganado 3-0» desde nuestro lado, copiado con alternativa, pestañas ocultas sin clasificaciones, enlace
-  «Ver el diseño de siempre». Más la prueba de sintaxis y de `__TITULO__`/`__DATOS__` únicos.
+  «Ganado 3-0» desde nuestro lado, copiado con alternativa, pestañas ocultas sin clasificaciones. Más la prueba de sintaxis y de `__TITULO__`/`__DATOS__` únicos.
 - [ ] Escribir la plantilla siguiendo la maqueta v3 y el diseño: barra con escudo y «+ Calendario» (panel
   con la suscripción, .ics, Excel, Imprimir y la ayuda actual), pestañas, chips (fila fija, sin barra de
   scroll), «Filtros» desplegable, «Salidas desde Os Remedios» + Lista/Mes, días, filas, detalle
@@ -64,12 +63,14 @@ repositorio (reescribe cachés): para probar con datos reales, copiar `config.js
   localStorage con su propia clave para no pisar la de la página actual).
 - [ ] `npm test` pasa entero. Commit.
 
-### Tarea 4: enlaces entre las dos páginas
+### Tarea 4: selector «Diseño antiguo | Diseño nuevo» arriba del todo en las dos páginas
 
-- [ ] En `src/plantilla.html` (la actual), un enlace discreto en el pie: «Probar el diseño nuevo» →
-  `salidas.html` (solo si la página está publicada o existe el archivo; basta con el enlace relativo). En la
-  nueva, «Ver el diseño de siempre» → `index.html` si está publicada, si no el nombre del .html actual
-  (`D.ics` sin extensión + `.html`). Prueba en html.test.js. Commit.
+- [ ] En las dos plantillas, una franja fina encima de la cabecera con dos enlaces: «Diseño antiguo» y
+  «Diseño nuevo», con el de la página actual marcado (`aria-current="page"`, relleno). Destinos: antiguo →
+  `index.html` si la página está publicada (http/https), si no el .html de siempre (`D.ics` cambiando
+  `.ics` por `.html`); nuevo → `salidas.html`. En la antigua respeta sus colores; en la nueva, los
+  suyos. 36-40 px de alto, sin scroll horizontal a 375 px, oculta al imprimir. Pruebas en los dos
+  archivos de pruebas de página (enlaces y marcado). Commit.
 
 ### Tarea 5: comprobación visual
 

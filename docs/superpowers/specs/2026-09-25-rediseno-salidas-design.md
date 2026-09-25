@@ -10,8 +10,11 @@ oscuro a la derecha; HTML de referencia en `2026-09-25-rediseno-salidas-maqueta.
   `<script id="datos">`) desde una plantilla nueva, `src/plantilla-salidas.html`.
 - La página actual (`src/plantilla.html` → `calendario.html` / `index.html`) NO cambia y sigue siendo la
   portada. El usuario decidirá más adelante cuál es la portada.
-- En la página actual se añade un enlace discreto a la nueva y viceversa («Probar el diseño nuevo» /
-  «Ver el diseño de siempre»), para comparar en el móvil.
+- **Selector de diseño arriba del todo en las dos páginas** (lo pidió el usuario para decidir cuál le
+  convence): una franja fina encima de la cabecera con dos opciones, «Diseño antiguo | Diseño nuevo», con la
+  de la página actual marcada (`aria-current="page"`). «Diseño antiguo» lleva a `index.html` (publicada) o
+  al .html de siempre (en local); «Diseño nuevo» lleva a `salidas.html`. Mismo aspecto en las dos páginas
+  (con los colores de cada una), 36-40 px de alto, que no tape nada y que no salga al imprimir.
 
 ## Condiciones del usuario (obligatorias)
 
@@ -120,7 +123,7 @@ todos los detalles salen abiertos y los botones no salen.
   «+N»), con la hora de salida si la hay; hoy con anillo aguamarina. Tocar un día lleva a la lista.
 - **Clasificación:** las tablas actuales con los nuevos colores; nuestra fila con barra `--agua-r`, tinte
   suave y negrita. «Comprobada el … · Ver en la federación».
-- **Pie:** calendarios .ics por equipo, fuente de los datos y enlace «Ver el diseño de siempre».
+- **Pie:** calendarios .ics por equipo y fuente de los datos.
 - **Vacíos:** los mismos mensajes y el botón para quitar filtros.
 
 ## Datos
