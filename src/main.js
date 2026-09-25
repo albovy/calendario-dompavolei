@@ -6,6 +6,8 @@
 //
 //   - <nombre>.ics   Calendario para Google Calendar, Outlook, iPhone o Android.
 //   - <nombre>.html  Página con los partidos (lista, vista mensual y clasificaciones), imprimible.
+//   - manifest.webmanifest, sw.js e iconos/  Para instalar la página como app en el móvil (solo si hay
+//                    iconos junto a config.json: ver prepararApp).
 //   - <nombre>.xlsx  Hoja de Excel con los partidos.
 //   - equipos/*.ics  Un calendario por cada equipo del club (para entrenadores y familias).
 //
@@ -37,7 +39,7 @@
 // deja además la pila en stderr; con la variable de entorno CALENDARIO_DETALLE=1, cualquier error
 // (como -Verbose en el .ps1).
 
-import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -120,7 +122,59 @@ export function rutasConfig(ruta) {
     temporadaAnterior: join(dirname(config), 'temporada-anterior.json'),
     resultados: join(dirname(config), 'resultados.json'),
     escudo: join(dirname(config), 'escudo.png'),
+    iconos: join(dirname(config), 'iconos'),
   };
+}
+
+// --- App instalable -------------------------------------------------------------------------------------
+
+// Los iconos de la app, en la carpeta iconos/ junto a config.json: [archivo, tamaño, uso]. 192 y 512 son
+// imprescindibles (sin ellos no se instala); los «maskable» los recorta Android a su forma (el escudo, en el
+// círculo central del 80 %). apple-touch-icon.png (180 x 180) es el de la pantalla de inicio del iPhone.
+const ICONOS_APP = [
+  ['192.png', '192x192', 'any'], ['512.png', '512x512', 'any'],
+  ['maskable-192.png', '192x192', 'maskable'], ['maskable-512.png', '512x512', 'maskable'],
+];
+const ICONO_IPHONE = 'apple-touch-icon.png';
+const SERVICE_WORKER = fileURLToPath(new URL('./sw.js', import.meta.url));
+
+// El nombre bajo el icono (hasta 12 letras, para que no se corte): el del club con mayúscula inicial
+// («DOMPAVOLEI» -> «Dompavolei»), o el nombre corto, o «Calendario».
+export function nombreApp(nombreClub, nombreCorto) {
+  const bonito = (t) => txt(t).trim().toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_m, a, b) => a + b.toUpperCase());
+  return [bonito(nombreClub), bonito(nombreCorto)].find((n) => n && n.length <= 12) ?? 'Calendario';
+}
+
+// Si hay iconos junto a config.json, deja junto a la página lo que hace falta para instalarla como app:
+// manifest.webmanifest, los iconos (iconos/) y el service worker (sw.js, siempre el mismo: que no cambie
+// entre publicaciones). Devuelve { nombre, appleIcono } para crearHtml, o null si no hay iconos.
+export function prepararApp({ carpetaIconos, carpetaSalida, nombreClub, nombreCorto, urlPublicada }) {
+  if (!ICONOS_APP.slice(0, 2).every(([f]) => existsSync(join(carpetaIconos, f)))) return null;
+  const presentes = [...ICONOS_APP.map(([f]) => f), ICONO_IPHONE].filter((f) => existsSync(join(carpetaIconos, f)));
+  mkdirSync(join(carpetaSalida, 'iconos'), { recursive: true });
+  for (const f of presentes) copyFileSync(join(carpetaIconos, f), join(carpetaSalida, 'iconos', f));
+  const nombre = nombreApp(nombreClub, nombreCorto);
+  // id: la carpeta de la web (p. ej. /calendario-dompavolei/), para que no se confunda con otra app del
+  // mismo dominio; sin dirección publicada se deja sin id (el navegador usa start_url).
+  let id = null;
+  try {
+    const u = new URL(txt(urlPublicada));
+    if (/^https?:$/.test(u.protocol)) id = u.pathname.replace(/[^/]*$/, '');
+  } catch { /* sin dirección publicada */ }
+  const bonitoClub = txt(nombreClub).trim().toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_m, a, b) => a + b.toUpperCase());
+  const manifiesto = {
+    ...(id ? { id } : {}),
+    name: `Calendario ${bonitoClub || nombre}`,
+    short_name: nombre,
+    description: `Partidos, salidas, resultados y clasificaciones de ${txt(nombreClub)}.`,
+    lang: 'es', dir: 'ltr', start_url: './', scope: './', display: 'standalone',
+    background_color: '#FFFFFF', theme_color: '#FFFFFF',
+    icons: ICONOS_APP.filter(([f]) => presentes.includes(f))
+      .map(([f, sizes, purpose]) => ({ src: `iconos/${f}`, sizes, type: 'image/png', purpose })),
+  };
+  writeFileSync(join(carpetaSalida, 'manifest.webmanifest'), `${JSON.stringify(manifiesto, null, 2)}\n`, 'utf8');
+  copyFileSync(SERVICE_WORKER, join(carpetaSalida, 'sw.js'));
+  return { nombre, appleIcono: presentes.includes(ICONO_IPHONE) };
 }
 
 // Como las propiedades de ConvertFrom-Json, los nombres de config.json no distinguen mayúsculas
@@ -485,6 +539,7 @@ export async function principal(args, ahora = new Date()) {
     partidos, equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
     rutaEscudo: rutas.escudo,
+    app: prepararApp({ carpetaIconos: rutas.iconos, carpetaSalida, nombreClub, nombreCorto, urlPublicada }),
   };
   writeFileSync(join(carpetaSalida, archivoHtml), crearHtml(opcionesHtml), 'utf8');
   if (opciones.historial) {
@@ -530,6 +585,7 @@ export async function principal(args, ahora = new Date()) {
   console.log(`    ${archivoIcs}   <- calendario para importar (copia fija)`);
   console.log(`    ${archivoXlsx}  <- Excel`);
   if (conEquipos) console.log(`    equipos${sep}  <- un calendario .ics por equipo (${equipos.length})`);
+  if (opcionesHtml.app) console.log(`    manifest.webmanifest, sw.js, iconos${sep}  <- para instalar la página como app en el móvil`);
   if (urlPublicada) {
     console.log('');
     console.log(`  Calendario en internet (se actualiza solo): ${urlPublicada}`);

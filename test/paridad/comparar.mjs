@@ -12,7 +12,7 @@
 //   - cada .ics (el del club y los de equipos/), sin DTSTAMP, LAST-MODIFIED ni SEQUENCE y con la fecha
 //     de "actualizados el" igualada: primero tal cual, con las líneas plegadas, y luego desplegadas;
 //   - la página: sus datos embebidos como JSON, sin "generado" ni lo que el .ps1 no tiene (corto, clas,
-//     escudo; r y wa en cada partido). La plantilla no: desde septiembre de 2026 es otro diseño;
+//     escudo, app; r y wa en cada partido). La plantilla no: desde septiembre de 2026 es otro diseño;
 //   - el Excel: cada parte XML, con la fecha del pie igualada (el ZIP en sí no: comprime distinto);
 //   - historial.txt byte a byte, pabellones.json como datos y lo que se escribe por consola;
 //   - que las marcas de tiempo (DTSTAMP, SEQUENCE, "actualizados el", "generado") son las de la hora
@@ -446,7 +446,7 @@ function compararEjecuciones(ps, js) {
       datosJs = b.valor;
       const sinGenerado = ({ generado, ...resto }) => resto;
       // Lo que solo tiene la versión en JavaScript no se compara (datosJs sigue entero para comprobarMarcas).
-      const comunConPs = ({ generado, corto, clas, escudo, ...resto }) => ({
+      const comunConPs = ({ generado, corto, clas, escudo, app, ...resto }) => ({
         ...resto, partidos: resto.partidos?.map(({ r, wa, ...p }) => p),
       });
       const d = diferenciaJson(sinGenerado(datosPs), comunConPs(datosJs), 'datos');

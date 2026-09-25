@@ -63,9 +63,12 @@ const SALIDAS = {
   redondeoViaje: 15, redondeo: 15, radioCasaKm: 1, manual: new Map(),
 };
 
-test('plantilla.html: un solo __TITULO__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
+test('plantilla.html: un solo __TITULO__, __APP__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
   assert.equal(veces(PLANTILLA, '__TITULO__'), 1);
   assert.equal(veces(PLANTILLA, '__DATOS__'), 1);
+  // __APP__: en la cabecera, lo de la app instalable (manifiesto e iconos) si la hay.
+  assert.equal(veces(PLANTILLA, '__APP__'), 1);
+  assert.ok(PLANTILLA.indexOf('__APP__') < PLANTILLA.indexOf('</head>'));
   assert.ok(PLANTILLA.includes(`${INICIO_DATOS}__DATOS__</script>`));
   assert.ok(PLANTILLA.includes('<title>__TITULO__</title>'));
   const codigo = PLANTILLA.slice(PLANTILLA.lastIndexOf('<script>') + '<script>'.length, PLANTILLA.lastIndexOf('</script>'));
@@ -114,9 +117,10 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   }));
   const d = datosDe(html);
 
-  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas', 'escudo']);
+  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas', 'escudo', 'app']);
   assert.equal(d.club, 'DOMPAVOLEI');
   assert.equal(d.escudo, '');   // sin rutaEscudo
+  assert.equal(d.app, false);   // sin app instalable
   // Nombre corto del club (config.json › nombre_corto) para «DOMPA INFANTIL» en la página; sin él, ''.
   assert.equal(d.corto, '');
   assert.equal(datosDe(crearHtml(opciones({ nombreCorto: 'Dompa' }))).corto, 'Dompa');
@@ -159,9 +163,9 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   assert.deepEqual(d.partidos.map((x) => Boolean(x.wa)), [true, false, true, false, true]);
   assert.deepEqual(d.clas, []);
 
-  // Fuera de __TITULO__ y __DATOS__, la página es la plantilla sin tocar.
+  // Fuera de __TITULO__, __APP__ y __DATOS__, la página es la plantilla sin tocar (sin app, __APP__ queda vacío).
   const [antes, resto] = PLANTILLA.split('__TITULO__');
-  const [medio, despues] = resto.split('__DATOS__');
+  const [medio, despues] = resto.replace('__APP__', '').split('__DATOS__');
   const titulo = 'Partidos &#183; DOMPAVOLEI &#183; 2026/27';
   assert.equal(html, antes + titulo + medio + jsonDe(html) + despues);
   // Sin espacios: como ConvertTo-Json -Compress.
@@ -292,7 +296,7 @@ test('crearHtml: mensaje de WhatsApp en el primer partido del día de cada equip
 
 // --- Escudo del club ---------------------------------------------------------------------------------
 
-test('crearHtml: el escudo del club (escudo.png) como data URI, el último de los datos', () => {
+test('crearHtml: el escudo del club (escudo.png) como data URI, al final de los datos (antes de "app")', () => {
   const dir = mkdtempSync(join(tmpdir(), 'escudo-'));
   try {
     const rutaEscudo = join(dir, 'escudo.png');
@@ -302,7 +306,7 @@ test('crearHtml: el escudo del club (escudo.png) como data URI, el último de lo
     const html = crearHtml({ ...op, rutaEscudo });
     const { escudo, ...resto } = datosDe(html);
     assert.equal(escudo, `data:image/png;base64,${png.toString('base64')}`);
-    assert.equal(Object.keys(datosDe(html)).at(-1), 'escudo');
+    assert.deepEqual(Object.keys(datosDe(html)).slice(-2), ['escudo', 'app']);
     // El resto de los datos, igual que sin escudo.
     const { escudo: vacio, ...sinEscudo } = datosDe(crearHtml(op));
     assert.equal(vacio, '');
@@ -326,4 +330,25 @@ test('crearHtml: un escudo que no se puede leer avisa y la página sale sin él'
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// --- App instalable -------------------------------------------------------------------------------
+
+test('crearHtml: con app, la cabecera enlaza el manifiesto y los iconos, y la página lo sabe (app: true)', () => {
+  const html = crearHtml(opciones({ app: { nombre: 'Dompa & Cía', appleIcono: true } }));
+  const cabecera = html.slice(0, html.indexOf('</head>'));
+  assert.ok(cabecera.includes(`<title>Partidos &#183; DOMPAVOLEI &#183; 2026/27</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="iconos/192.png">
+<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Dompa &amp; C&#237;a">`), cabecera);
+  assert.equal(datosDe(html).app, true);
+  // Sin el icono de iPhone, sin su enlace (el resto igual).
+  const sinApple = crearHtml(opciones({ app: { nombre: 'Dompavolei', appleIcono: false } }));
+  assert.ok(sinApple.includes('<link rel="manifest" href="manifest.webmanifest">'));
+  assert.ok(!sinApple.includes('apple-touch-icon'));
+  // Sin app: nada de eso.
+  const sin = crearHtml(opciones());
+  assert.ok(!/rel="manifest"|apple-touch-icon|apple-mobile-web-app-title|iconos\//.test(sin));
+  assert.equal(datosDe(sin).app, false);
 });

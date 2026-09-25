@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -463,6 +463,75 @@ test('el nombre corto de la página: el de config.json; si no hay, el del club; 
   assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: 'Dompa' }] }), 'Dompa');
   assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }] }), 'DOMPAVOLEI');
   assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: 'Dompa' }, { id: '1', nombre: 'RIVAL' }] }), '');
+});
+
+test('app instalable: con iconos junto a config.json, manifiesto, iconos y sw.js junto a la página', async () => {
+  const filas = [fila('2026-10-03 12:00:00', 'RIVAL', 'DOMPAVOLEI CF1', '1', DOMPA)];
+  const png = (n) => Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, n]);
+  const generar = async (config, iconos) => {
+    const dir = carpetaConConfig(config);
+    if (iconos) {
+      mkdirSync(join(dir, 'iconos'));
+      iconos.forEach((f, i) => writeFileSync(join(dir, 'iconos', f), png(i)));
+    }
+    const salida = join(dir, 'salida');
+    const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
+      () => principal(['--config', dir, '--salida', salida, '--sin-equipos', '--nombre-base', 'cal', '--temporada', '2026-27'], new Date('2026-09-24T10:00:00Z'))));
+    return { dir, salida, consola };
+  };
+  const TODOS = ['192.png', '512.png', 'maskable-192.png', 'maskable-512.png', 'apple-touch-icon.png'];
+  const cfg = { clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: 'Dompa' }], calendario_publicado: 'https://albovy.github.io/calendario-dompavolei/calendario.ics' };
+  let g = await generar(cfg, TODOS);
+  try {
+    assert.deepEqual(readdirSync(g.salida).sort(), ['cal.html', 'cal.ics', 'cal.xlsx', 'iconos', 'manifest.webmanifest', 'sw.js']);
+    assert.deepEqual(readdirSync(join(g.salida, 'iconos')).sort(), [...TODOS].sort());
+    TODOS.forEach((f, i) => assert.deepEqual(readFileSync(join(g.salida, 'iconos', f)), png(i), f));
+    // sw.js: el de src/, byte a byte (si cambiara en cada publicación, se instalaría uno nuevo cada hora).
+    assert.deepEqual(readFileSync(join(g.salida, 'sw.js')), readFileSync(join(REPO, 'src', 'sw.js')));
+    const m = JSON.parse(readFileSync(join(g.salida, 'manifest.webmanifest'), 'utf8'));
+    assert.deepEqual(m, {
+      id: '/calendario-dompavolei/', name: 'Calendario Dompavolei', short_name: 'Dompavolei',
+      description: 'Partidos, salidas, resultados y clasificaciones de DOMPAVOLEI.',
+      lang: 'es', dir: 'ltr', start_url: './', scope: './', display: 'standalone',
+      background_color: '#FFFFFF', theme_color: '#FFFFFF',
+      icons: [
+        { src: 'iconos/192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: 'iconos/512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: 'iconos/maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: 'iconos/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    });
+    const html = readFileSync(join(g.salida, 'cal.html'), 'utf8');
+    assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
+    assert.match(html, /<meta name="apple-mobile-web-app-title" content="Dompavolei">/);
+    assert.equal(datosDePagina(join(g.salida, 'cal.html')).app, true);
+    assert.ok(g.consola.some((l) => /^ {4}manifest\.webmanifest, sw\.js, iconos. +<- /.test(l)), g.consola.join('\n'));
+  } finally {
+    rmSync(g.dir, { recursive: true, force: true });
+  }
+  // Solo con los iconos imprescindibles (192 y 512), sin dirección publicada: sin id y sin el icono de iPhone.
+  g = await generar({ clubs: [{ id: DOMPA, nombre: 'CV SAN MARTIÑO DE LUGO' }] }, ['192.png', '512.png']);
+  try {
+    const m = JSON.parse(readFileSync(join(g.salida, 'manifest.webmanifest'), 'utf8'));
+    assert.equal(m.id, undefined);
+    assert.equal(m.short_name, 'Calendario');   // ni el nombre ni el corto caben en 12 letras
+    assert.equal(m.name, 'Calendario Cv San Martiño De Lugo');
+    assert.deepEqual(m.icons.map((i) => i.src), ['iconos/192.png', 'iconos/512.png']);
+    assert.ok(!readFileSync(join(g.salida, 'cal.html'), 'utf8').includes('apple-touch-icon'));
+  } finally {
+    rmSync(g.dir, { recursive: true, force: true });
+  }
+  // Sin iconos (o sin alguno de los dos imprescindibles): ni manifiesto ni service worker.
+  for (const iconos of [null, ['192.png']]) {
+    g = await generar(cfg, iconos);
+    try {
+      assert.deepEqual(readdirSync(g.salida).filter((f) => !f.startsWith('cal.')), [], String(iconos));
+      assert.equal(datosDePagina(join(g.salida, 'cal.html')).app, false);
+      assert.ok(!readFileSync(join(g.salida, 'cal.html'), 'utf8').includes('rel="manifest"'));
+    } finally {
+      rmSync(g.dir, { recursive: true, force: true });
+    }
+  }
 });
 
 // Lo que ejecuta bash en el bloque «run: |» de un paso del workflow: sus líneas sin la sangría común, como

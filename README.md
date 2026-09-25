@@ -26,6 +26,37 @@ diario), y se guardan en `resultados.json`. Nunca se descargan actas ni plantill
 En los partidos por jugar, los botones **Copiar** y **WhatsApp** preparan un mensaje para el grupo de las
 familias: día, salida y lugar, pabellón con mapa, calentamiento, partidos y vuelta aproximada.
 
+### Instalar como app
+
+La página se puede instalar en el móvil como una app: queda con el escudo en la pantalla de inicio (y en
+el cajón de apps de Android) y se abre sin la barra del navegador. En el móvil sale un aviso bajo la barra,
+que se puede cerrar; también está en **+ Calendario › Instalar como app**:
+
+- **Android (Chrome):** botón **Instalar** del aviso, o menú ⋮ › «Instalar y crear acceso directo» › «Instalar».
+- **iPhone (Safari):** Compartir (en iOS 26, primero «…») › «Añadir a pantalla de inicio» › «Añadir».
+  La app del iPhone no comparte lo guardado con Safari: los equipos elegidos se eligen otra vez una vez.
+
+Sin cobertura (en un pabellón, por ejemplo), la app enseña la última copia que vio, con un aviso
+«Sin conexión» y la fecha de los datos; con cobertura siempre trae la página recién publicada, y al volver
+a la app tras más de 30 minutos se pone al día sola.
+
+Lo hacen `manifest.webmanifest`, los iconos (`iconos/`, junto a `config.json`; salen del escudo) y el
+service worker `src/sw.js`, que `src/main.js` deja junto a la página si hay iconos. `sw.js` no debe cambiar
+entre publicaciones ni de nombre. Para retirarlo (borrar `sw.js` no basta: los móviles se quedarían con el
+que tienen), se cambia `src/sw.js` por este, que se borra a sí mismo y sus copias la siguiente vez que se abra
+la página, y en `src/plantilla.html` se quita el `navigator.serviceWorker.register(...)`. Los iconos se quedan:
+sin ellos no se publica `sw.js`.
+
+```js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil((async () => {
+  const prefijo = 'calendario' + new URL(self.registration.scope).pathname + ':';
+  for (const n of await caches.keys()) if (n.startsWith(prefijo)) await caches.delete(n);
+  await self.registration.unregister();
+  for (const v of await self.clients.matchAll({ type: 'window' })) v.navigate(v.url);
+})()));
+```
+
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 
 Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://nodejs.org/) instalado):

@@ -35,6 +35,7 @@ export function elemento(doc, etiqueta = 'div') {
     },
     setAttribute(k, v) { atributos.set(k, String(v)); },
     getAttribute(k) { return atributos.has(k) ? atributos.get(k) : null; },
+    hasAttribute(k) { return atributos.has(k); },
     removeAttribute(k) { atributos.delete(k); },
     hasAttribute(k) { return atributos.has(k); },
     addEventListener(tipo, fn) { el.oyentes[tipo] = fn; },
@@ -58,9 +59,22 @@ export function elemento(doc, etiqueta = 'div') {
 // isSecureContext; almacen: un Map que hace de localStorage (sin él, localStorage está vacío y no guarda);
 // protocolo: el de location ('https:', publicada; 'file:', abierta en el ordenador); alturas: el
 // offsetHeight de algunos elementos por su id (p. ej. { fijos: 65 }), que el DOM simulado no calcula.
-export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almacen = null, protocolo = 'https:', alturas = {} } = {}) {
+// Para la app instalable: ua (navigator.userAgent), consultas (media queries que se cumplen, p. ej.
+// ['(pointer: coarse)']), standalone (navigator.standalone del iPhone), toques (navigator.maxTouchPoints),
+// serviceWorker (si el navegador los tiene: se apuntan los register() en pagina.registros), copia (la
+// página es la copia del service worker: data-sw-copia) y eventoInstalar (el beforeinstallprompt ya
+// recogido por la cabecera). pagina.recargas cuenta los location.reload(). red(url, opciones): lo que
+// contesta fetch() (por defecto, sin red), apuntado en pagina.peticiones; enLinea: navigator.onLine;
+// recursos: las URL cargadas (performance); los setInterval quedan en pagina.intervalos (id -> función) y
+// lo que la página manda al service worker, en pagina.mensajesSw.
+export function abrirPagina(codigo, datos, {
+  portapapeles, seguro = false, almacen = null, protocolo = 'https:', alturas = {},
+  ua = 'Pruebas', consultas = [], standalone, toques = 0, serviceWorker = false, copia = false, eventoInstalar = null,
+  red = () => Promise.reject(new TypeError('Failed to fetch')), enLinea = true, recursos = [],
+} = {}) {
   const porId = new Map();
-  const pagina = { copiado: null };
+  const pagina = { copiado: null, recargas: 0, registros: [], peticiones: [], intervalos: new Map(), mensajesSw: [] };
+  let siguienteIntervalo = 1;
   const doc = {
     getElementById(id) {
       if (!porId.has(id)) porId.set(id, elemento(doc));
@@ -77,7 +91,11 @@ export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almac
     },
   };
   doc.documentElement = elemento(doc, 'html');
+  if (copia) doc.documentElement.setAttribute('data-sw-copia', '');
   doc.body = elemento(doc, 'body');
+  doc.visibilityState = 'visible';
+  doc.oyentes = {};
+  doc.addEventListener = (tipo, fn) => { doc.oyentes[tipo] = fn; };
   doc.activeElement = doc.body;
   doc.getElementById('datos').textContent = JSON.stringify(datos);
   for (const [id, alto] of Object.entries(alturas)) doc.getElementById(id).offsetHeight = alto;
@@ -86,18 +104,45 @@ export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almac
   }
   const contexto = {
     document: doc, Date: Fecha, isSecureContext: seguro,
-    navigator: { userAgent: 'Pruebas', clipboard: portapapeles },
-    location: { protocol: protocolo, host: 'example.org', pathname: '/calendario/' },
+    navigator: {
+      userAgent: ua, clipboard: portapapeles, standalone, maxTouchPoints: toques, onLine: enLinea,
+      ...(serviceWorker ? { serviceWorker: {
+        register(url, opciones) { pagina.registros.push({ url, opciones: { ...opciones } }); return Promise.resolve({}); },
+        ready: Promise.resolve({ active: { postMessage: (m) => pagina.mensajesSw.push(JSON.parse(JSON.stringify(m))) } }),
+        onmessage: null,
+      } } : {}),
+    },
+    // (La señal de corte se apunta aparte: corte.)
+    fetch: (url, opciones = {}) => {
+      const { signal, ...resto } = opciones;
+      pagina.peticiones.push({ url, opciones: resto, corte: Boolean(signal) });
+      return red(url, opciones);
+    },
+    AbortController,
+    performance: { getEntriesByType: (tipo) => (tipo === 'resource' ? recursos.map((name) => ({ name })) : []) },
+    setInterval(fn) { const id = siguienteIntervalo++; pagina.intervalos.set(id, fn); return id; },
+    clearInterval(id) { pagina.intervalos.delete(id); },
+    location: {
+      protocol: protocolo, host: 'example.org', pathname: '/calendario/', href: `${protocolo}//example.org/calendario/`,
+      reload() { pagina.recargas++; },
+    },
+    matchMedia: (q) => ({ matches: consultas.includes(q) }),
+    eventoInstalar,
     localStorage: almacen
       ? { getItem(k) { return almacen.has(k) ? almacen.get(k) : null; }, setItem(k, v) { almacen.set(k, String(v)); } }
       : { getItem() { return null; }, setItem() {} },
     // El aviso «✓ Copiado» se quitaría a los 2 s: en las pruebas no hace falta.
     setTimeout() { return 0; }, clearTimeout() {},
     print() {}, scrollTo() {}, getComputedStyle() { return {}; },
-    // Los oyentes de la ventana (p. ej. "resize"), para lanzarlos desde las pruebas.
+    // Los oyentes de la ventana (p. ej. "resize"), para lanzarlos desde las pruebas: oyentes[tipo](evento)
+    // llama a todos los de ese tipo.
     oyentes: {},
-    addEventListener(tipo, fn) { contexto.oyentes[tipo] = fn; },
+    addEventListener(tipo, fn) {
+      (listas[tipo] ||= []).push(fn);
+      contexto.oyentes[tipo] = (ev) => listas[tipo].forEach((f) => f(ev));
+    },
   };
+  const listas = {};
   contexto.window = contexto;
   vm.createContext(contexto);
   vm.runInContext(codigo, contexto);

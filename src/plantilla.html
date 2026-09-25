@@ -5,8 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>__TITULO__</title>
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700&amp;display=swap">
+__APP__
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1F25" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700&amp;display=swap" crossorigin>
+<script>
+// Instalar como app (Chrome y Edge): el navegador avisa con «beforeinstallprompt» cuando la página se puede
+// instalar. Se recoge aquí, antes que nada, para no perderlo; lo usa el aviso «Instalar» de la página.
+window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.eventoInstalar = e; });
+</script>
 <style>
 /* La página del calendario, «Salidas desde Os Remedios» (maqueta v3). Diseño:
    docs/superpowers/specs/2026-09-25-rediseno-salidas-design.md. El color dice qué es firme (tinta), qué es
@@ -71,6 +79,39 @@ svg { flex: none; }
   background: none; color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .03em; cursor: pointer;
 }
 .btn-cal[aria-expanded="true"] { background: var(--elegido); border-color: var(--elegido); color: var(--elegido-t); }
+
+/* Aviso para instalar la página como app: una hoja fija abajo (aparecer no mueve nada; Chrome avisa de que se
+   puede instalar a los ~30 s de estar en la página). Se cierra con la ×. Dentro de la app, nunca. */
+.instalar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--sup);
+  border-top: 1px solid var(--borde); box-shadow: 0 -6px 18px rgb(0 0 0 / 12%); padding-bottom: env(safe-area-inset-bottom);
+}
+.inst-caja { display: grid; grid-template-columns: auto 1fr auto; align-items: start; column-gap: 12px; padding: 12px 0 14px; }
+.inst-icono { width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--borde); background: #fff; display: grid; place-items: center; overflow: hidden; }
+.inst-icono img { width: 34px; height: 34px; object-fit: contain; }
+.inst-titulo { margin: 1px 0 0; font: 700 17px/1.2 var(--cond); letter-spacing: .02em; color: var(--tinta); }
+.inst-titulo:focus { outline: none; }
+.inst-pasos { margin: 4px 0 0; font: 400 15px/1.4 var(--txt); color: var(--tinta2); }
+.inst-pasos svg { vertical-align: -3px; color: var(--tinta); }
+.inst-cerrar {
+  width: 44px; height: 44px; margin: -10px -12px 0 0; border: 0; border-radius: 10px; background: none; color: var(--tinta2);
+  display: grid; place-items: center; cursor: pointer;
+}
+.inst-si { grid-column: 2; justify-self: start; margin-top: 10px; }
+/* La copia guardada que enseña el service worker cuando no hay cobertura. */
+.aviso-copia {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--borde); text-align: center;
+  background: color-mix(in srgb, var(--ambar) 16%, var(--sup)); color: var(--tinta); font: 500 15px/1.35 var(--txt);
+}
+.aviso-copia[hidden] { display: none; }
+.reintentar {
+  min-height: 36px; padding: 0 14px; border: 1.5px solid var(--tinta); border-radius: 999px; background: none;
+  color: var(--tinta); font: 600 15px/1 var(--cond); letter-spacing: .03em; cursor: pointer;
+}
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .instalar, #instalar-app { display: none !important; }
+}
 
 /* Panel «+ Calendario»: suscribirse, .ics, Excel, imprimir y la ayuda */
 .panel-cal { background: var(--sup); border-bottom: 1px solid var(--borde); }
@@ -286,7 +327,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     --fondo: #fff; --sup: #fff; --borde: #bbb; --control: #666; --tinta: #000; --tinta2: #333; --marino-t: #000;
     --agua: #000; --agua-r: #666; --ambar: #000; --elegido: #000; --elegido-t: #fff;
   }
-  .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
+  .instalar, .aviso-copia, .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
   .det[hidden] { display: block !important; }
   .solo-impresion { display: block; margin-top: 4px; font-weight: 600; color: #000; }
   body { font-size: 12px; }
@@ -325,6 +366,11 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   </div>
 </header>
 
+<div class="aviso-copia" id="aviso-copia" role="status" hidden>
+  <span id="aviso-copia-texto"></span>
+  <button type="button" class="reintentar" id="reintentar">Reintentar</button>
+</div>
+
 <div class="panel-cal" id="panel-cal" hidden>
   <div class="ancho">
     <div class="acciones">
@@ -332,6 +378,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       <a class="boton principal" id="enlace-ics" href="#">Añadir al calendario</a>
       <a class="boton" id="enlace-xlsx" href="#">Abrir en Excel</a>
       <button class="boton" type="button" id="imprimir">Imprimir</button>
+      <button class="boton oculto" type="button" id="instalar-app">Instalar como app</button>
     </div>
     <details class="ayuda-cal" id="ayuda">
       <summary>Cómo añadirlo al móvil o a Google Calendar</summary>
@@ -351,6 +398,21 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     </details>
   </div>
 </div>
+
+<!-- La hoja para instalar la app (fija abajo; en el DOM aquí, tras el panel, por el orden de lectura). -->
+<section class="instalar" id="instalar" aria-labelledby="inst-titulo" hidden>
+  <div class="ancho">
+    <div class="inst-caja">
+      <span class="inst-icono" id="inst-icono" aria-hidden="true"></span>
+      <div>
+        <p class="inst-titulo" id="inst-titulo" tabindex="-1">Instala el calendario en el móvil</p>
+        <p class="inst-pasos" id="inst-pasos"></p>
+      </div>
+      <button type="button" class="inst-cerrar" id="inst-cerrar" aria-label="Cerrar el aviso de instalar"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button type="button" class="boton principal inst-si oculto" id="inst-si">Instalar</button>
+    </div>
+  </div>
+</section>
 
 <div class="pestanas" id="pestanas">
   <div class="ancho" role="group" aria-label="Sección">
@@ -1058,6 +1120,175 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     anunciar(n);
     if (foco) { var el = $(foco); if (el && !el.disabled) el.focus(); }
   }
+
+  // --- App instalable (D.app: manifest.webmanifest, iconos y sw.js junto a la página publicada) ---------
+
+  // ¿Contesta la web? (Una petición HEAD, que el service worker deja pasar: no es una página.) Si contesta en
+  // menos de ms (8 s por defecto), llama a si(); sin red, nada: nunca se cambia lo que hay en pantalla por un
+  // error. De una en una: con la red muy lenta no se amontonan.
+  var comprobando = false;
+  function siHayRed(si, ms) {
+    if (comprobando || navigator.onLine === false || typeof fetch !== 'function') return;
+    comprobando = true;
+    var corte = window.AbortController ? new window.AbortController() : null;
+    var reloj = corte ? setTimeout(function () { corte.abort(); }, ms || 8000) : null;
+    function fin() { comprobando = false; if (reloj !== null) clearTimeout(reloj); }
+    fetch(location.href, corte ? { method: 'HEAD', cache: 'no-store', signal: corte.signal } : { method: 'HEAD', cache: 'no-store' })
+      .then(function (r) { fin(); if (r.ok) si(); }, fin);
+  }
+
+  // El service worker enseña la última copia cuando no hay cobertura (marcada con data-sw-copia): se avisa, con
+  // «Reintentar», y se vuelve a la de la red en cuanto contesta (al volver la red o a la app, cada 30 s, o
+  // cuando el service worker la trae). No basta con el evento «online»: con el wifi de un pabellón sin
+  // internet el móvil cree que tiene red.
+  var raizDoc = document.documentElement;
+  var esCopia = !!(raizDoc.hasAttribute && raizDoc.hasAttribute('data-sw-copia'));
+  var avisoCopia = $('aviso-copia');
+  var reintentos = null;
+  function recargar() { location.reload(); }
+  // Solo si aún se ve la copia (el service worker puede haber dicho ya que está al día).
+  function recargarSiCopia() { if (!avisoCopia.hidden) recargar(); }
+  if (esCopia) {
+    $('aviso-copia-texto').textContent = 'Sin conexión: esta es la copia guardada, con los datos del ' + D.generado + '.';
+    avisoCopia.hidden = false;
+    $('reintentar').addEventListener('click', recargar);
+    window.addEventListener('online', function () { siHayRed(recargarSiCopia); });
+    reintentos = setInterval(function () { siHayRed(recargarSiCopia); }, 30000);
+  }
+  if (D.app && enWeb && 'serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(function () {});
+      // Las fuentes de esta visita (antes de que hubiera service worker), para que las guarde.
+      navigator.serviceWorker.ready.then(function (reg) {
+        var urls = window.performance && performance.getEntriesByType ? performance.getEntriesByType('resource')
+          .map(function (e) { return e.name; }).filter(function (u) { return u.indexOf('https://fonts.bunny.net/') === 0; }) : [];
+        if (reg.active && urls.length) reg.active.postMessage({ type: 'guardar-fuentes', urls: urls });
+      }, function () {});
+    });
+    navigator.serviceWorker.onmessage = function (ev) {
+      var m = ev.data || {};
+      if (m.type !== 'sw-fresh' || !esCopia) return;
+      if (m.changed) { recargar(); return; }
+      // La red trajo la misma que se ve: ya está al día.
+      avisoCopia.hidden = true;
+      if (reintentos !== null) { clearInterval(reintentos); reintentos = null; }
+    };
+  }
+  // La app, al volver de segundo plano, no se recarga sola: si han pasado más de 30 minutos (o se está viendo
+  // la copia), se recarga, pero solo si la web contesta enseguida (3 s) y si mientras tanto no se ha tocado
+  // la página (no se pierde lo que se estaba haciendo).
+  var cargada = Date.now(), tocada = 0;
+  if (enWeb && document.addEventListener) {
+    ['pointerdown', 'keydown'].forEach(function (tipo) {
+      document.addEventListener(tipo, function () { tocada = Date.now(); }, true);
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState !== 'visible') return;
+      var copiaVisible = esCopia && !avisoCopia.hidden;
+      if (!copiaVisible && Date.now() - cargada <= 30 * 60 * 1000) return;
+      var vuelta = Date.now();
+      siHayRed(function () { if (tocada < vuelta) recargar(); }, 3000);
+    });
+  }
+
+  // Aviso para instalarla: con el botón «Instalar» donde el navegador lo permite (Chrome y Edge avisan con
+  // beforeinstallprompt, recogido en la cabecera), y con los pasos en el iPhone y en Samsung Internet. Solo
+  // en el móvil (el botón del panel, también en el ordenador), nunca dentro de la app ya instalada, y si se
+  // cierra, no vuelve hasta dentro de 45 días (o nunca, una vez instalada).
+  var ua = navigator.userAgent || '';
+  var consulta = function (q) { return !!(window.matchMedia && window.matchMedia(q).matches); };
+  var enApp = navigator.standalone === true ||
+    ['standalone', 'fullscreen', 'minimal-ui'].some(function (m) { return consulta('(display-mode: ' + m + ')'); });
+  var esIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var enMovil = consulta('(pointer: coarse)');
+  var CLAVE_INSTALAR = CLAVE + ':instalar';   // cuándo se cerró el aviso (ms), o «instalada»
+  var DIAS_SIN_AVISO = 45;
+  function leerInstalar() { try { return localStorage.getItem(CLAVE_INSTALAR) || ''; } catch (e) { return ''; } }
+  function guardarInstalar(v) { try { localStorage.setItem(CLAVE_INSTALAR, v); } catch (e) { /* sin almacenamiento */ } }
+  var COMPARTIR = '<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>';
+  var PASOS = {
+    boton: 'Se abre como una app, sin tener que buscar la web.',
+    ios: 'Toca Compartir ' + COMPARTIR + ' (en iOS 26, primero «…»), elige «Añadir a pantalla de inicio» y luego «Añadir».',
+    iosOtro: 'Toca Compartir ' + COMPARTIR + ' junto a la barra de direcciones, elige «Añadir a pantalla de inicio» y luego «Añadir».',
+    samsung: 'Toca el icono de instalar de la barra de direcciones o, en el menú ≡, «Añadir página a» › «Pantalla de inicio».'
+  };
+  function comoInstalar() {
+    if (!D.app || !enWeb || enApp) return '';
+    if (window.eventoInstalar) return 'boton';
+    if (esIOS) return /CriOS|FxiOS|EdgiOS/.test(ua) ? 'iosOtro' : 'ios';
+    if (/SamsungBrowser/.test(ua)) return 'samsung';
+    return '';
+  }
+  var aviso = $('instalar'), btnInstalarApp = $('instalar-app');
+  var inicioPagina = Date.now();
+  var abridor = null;   // el botón del panel, si la hoja se abrió desde él (para devolverle el foco)
+  // Mientras se ve la hoja de abajo, su alto se reserva al final de la página (para que no tape el pie) y
+  // para el foco del teclado (WCAG 2.2, 2.4.11).
+  function reservaInstalar() {
+    var alto = aviso.hidden ? 0 : (aviso.offsetHeight || 0);
+    document.body.style.paddingBottom = alto ? alto + 'px' : '';
+    document.documentElement.style.scrollPaddingBottom = alto ? (alto + 8) + 'px' : '';
+  }
+  if (window.ResizeObserver) new window.ResizeObserver(function () { reservaInstalar(); }).observe(aviso);
+  else window.addEventListener('resize', reservaInstalar);
+  // pedido: desde el botón del panel. sinHoja: no sacar la hoja si no se ve ya (Chrome avisa a veces a los
+  // ~30 s de estar en la página: la hoja aparecería de golpe bajo el dedo; queda el botón del panel y, la
+  // próxima vez, la hoja al abrir).
+  function pintarInstalar(pedido, sinHoja) {
+    var como = comoInstalar();
+    btnInstalarApp.classList.toggle('oculto', !como);
+    var cerrado = leerInstalar();
+    var reciente = cerrado === 'instalada' || (+cerrado > 0 && Date.now() - +cerrado < DIAS_SIN_AVISO * 864e5);
+    var ver = !!como && (pedido || (enMovil && !reciente && !(sinHoja && aviso.hidden)));
+    aviso.hidden = !ver;
+    if (!aviso.hidden) {
+      $('inst-pasos').innerHTML = PASOS[como];
+      $('inst-si').classList.toggle('oculto', como !== 'boton');
+      $('inst-icono').innerHTML = D.escudo ? '<img src="' + esc(D.escudo) + '" alt="" width="34" height="34">' : '';
+    }
+    reservaInstalar();
+  }
+  // Esconde la hoja; si tenía el foco (o se abrió desde el panel), vuelve a donde estaba.
+  function cerrarHoja() {
+    var dentro = !!(aviso.contains && aviso.contains(document.activeElement));
+    aviso.hidden = true;
+    reservaInstalar();
+    var volver = abridor || (dentro ? $('btn-cal') : null);
+    abridor = null;
+    if (volver && volver.focus) volver.focus();
+  }
+  function instalar() {
+    var ev = window.eventoInstalar;
+    if (!ev) { pintarInstalar(true); return; }
+    window.eventoInstalar = null;   // prompt() vale una sola vez
+    cerrarHoja();
+    try {
+      ev.prompt();
+      ev.userChoice.then(function (r) {
+        guardarInstalar(r && r.outcome === 'accepted' ? 'instalada' : String(Date.now()));
+        pintarInstalar(false);
+      }, function () { pintarInstalar(false); });
+    } catch (e) { pintarInstalar(false); }
+  }
+  $('inst-si').addEventListener('click', instalar);
+  btnInstalarApp.addEventListener('click', function () {
+    if (window.eventoInstalar) { instalar(); return; }
+    // Los pasos (iPhone, Samsung): la hoja, a la vista y con el foco, para que se lean.
+    pintarInstalar(true);
+    if (!aviso.hidden) { abridor = btnInstalarApp; $('inst-titulo').focus(); }
+  });
+  $('inst-cerrar').addEventListener('click', function () {
+    guardarInstalar(String(Date.now()));
+    cerrarHoja();
+  });
+  window.addEventListener('beforeinstallprompt', function () { pintarInstalar(false, Date.now() - inicioPagina > 3000); });
+  window.addEventListener('appinstalled', function () {
+    window.eventoInstalar = null;
+    guardarInstalar('instalada');
+    pintarInstalar(false);
+  });
+  pintarInstalar(false);
 
   // Pie: calendario de cada equipo y de dónde salen los datos.
   var li = D.equipos.filter(function (e) { return e.ics; }).map(function (e) {

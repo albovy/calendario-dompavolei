@@ -120,8 +120,20 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
   return datos;
 }
 
-// La plantilla con el título y los datos dentro.
-function rellenarPlantilla(plantilla, datos, { nombreClub, temporada }) {
+// Lo de la app instalable en la cabecera de la página (__APP__): el manifiesto, el icono de la pestaña y,
+// si lo hay, el de la pantalla de inicio del iPhone. app: { nombre, appleIcono } o null (sin app: nada).
+function cabeceraApp(app) {
+  if (!app) return '';
+  return [
+    '<link rel="manifest" href="manifest.webmanifest">',
+    '<link rel="icon" type="image/png" sizes="192x192" href="iconos/192.png">',
+    ...(app.appleIcono ? ['<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">'] : []),
+    `<meta name="apple-mobile-web-app-title" content="${codificarHtml(app.nombre)}">`,
+  ].join('\n');
+}
+
+// La plantilla con el título, lo de la app y los datos dentro.
+function rellenarPlantilla(plantilla, datos, { nombreClub, temporada, app }) {
   // Como ConvertTo-Json: lo que falta sale como null (JSON.stringify quitaría la propiedad).
   let json = JSON.stringify(datos, (_clave, valor) => (valor === undefined ? null : valor));
   json = json.replace(RE_SEPARADORES, (c) => `${BARRA}u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
@@ -129,9 +141,14 @@ function rellenarPlantilla(plantilla, datos, { nombreClub, temporada }) {
   // (barra invertida + u003c). Se construye por partes a propósito para que ningún editor lo convierta en "<".
   json = json.split('<').join(`${BARRA}u003c`);
   if (json.includes('<')) throw new Error('Error interno: quedan "<" sin escapar en los datos de la página.');
-  const titulo = codificarHtml(`Partidos · ${txt(nombreClub)} · ${txt(temporada)}`);
-  // split/join y no replace(): con replace(), un "$&" o "$'" en los textos se interpretaría.
-  return plantilla.split('__TITULO__').join(titulo).split('__DATOS__').join(json);
+  const valores = {
+    TITULO: codificarHtml(`Partidos · ${txt(nombreClub)} · ${txt(temporada)}`),
+    APP: cabeceraApp(app),
+    DATOS: json,
+  };
+  // De una pasada y con función: lo que se mete no se vuelve a mirar (un "__DATOS__" en un nombre se queda
+  // como está) y un "$&" o "$'" en los textos no se interpreta.
+  return plantilla.replace(/__(TITULO|APP|DATOS)__/g, (_m, clave) => valores[clave]);
 }
 
 // El escudo del club (escudo.png) como data URI, para que la página no dependa de otro archivo; '' si
@@ -147,8 +164,10 @@ function escudoDataUri(ruta) {
 }
 
 // La página (calendario.html, la portada en la web). Opciones: las de datosPagina más rutaEscudo, el
-// escudo.png del club (main.js usa el de la carpeta de config.json); "escudo" va el último en los datos.
-export function crearHtml({ rutaEscudo = '', ...opciones }) {
-  const datos = { ...datosPagina(opciones), escudo: escudoDataUri(rutaEscudo) };
-  return rellenarPlantilla(PLANTILLA, datos, opciones);
+// escudo.png del club (main.js usa el de la carpeta de config.json), y app, { nombre, appleIcono } si junto
+// a la página van el manifiesto, los iconos y sw.js (ver prepararApp en main.js). "escudo" y "app" van los
+// últimos en los datos.
+export function crearHtml({ rutaEscudo = '', app = null, ...opciones }) {
+  const datos = { ...datosPagina(opciones), escudo: escudoDataUri(rutaEscudo), app: Boolean(app) };
+  return rellenarPlantilla(PLANTILLA, datos, { ...opciones, app });
 }

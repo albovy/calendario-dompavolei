@@ -662,3 +662,295 @@ test('página: vista Mes con los códigos de los equipos (máx. 2 y «+N») y la
   assert.match(html, /aria-label="26 de septiembre: 4 partidos"/);
   assert.match(html, /<div class="celda hoy">/);
 });
+
+// --- App instalable --------------------------------------------------------------------------------------
+
+const ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Mobile Safari/537.36';
+const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1';
+const IPHONE_CHROME = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0 Mobile/15E148 Safari/604.1';
+const IPAD = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+const SAMSUNG = 'Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0 Mobile Safari/537.36';
+const TACTIL = ['(pointer: coarse)'];
+const CLAVE_INSTALAR = CLAVE + ':instalar';
+
+// El beforeinstallprompt de Chrome: apunta los prompt() y contesta userChoice con el resultado.
+function eventoInstalar(resultado = 'accepted') {
+  const ev = { prompts: 0, prompt() { ev.prompts++; return Promise.resolve(); } };
+  ev.userChoice = Promise.resolve({ outcome: resultado });
+  return ev;
+}
+const conApp = (campos = {}) => datos([partido()], { app: true, escudo: 'data:image/png;base64,AAAA', ...campos });
+// (El botón «Instalar» trae la clase oculto en el marcado, que el DOM simulado no lee: solo cuenta con el aviso a la vista.)
+const aviso = (p) => ({
+  visto: !p.porId('instalar').hidden,
+  pasos: texto(p.porId('inst-pasos').innerHTML),
+  boton: !p.porId('instalar').hidden && !p.porId('inst-si').classList.contains('oculto'),
+  panel: !p.porId('instalar-app').classList.contains('oculto'),
+});
+const esperar = () => new Promise((listo) => setImmediate(listo));
+
+test('app: en Android (Chrome), aviso con «Instalar»; al pulsarlo, el diálogo del navegador, una sola vez', async () => {
+  const ev = eventoInstalar('accepted');
+  const almacen = new Map();
+  const p = abrirPagina(conApp(), { ua: ANDROID, consultas: TACTIL, eventoInstalar: ev, almacen });
+  assert.deepEqual(aviso(p), { visto: true, pasos: 'Se abre como una app, sin tener que buscar la web.', boton: true, panel: true });
+  assert.match(p.porId('inst-icono').innerHTML, /<img src="data:image\/png;base64,AAAA" alt=""/);
+  p.porId('inst-si').oyentes.click({});
+  assert.equal(ev.prompts, 1);
+  assert.equal(p.porId('instalar').hidden, true);
+  await esperar();
+  assert.equal(almacen.get(CLAVE_INSTALAR), 'instalada');
+  p.porId('inst-si').oyentes.click({});   // el evento ya se usó: no se vuelve a pedir
+  assert.equal(ev.prompts, 1);
+  // Si dice que no, el aviso descansa 45 días.
+  const no = eventoInstalar('dismissed');
+  const almacen2 = new Map();
+  const p2 = abrirPagina(conApp(), { ua: ANDROID, consultas: TACTIL, eventoInstalar: no, almacen: almacen2 });
+  p2.porId('inst-si').oyentes.click({});
+  await esperar();
+  assert.ok(+almacen2.get(CLAVE_INSTALAR) > 0);
+  assert.equal(p2.porId('instalar').hidden, true);
+});
+
+test('app: en el iPhone y en Samsung Internet, los pasos (no hay botón que instale)', () => {
+  let p = abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5 });
+  assert.deepEqual(aviso(p), {
+    visto: true, boton: false, panel: true,
+    pasos: 'Toca Compartir (en iOS 26, primero «…»), elige «Añadir a pantalla de inicio» y luego «Añadir».',
+  });
+  assert.match(p.porId('inst-pasos').innerHTML, /Compartir <svg [^>]*aria-hidden="true"/);
+  p = abrirPagina(conApp(), { ua: IPHONE_CHROME, consultas: TACTIL, toques: 5 });
+  assert.equal(aviso(p).pasos, 'Toca Compartir junto a la barra de direcciones, elige «Añadir a pantalla de inicio» y luego «Añadir».');
+  // El iPad dice que es un Mac: se le reconoce por la pantalla táctil.
+  p = abrirPagina(conApp(), { ua: IPAD, consultas: TACTIL, toques: 5 });
+  assert.match(aviso(p).pasos, /^Toca Compartir \(en iOS 26/);
+  p = abrirPagina(conApp(), { ua: IPAD, toques: 0 });   // un Mac de verdad: nada
+  assert.deepEqual(aviso(p), { visto: false, pasos: '', boton: false, panel: false });
+  p = abrirPagina(conApp(), { ua: SAMSUNG, consultas: TACTIL });
+  assert.match(aviso(p).pasos, /icono de instalar de la barra de direcciones/);
+  assert.equal(aviso(p).boton, false);
+});
+
+test('app: nada de avisos dentro de la app instalada, sin app, abierta desde el ordenador o sin forma de instalar', () => {
+  const nada = { visto: false, pasos: '', boton: false, panel: false };
+  for (const consulta of ['(display-mode: standalone)', '(display-mode: fullscreen)', '(display-mode: minimal-ui)']) {
+    assert.deepEqual(aviso(abrirPagina(conApp(), { ua: ANDROID, consultas: [...TACTIL, consulta], eventoInstalar: eventoInstalar() })), nada, consulta);
+  }
+  assert.deepEqual(aviso(abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, standalone: true })), nada);
+  assert.deepEqual(aviso(abrirPagina(datos([partido()]), { ua: IPHONE, consultas: TACTIL, toques: 5 })), nada);   // sin app
+  assert.deepEqual(aviso(abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, protocolo: 'file:' })), nada);
+  // Chrome en Android sin beforeinstallprompt (aún no deja, o ya está instalada), Firefox...: sin insistir.
+  assert.deepEqual(aviso(abrirPagina(conApp(), { ua: ANDROID, consultas: TACTIL })), nada);
+  // CSS: dentro de la app, el aviso y el botón del panel no se ven aunque el código fallara.
+  assert.match(PLANTILLA, /@media \(display-mode: standalone\), \(display-mode: fullscreen\), \(display-mode: minimal-ui\) \{\s*\.instalar, #instalar-app \{ display: none !important; \}/);
+});
+
+test('app: en el ordenador, sin aviso; el botón «Instalar como app» del panel sí (si el navegador deja)', () => {
+  const ev = eventoInstalar();
+  const p = abrirPagina(conApp(), { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/140.0', eventoInstalar: ev });
+  assert.deepEqual(aviso(p), { visto: false, pasos: '', boton: false, panel: true });
+  p.porId('instalar-app').oyentes.click({});
+  assert.equal(ev.prompts, 1);
+});
+
+test('app: la × cierra el aviso 45 días; el botón del panel lo vuelve a enseñar; instalada, no vuelve', () => {
+  const almacen = new Map();
+  let p = abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, almacen });
+  p.porId('inst-cerrar').oyentes.click({});
+  assert.equal(p.porId('instalar').hidden, true);
+  const cerrado = +almacen.get(CLAVE_INSTALAR);
+  assert.ok(Math.abs(cerrado - Date.now()) < 60000);
+  p = abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, almacen });
+  assert.equal(aviso(p).visto, false);
+  p.porId('instalar-app').oyentes.click({});   // pedido desde el panel: sí
+  assert.equal(aviso(p).visto, true);
+  almacen.set(CLAVE_INSTALAR, String(Date.now() - 46 * 864e5));
+  assert.equal(aviso(abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, almacen })).visto, true);
+  almacen.set(CLAVE_INSTALAR, 'instalada');
+  assert.equal(aviso(abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, almacen })).visto, false);
+});
+
+test('app: si Chrome deja instalar más tarde, aparece el aviso; al instalarse (por donde sea), se va', () => {
+  const almacen = new Map();
+  const p = abrirPagina(conApp(), { ua: ANDROID, consultas: TACTIL, almacen });
+  assert.equal(aviso(p).visto, false);
+  p.ventana.eventoInstalar = eventoInstalar();   // lo recoge la cabecera
+  p.ventana.oyentes.beforeinstallprompt({});
+  assert.equal(aviso(p).visto, true);
+  p.ventana.oyentes.appinstalled({});
+  assert.deepEqual(aviso(p), { visto: false, pasos: 'Se abre como una app, sin tener que buscar la web.', boton: false, panel: false });
+  assert.equal(almacen.get(CLAVE_INSTALAR), 'instalada');
+});
+
+const conRed = () => Promise.resolve({ ok: true });
+const HEAD = { method: 'HEAD', cache: 'no-store' };
+
+test('app: el service worker se registra al cargar (solo publicada, con app y si el navegador los tiene) y guarda las fuentes', async () => {
+  const fuentes = ['https://fonts.bunny.net/css?family=barlow:400', 'https://fonts.bunny.net/barlow/files/barlow-latin-400-normal.woff2'];
+  let p = abrirPagina(conApp(), { serviceWorker: true, recursos: [...fuentes, 'https://example.org/calendario/iconos/192.png'] });
+  assert.deepEqual(p.registros, []);   // hasta el «load»
+  p.ventana.oyentes.load({});
+  assert.deepEqual(p.registros, [{ url: './sw.js', opciones: { scope: './', updateViaCache: 'none' } }]);
+  // Las fuentes de esta primera visita (antes de haber service worker), para que las guarde.
+  await esperar();
+  assert.deepEqual(p.mensajesSw, [{ type: 'guardar-fuentes', urls: fuentes }]);
+  for (const [d, op] of [[datos([partido()]), {}], [conApp(), { protocolo: 'file:' }]]) {
+    p = abrirPagina(d, { serviceWorker: true, ...op });
+    p.ventana.oyentes.load?.({});
+    assert.deepEqual(p.registros, []);
+  }
+  p = abrirPagina(conApp());   // sin service workers: nada (y sin errores)
+  assert.equal(p.ventana.oyentes.load, undefined);
+});
+
+test('app: la copia sin conexión avisa, con «Reintentar», y vuelve a la de la red en cuanto la web contesta', async () => {
+  let p = abrirPagina(conApp(), { serviceWorker: true, copia: true, red: conRed });
+  const avisoCopia = p.porId('aviso-copia');
+  assert.equal(avisoCopia.hidden, false);
+  assert.equal(p.porId('aviso-copia-texto').textContent, 'Sin conexión: esta es la copia guardada, con los datos del 25/09/2026 12:00.');
+  p.porId('reintentar').oyentes.click({});
+  assert.equal(p.recargas, 1);
+  // Cada 30 s se pregunta a la web (HEAD, sin caché): si contesta, a la de la red.
+  assert.equal(p.intervalos.size, 1);
+  [...p.intervalos.values()][0]();
+  await esperar();
+  assert.deepEqual(p.peticiones, [{ url: 'https://example.org/calendario/', opciones: HEAD, corte: true }]);
+  assert.equal(p.recargas, 2);
+  // Al volver la red o a la app, igual.
+  p.ventana.oyentes.online({});
+  await esperar();
+  p.doc.oyentes.visibilitychange({});
+  await esperar();
+  assert.equal(p.recargas, 4);
+  // El service worker trajo una nueva: se recarga; trajo la misma: fuera el aviso y los reintentos.
+  const sw = p.ventana.navigator.serviceWorker;
+  sw.onmessage({ data: { type: 'sw-fresh', changed: true } });
+  assert.equal(p.recargas, 5);
+  sw.onmessage({ data: { type: 'sw-fresh', changed: false } });
+  assert.equal(avisoCopia.hidden, true);
+  assert.equal(p.intervalos.size, 0);
+  // Sin red (o la web no contesta), nunca se cambia la copia por un error.
+  p = abrirPagina(conApp(), { serviceWorker: true, copia: true });
+  [...p.intervalos.values()][0]();
+  p.ventana.oyentes.online({});
+  p.doc.oyentes.visibilitychange({});
+  await esperar();
+  assert.equal(p.recargas, 0);
+  p = abrirPagina(conApp(), { serviceWorker: true, copia: true, red: conRed, enLinea: false });
+  [...p.intervalos.values()][0]();
+  await esperar();
+  assert.deepEqual(p.peticiones, []);
+  // La página de la red: ni aviso, ni reintentos, ni recargas por eso.
+  p = abrirPagina(conApp(), { serviceWorker: true, red: conRed });
+  assert.notEqual(p.porId('aviso-copia').hidden, false);
+  assert.equal(p.intervalos.size, 0);
+  p.ventana.navigator.serviceWorker.onmessage({ data: { type: 'sw-fresh', changed: true } });
+  p.ventana.oyentes.online?.({});
+  await esperar();
+  assert.equal(p.recargas, 0);
+});
+
+test('app: al volver a la página tras más de 30 minutos, se recarga si la web contesta (nunca por un error)', async () => {
+  const prueba = async ({ minutos, visible = true, red = conRed, enLinea = true }) => {
+    const p = abrirPagina(conApp(), { red, enLinea });
+    const ahora = Date.now();
+    p.ventana.Date.now = () => ahora + minutos * 60000;
+    p.doc.visibilityState = visible ? 'visible' : 'hidden';
+    p.doc.oyentes.visibilitychange({});
+    await esperar();
+    return { recargas: p.recargas, peticiones: p.peticiones.map((x) => x.opciones) };
+  };
+  assert.deepEqual(await prueba({ minutos: 10 }), { recargas: 0, peticiones: [] });
+  assert.deepEqual(await prueba({ minutos: 31, visible: false }), { recargas: 0, peticiones: [] });
+  assert.deepEqual(await prueba({ minutos: 31 }), { recargas: 1, peticiones: [HEAD] });
+  assert.deepEqual(await prueba({ minutos: 31, red: () => Promise.reject(new TypeError('sin red')) }), { recargas: 0, peticiones: [HEAD] });
+  assert.deepEqual(await prueba({ minutos: 31, red: () => Promise.resolve({ ok: false }) }), { recargas: 0, peticiones: [HEAD] });
+  assert.deepEqual(await prueba({ minutos: 31, enLinea: false }), { recargas: 0, peticiones: [] });
+  // Abierta desde el ordenador, no (no hay nada nuevo que traer).
+  assert.equal(abrirPagina(conApp(), { protocolo: 'file:' }).doc.oyentes.visibilitychange, undefined);
+});
+
+test('app: la hoja de instalar va fija abajo (no mueve la página) y reserva su alto mientras se ve', () => {
+  const regla = (sel) => reglasCss(PLANTILLA).find((r) => !r.impresion && r.selector === sel)?.cuerpo ?? '';
+  assert.match(regla('.instalar'), /position: fixed; left: 0; right: 0; bottom: 0;/);
+  assert.match(regla('.instalar'), /padding-bottom: env\(safe-area-inset-bottom\)/);
+  const p = abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, alturas: { instalar: 150 } });
+  assert.equal(aviso(p).visto, true);
+  assert.equal(p.doc.body.style.paddingBottom, '150px');
+  assert.equal(p.doc.documentElement.style.scrollPaddingBottom, '158px');
+  p.porId('inst-cerrar').oyentes.click({});
+  assert.equal(p.doc.body.style.paddingBottom, '');
+  assert.equal(p.doc.documentElement.style.scrollPaddingBottom, '');
+  // Pedida desde el panel (tras cerrarla): vuelve, con el foco en su título para que se lea.
+  p.porId('instalar-app').oyentes.click({});
+  assert.equal(aviso(p).visto, true);
+  assert.equal(p.doc.activeElement, p.porId('inst-titulo'));
+  assert.equal(p.doc.body.style.paddingBottom, '150px');
+  assert.match(PLANTILLA, /<p class="inst-titulo" id="inst-titulo" tabindex="-1">/);
+});
+
+test('app: la cabecera recoge el beforeinstallprompt antes que nada; el color de la barra del sistema; fuentes con CORS', () => {
+  const cabecera = PLANTILLA.slice(0, PLANTILLA.indexOf('</head>'));
+  assert.match(cabecera, /<script>[\s\S]*window\.addEventListener\('beforeinstallprompt', function \(e\) \{ e\.preventDefault\(\); window\.eventoInstalar = e; \}\);\s*<\/script>/);
+  assert.match(cabecera, /<meta name="theme-color" content="#FFFFFF" media="\(prefers-color-scheme: light\)">\n<meta name="theme-color" content="#1C1F25" media="\(prefers-color-scheme: dark\)">/);
+  // Los mismos colores que la barra de la página (--sup), en claro y en oscuro.
+  assert.match(PLANTILLA, /--sup: #FFFFFF;/);
+  assert.match(PLANTILLA, /--sup: #1C1F25;/);
+  // La hoja de las fuentes con crossorigin: así el service worker la puede guardar para sin conexión.
+  assert.match(cabecera, /<link rel="stylesheet" href="https:\/\/fonts\.bunny\.net\/css\?[^"]+" crossorigin>/);
+  // Al imprimir, ni el aviso de instalar ni el de la copia.
+  assert.ok(reglasCss(PLANTILLA).some((r) => r.impresion && /\.instalar, \.aviso-copia/.test(r.selector) && /display: none/.test(r.cuerpo)));
+});
+
+test('app: con la red muy lenta, las comprobaciones no se amontonan ni recargan cuando ya no hace falta', async () => {
+  let contestar;
+  const p = abrirPagina(conApp(), { serviceWorker: true, copia: true, red: () => new Promise((si) => { contestar = si; }) });
+  const tic = [...p.intervalos.values()][0];
+  tic(); tic(); p.ventana.oyentes.online({}); p.doc.oyentes.visibilitychange({});
+  assert.equal(p.peticiones.length, 1);   // una sola a la vez
+  // Mientras tanto, el service worker ya trajo la misma página: fuera el aviso. La comprobación que llega
+  // después no recarga.
+  p.ventana.navigator.serviceWorker.onmessage({ data: { type: 'sw-fresh', changed: false } });
+  contestar({ ok: true });
+  await esperar();
+  assert.equal(p.recargas, 0);
+});
+
+test('app: al volver tras 30 minutos, si se toca la página antes de que la web conteste, no se recarga', async () => {
+  let contestar;
+  const p = abrirPagina(conApp(), { red: () => new Promise((si) => { contestar = si; }) });
+  const ahora = Date.now();
+  p.ventana.Date.now = () => ahora + 31 * 60000;
+  p.doc.oyentes.visibilitychange({});
+  assert.deepEqual(p.peticiones.map((x) => x.corte), [true]);
+  p.ventana.Date.now = () => ahora + 31 * 60000 + 500;
+  p.doc.oyentes.pointerdown({});   // abre un panel, despliega un partido...
+  contestar({ ok: true });
+  await esperar();
+  assert.equal(p.recargas, 0);
+});
+
+test('app: si Chrome avisa tarde (a los ~30 s), la hoja no aparece de golpe: solo el botón del panel', () => {
+  const p = abrirPagina(conApp(), { ua: ANDROID, consultas: TACTIL });
+  const ahora = Date.now();
+  p.ventana.Date.now = () => ahora + 30000;
+  p.ventana.eventoInstalar = eventoInstalar();
+  p.ventana.oyentes.beforeinstallprompt({});
+  assert.deepEqual(aviso(p), { visto: false, pasos: '', boton: false, panel: true });
+  // Pedida desde el panel, sí (y ahí el botón «Instalar» abre el diálogo de Chrome).
+  p.porId('instalar-app').oyentes.click({});
+  assert.equal(p.ventana.eventoInstalar, null);
+});
+
+test('app: al cerrar la hoja abierta desde el panel, el foco vuelve al botón del panel; la hoja va tras el panel en el DOM', () => {
+  const almacen = new Map([[CLAVE_INSTALAR, String(Date.now())]]);   // cerrada hace poco
+  const p = abrirPagina(conApp(), { ua: IPHONE, consultas: TACTIL, toques: 5, almacen });
+  p.porId('instalar-app').oyentes.click({});
+  assert.equal(p.doc.activeElement, p.porId('inst-titulo'));
+  p.porId('inst-cerrar').oyentes.click({});
+  assert.equal(p.porId('instalar').hidden, true);
+  assert.equal(p.doc.activeElement, p.porId('instalar-app'));
+  // Orden de lectura y de Tab: la hoja justo después del panel «+ Calendario».
+  const i = PLANTILLA.indexOf('<section class="instalar"');
+  assert.ok(i > PLANTILLA.indexOf('id="panel-cal"') && i < PLANTILLA.indexOf('<div class="pestanas"'));
+});
