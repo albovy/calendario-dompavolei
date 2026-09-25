@@ -46,6 +46,17 @@ a { color: inherit; }
 .solo-impresion { display: none; }
 .envoltura { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
 
+/* Selector «Diseño antiguo | Diseño nuevo» (arriba del todo, para comparar con salidas.html): la misma
+   franja en las dos páginas, cada una con sus colores. Va con el scroll, así que no tapa nada. */
+.selector-diseno { background: var(--fondo); border-bottom: 1px solid var(--borde); }
+.selector-diseno .envoltura { display: flex; align-items: center; justify-content: center; min-height: 38px; }
+.opciones-diseno { display: inline-flex; border: 1.5px solid var(--borde); border-radius: 999px; background: var(--superficie); }
+.opciones-diseno a {
+  display: inline-flex; align-items: center; min-height: 28px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
+  color: var(--tinta-2); text-decoration: none; font: 600 14px/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+}
+.opciones-diseno a[aria-current="page"] { background: var(--pista); color: #fff; }
+
 /* Cabecera: una pista vista desde arriba (solo el marco: la red y las líneas de ataque cruzaban el texto) */
 .cabecera { background: var(--libre); color: #fff; padding: 22px 0 26px; }
 .pista {
@@ -229,7 +240,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   .dia-num { font-size: 2.2rem; }
 }
 @media print {
-  .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus, .acciones-partido { display: none !important; }
+  .selector-diseno, .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus, .acciones-partido { display: none !important; }
   .solo-impresion { display: block; margin: 6px 0 0; font-weight: 600; }
   body { background: #fff; color: #000; font-size: 12px; }
   .cabecera { background: none; color: #000; padding: 0; }
@@ -241,6 +252,11 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 </style>
 </head>
 <body>
+<nav class="selector-diseno" aria-label="Diseño de la página">
+  <div class="envoltura">
+    <div class="opciones-diseno"><a id="diseno-antiguo" href="index.html" aria-current="page">Diseño antiguo</a><a id="diseno-nuevo" href="salidas.html">Diseño nuevo</a></div>
+  </div>
+</nav>
 <header class="cabecera">
   <div class="envoltura">
     <div class="pista">
@@ -353,6 +369,10 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   function urlHttps(rel) { return pub.base + encodeURI(rel); }
   function urlWebcal(rel) { return urlHttps(rel).replace(/^https?:/, 'webcal:'); }
   function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
+
+  // Selector de diseño (la franja de arriba del todo): «Diseño antiguo» es esta página, que publicada es
+  // index.html y en el ordenador se llama como el .ics; «Diseño nuevo» es salidas.html, que está al lado.
+  $('diseno-antiguo').href = enWeb ? 'index.html' : encodeURI(D.ics.replace(/\.ics$/i, '') + '.html');
 
   // Filtros (se recuerdan en este navegador).
   var CLAVE = 'calendario-voley:' + D.club;

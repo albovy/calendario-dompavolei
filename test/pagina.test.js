@@ -1,17 +1,50 @@
 // Pruebas del código de la página (el <script> de plantilla.html), ejecutado con node:vm en el DOM
 // simulado mínimo de test/apoyo/pagina-simulada.js: solo lo que el código usa al pintar la lista y al copiar
-// el mensaje de WhatsApp.
+// el mensaje de WhatsApp. Más el selector «Diseño antiguo | Diseño nuevo» de arriba del todo.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  abrirPagina as abrir, codigoDe, conCopiar, correosBus, datos, foco, partido, plantilla, pulsarCopiar,
+  abrirPagina as abrir, codigoDe, conCopiar, correosBus, datos, foco, partido, plantilla, pulsarCopiar, reglasSelector,
+  selectorDiseno,
 } from './apoyo/pagina-simulada.js';
 
-const CODIGO = codigoDe(plantilla('plantilla.html'));
+const PLANTILLA = plantilla('plantilla.html');
+const CODIGO = codigoDe(PLANTILLA);
 
 // Abre la página de siempre con estos datos (opciones: las de abrirPagina).
 function abrirPagina(d, opciones) { return abrir(CODIGO, d, opciones); }
+
+// --- Selector «Diseño antiguo | Diseño nuevo» (para comparar con salidas.html) ---------------------------
+
+test('página: selector «Diseño antiguo | Diseño nuevo» arriba del todo, con esta página marcada', () => {
+  const s = selectorDiseno(PLANTILLA);
+  assert.ok(s, 'falta la franja del selector');
+  // Lo primero del <body>: encima de la cabecera.
+  assert.equal(PLANTILLA.slice(PLANTILLA.indexOf('<body>') + '<body>'.length, s.inicio).trim(), '');
+  assert.ok(s.inicio < PLANTILLA.indexOf('<header class="cabecera">'));
+  assert.match(s.nav, /^<nav class="selector-diseno" aria-label="Diseño de la página">/);
+  assert.deepEqual(s.enlaces, [
+    { texto: 'Diseño antiguo', id: 'diseno-antiguo', href: 'index.html', actual: true },
+    { texto: 'Diseño nuevo', id: 'diseno-nuevo', href: 'salidas.html', actual: false },
+  ]);
+});
+
+test('página: «Diseño antiguo» lleva a index.html en la web y, en el ordenador, al .html de siempre (el nombre del .ics)', () => {
+  const d = datos([partido()], { ics: 'calendario-dompavolei-2026-27.ics' });
+  assert.equal(abrirPagina(d).porId('diseno-antiguo').href, 'index.html');
+  assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-antiguo').href, 'calendario-dompavolei-2026-27.html');
+});
+
+test('página: la franja del selector mide 36-40 px, se va con el scroll (no tapa nada) y no sale al imprimir', () => {
+  const reglas = reglasSelector(PLANTILLA);
+  const pantalla = reglas.filter((r) => !r.impresion);
+  const altos = pantalla.flatMap((r) => [...r.cuerpo.matchAll(/min-height: (\d+)px/g)].map((m) => +m[1]));
+  assert.ok(altos.some((a) => a >= 36 && a <= 40), `alto de la franja: ${altos.join(', ')}`);
+  for (const r of pantalla) assert.doesNotMatch(r.cuerpo, /position: *(sticky|fixed)/, r.selector);
+  assert.ok(reglas.some((r) => r.impresion && /(^|,)\s*\.selector-diseno\s*(,|$)/.test(r.selector) && /display: none/.test(r.cuerpo)),
+    'la franja sale al imprimir');
+});
 
 test('página: botones de WhatsApp solo en los partidos por jugar sin resultado', () => {
   // Marcador local-visitante: el club juega de visitante (CV RIVAL 1 - 3 DOMPAVOLEI IF1).

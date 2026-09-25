@@ -8,6 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   abrirPagina as abrir, codigoDe, conCopiar, correosBus, datos, elemento, foco, partido, plantilla, pulsarCopiar,
+  reglasSelector, selectorDiseno,
 } from './apoyo/pagina-simulada.js';
 
 const PLANTILLA = plantilla('plantilla-salidas.html');
@@ -55,6 +56,52 @@ test('plantilla-salidas.html: tokens de color del diseño en claro y en oscuro, 
   assert.ok(PLANTILLA.includes('family=barlow:400,500,600|barlow-condensed:500,600,700'));
   // Sin colores de categoría ni amarillo balón de la página de siempre.
   assert.doesNotMatch(PLANTILLA, /--c-infantil|--balon|#FFC915/);
+});
+
+// --- Selector «Diseño antiguo | Diseño nuevo» -----------------------------------------------------------
+
+test('salidas: selector «Diseño antiguo | Diseño nuevo» arriba del todo, con esta página marcada', () => {
+  const s = selectorDiseno(PLANTILLA);
+  assert.ok(s, 'falta la franja del selector');
+  // Lo primero del <body>: encima de la barra con el escudo.
+  assert.equal(PLANTILLA.slice(PLANTILLA.indexOf('<body>') + '<body>'.length, s.inicio).trim(), '');
+  assert.ok(s.inicio < PLANTILLA.indexOf('<header class="barra">'));
+  assert.match(s.nav, /^<nav class="selector-diseno" aria-label="Diseño de la página">/);
+  assert.deepEqual(s.enlaces, [
+    { texto: 'Diseño antiguo', id: 'diseno-antiguo', href: 'index.html', actual: false },
+    { texto: 'Diseño nuevo', id: 'diseno-nuevo', href: 'salidas.html', actual: true },
+  ]);
+});
+
+test('salidas: el selector es el mismo en las dos páginas; solo cambia cuál está marcado', () => {
+  const antigua = selectorDiseno(plantilla('plantilla.html'));
+  assert.ok(antigua, 'falta la franja del selector en plantilla.html');
+  // Cada página con su contenedor de siempre (.envoltura en la antigua, .ancho en la nueva).
+  const igualar = (s) => s.nav.replace(/ aria-current="page"/g, '').replace('<div class="ancho">', '<div class="envoltura">');
+  assert.equal(igualar(selectorDiseno(PLANTILLA)), igualar(antigua));
+  // La misma forma (alto, letra, bordes, márgenes) en las dos; solo cambian los colores de cada página.
+  const forma = (texto) => reglasSelector(texto).filter((r) => !r.impresion).map((r) => ({
+    selector: r.selector.replace(/\.ancho\b/g, '.envoltura'),
+    cuerpo: r.cuerpo.replace(/var\(--[\w-]+\)|#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi, 'COLOR'),
+  }));
+  assert.ok(forma(PLANTILLA).length > 0);
+  assert.deepEqual(forma(PLANTILLA), forma(plantilla('plantilla.html')));
+});
+
+test('salidas: «Diseño antiguo» lleva a index.html en la web y, en el ordenador, al .html de siempre (el nombre del .ics)', () => {
+  const d = datos([partido()], { ics: 'calendario-dompavolei-2026-27.ics' });
+  assert.equal(abrirPagina(d).porId('diseno-antiguo').href, 'index.html');
+  assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-antiguo').href, 'calendario-dompavolei-2026-27.html');
+});
+
+test('salidas: la franja del selector mide 36-40 px, se va con el scroll (no tapa nada) y no sale al imprimir', () => {
+  const reglas = reglasSelector(PLANTILLA);
+  const pantalla = reglas.filter((r) => !r.impresion);
+  const altos = pantalla.flatMap((r) => [...r.cuerpo.matchAll(/min-height: (\d+)px/g)].map((m) => +m[1]));
+  assert.ok(altos.some((a) => a >= 36 && a <= 40), `alto de la franja: ${altos.join(', ')}`);
+  for (const r of pantalla) assert.doesNotMatch(r.cuerpo, /position: *(sticky|fixed)/, r.selector);
+  assert.ok(reglas.some((r) => r.impresion && /(^|,)\s*\.selector-diseno\s*(,|$)/.test(r.selector) && /display: none/.test(r.cuerpo)),
+    'la franja sale al imprimir');
 });
 
 // --- Una fila por partido y la columna de la hora ----------------------------------------------------------

@@ -1,6 +1,7 @@
 // DOM simulado mínimo para ejecutar con node:vm el código de una de las páginas (el último <script> de
 // plantilla.html o de plantilla-salidas.html): solo lo que ese código usa al pintar la lista, al copiar el
-// mensaje de WhatsApp y al abrir y cerrar paneles. Lo comparten test/pagina.test.js y
+// mensaje de WhatsApp y al abrir y cerrar paneles; más lo que se mira en el texto de las plantillas (el
+// selector «Diseño antiguo | Diseño nuevo»). Lo comparten test/pagina.test.js y
 // test/pagina-salidas.test.js. (No tiene pruebas: node --test lo carga y no hace nada.)
 
 import { readFileSync } from 'node:fs';
@@ -54,8 +55,9 @@ export function elemento(doc, etiqueta = 'div') {
 }
 
 // Abre la página (su código) con estos datos. portapapeles: el navigator.clipboard (o nada); seguro:
-// isSecureContext; almacen: un Map que hace de localStorage (sin él, localStorage está vacío y no guarda).
-export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almacen = null } = {}) {
+// isSecureContext; almacen: un Map que hace de localStorage (sin él, localStorage está vacío y no guarda);
+// protocolo: el de location ('https:', publicada; 'file:', abierta en el ordenador).
+export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almacen = null, protocolo = 'https:' } = {}) {
   const porId = new Map();
   const pagina = { copiado: null };
   const doc = {
@@ -82,7 +84,7 @@ export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almac
   const contexto = {
     document: doc, Date: Fecha, isSecureContext: seguro,
     navigator: { userAgent: 'Pruebas', clipboard: portapapeles },
-    location: { protocol: 'https:', host: 'example.org', pathname: '/calendario/' },
+    location: { protocol: protocolo, host: 'example.org', pathname: '/calendario/' },
     localStorage: almacen
       ? { getItem(k) { return almacen.has(k) ? almacen.get(k) : null; }, setItem(k, v) { almacen.set(k, String(v)); } }
       : { getItem() { return null; }, setItem() {} },
@@ -136,6 +138,33 @@ export function pulsarCopiar(pagina, i, texto = '📋 Copiar') {
 export function foco(pagina) {
   const el = pagina.doc.activeElement;
   return el === pagina.boton ? 'el botón' : `<${el.tagName.toLowerCase()}>`;
+}
+
+// --- Selector «Diseño antiguo | Diseño nuevo» (la franja de arriba del todo de las dos páginas) -----------
+
+// La franja de una plantilla: dónde empieza, el <nav> entero y sus enlaces (texto, id, href y si está
+// marcado como la página actual); null si no la tiene.
+export function selectorDiseno(texto) {
+  const inicio = texto.indexOf('<nav class="selector-diseno"');
+  if (inicio < 0) return null;
+  const nav = texto.slice(inicio, texto.indexOf('</nav>', inicio) + '</nav>'.length);
+  const enlaces = [...nav.matchAll(/<a ([^>]*)>([^<]*)<\/a>/g)].map((m) => ({
+    texto: m[2],
+    id: /\bid="([^"]*)"/.exec(m[1])?.[1],
+    href: /\bhref="([^"]*)"/.exec(m[1])?.[1],
+    actual: /\baria-current="page"/.test(m[1]),
+  }));
+  return { inicio, nav, enlaces };
+}
+
+// Las reglas CSS de la franja (las que nombran .selector-diseno u .opciones-diseno), sin comentarios:
+// { selector, cuerpo, impresion } (impresion: si está dentro de @media print).
+export function reglasSelector(texto) {
+  const estilo = texto.slice(texto.indexOf('<style>'), texto.indexOf('</style>')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const impresion = estilo.indexOf('@media print {');
+  return [...estilo.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .map((m) => ({ selector: m[1].trim(), cuerpo: m[2].trim(), impresion: impresion >= 0 && m.index > impresion }))
+    .filter((r) => /selector-diseno|opciones-diseno/.test(r.selector));
 }
 
 // Cuerpo de los correos de «Pedir bus» de la página.
