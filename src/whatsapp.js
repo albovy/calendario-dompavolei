@@ -20,13 +20,17 @@ function lugar(p) {
   return `${p.pabellon} (${p.municipio})`;
 }
 
+// Coordenada con 7 decimales como mucho (los que da el geocodificador): pabellones.json guarda algunas
+// con ruido de coma flotante (-7.5242499999999994 -> -7.52425).
+function coordenada(n) { return String(+Number(n).toFixed(7)); }
+
 // Enlace al mapa: con las coordenadas de pabellones.json si las hay; si no, buscando el nombre y el
 // municipio, como el enlace del pabellón en la página.
 function enlaceMapa(p, pabellones) {
   const k = pabellones ? claveSinCaja(pabellones, p.pabellon) : '';
   const e = k && Object.hasOwn(pabellones, k) ? pabellones[k] : null;
   const consulta = e && e.lat != null && e.lon != null
-    ? `${Number(e.lat)},${Number(e.lon)}`
+    ? `${coordenada(e.lat)},${coordenada(e.lon)}`
     : encodeURIComponent(`${p.pabellon}, ${p.municipio || 'Galicia'}`);
   return `https://www.google.com/maps/search/?api=1&query=${consulta}`;
 }

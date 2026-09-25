@@ -101,6 +101,14 @@ test('mensajesWhatsApp: sin hora, hora provisional, fecha sin confirmar y partid
   ]);
 });
 
+test('mensajesWhatsApp: coordenadas del mapa sin el ruido de coma flotante de pabellones.json', () => {
+  // Como las guardó el .ps1: -7.5242499999999994 se escribiría "-7.524249999999999".
+  const pabellones = { 'A PINGUELA - PISTA 1': { municipio: 'MONFORTE DE LEMOS', lat: 42.3889848, lon: -7.5242499999999994 } };
+  const p = partido({ pabellon: 'A PINGUELA - PISTA 1', municipio: 'MONFORTE DE LEMOS' });
+  const lineas = mensajesWhatsApp([p], { ...OPCIONES, pabellones }).get(p).split('\n');
+  assert.equal(lineas[4], '    https://www.google.com/maps/search/?api=1&query=42.3889848,-7.52425');
+});
+
 test('mensajesWhatsApp: derbi, sin horas de salida configuradas y sin pabellón', () => {
   const derbi = partido({
     fecha: fechaPared(2026, 10, 4, 10, 0), local: 'DOMPAVOLEI CF1', visitante: 'DOMPAVOLEI CF2', esLocal: true, esVisitante: true,
