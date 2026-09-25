@@ -12,6 +12,7 @@ import {
   duracionConfig, fechaParametro, leerConfig, leerOpciones, mostrarError, nuevoRango, principal, rangoTemporada,
   resolverClubs, temporadaAnterior,
 } from '../src/main.js';
+import { URL_BASE } from '../src/isquad.js';
 import { configPedirBus, configSalidas } from '../src/salidas.js';
 import { fechaPared, fmt } from '../src/util.js';
 
@@ -458,4 +459,21 @@ test('la web publica la página nueva como salidas.html (la que enlaza «Diseño
   assert.match(workflow, /node src\/main\.js --salida web --nombre-base calendario /);
   assert.match(workflow, /^[ \t]*cp web\/calendario\.html web\/index\.html\r?$/m);
   assert.match(workflow, /^[ \t]*cp web\/calendario-salidas\.html web\/salidas\.html\r?$/m);
+});
+
+test('si la federación no deja conectar a la máquina de GitHub, la publicación se relanza sola en otra (hasta 3 veces)', () => {
+  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'calendario.yml'), 'utf8').replace(/\r\n/g, '\n');
+  // Permiso para lanzar otra ejecución con el token de la propia tarea (sin claves nuevas).
+  assert.match(workflow, /^permissions:\n(?:[ \t]+.*\n)*[ \t]+actions: write/m);
+  // El número de relanzamiento viaja como entrada de workflow_dispatch; las demás ejecuciones valen 0.
+  assert.match(workflow, /workflow_dispatch:[^\n]*\n[ \t]+inputs:\n[ \t]+intento:\n(?:[ \t]+.*\n)*?[ \t]+default: '0'/);
+  // La salida de la generación se guarda para saber por qué falló.
+  assert.match(workflow, /- name: Generar calendario\n[ \t]+id: generar\n[ \t]+run: [^\n]*node src\/main\.js [^\n]*\| tee generar\.log/);
+  // Solo se relanza si el fallo es de conexión con la federación (el mismo texto que da peticion()), y como mucho 3 veces.
+  const paso = workflow.slice(workflow.indexOf('- name: Relanzar en otra máquina'));
+  assert.match(paso, /if: failure\(\) && steps\.generar\.outcome == 'failure'/);
+  assert.ok(paso.includes(`grep -q 'No se pudo descargar ${URL_BASE}' generar.log`), paso);
+  assert.match(paso, /-ge 3/);
+  assert.match(paso, /gh workflow run calendario\.yml [^\n]*-f intento="\$siguiente"/);
+  assert.match(paso, /GH_TOKEN: \$\{\{ github\.token \}\}/);
 });

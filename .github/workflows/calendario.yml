@@ -11,6 +11,11 @@ on:
     # daba problemas para programar las ejecuciones.
     - cron: '17 6-22 * * *'
   workflow_dispatch:              # botón "Run workflow" para actualizar a mano
+    inputs:
+      intento:
+        description: 'Relanzamiento automático tras no poder conectar con la federación (0 = normal)'
+        required: false
+        default: '0'
   push:
     branches: [main]
     paths-ignore: ['historial/**']
@@ -19,6 +24,7 @@ permissions:
   contents: write                 # para guardar el historial de cambios
   pages: write
   id-token: write
+  actions: write                  # para relanzar la publicación en otra máquina (paso del final)
 
 concurrency:
   group: pages
@@ -42,9 +48,11 @@ jobs:
         with:
           node-version: 24
 
-      # src/main.js no tiene dependencias: no hace falta npm install.
+      # src/main.js no tiene dependencias: no hace falta npm install. La salida se guarda en generar.log
+      # para saber, si falla, si fue porque la federación no dejó conectar (ver el último paso).
       - name: Generar calendario
-        run: node src/main.js --salida web --nombre-base calendario --historial historial/partidos.txt
+        id: generar
+        run: set -o pipefail; node src/main.js --salida web --nombre-base calendario --historial historial/partidos.txt 2>&1 | tee generar.log
 
       # Si la federación devolviera 0 partidos por un fallo, no se borra el calendario de los suscritos.
       - name: Comprobar que no se publica un calendario vacío
@@ -87,3 +95,24 @@ jobs:
             git commit -m 'Cambios en el calendario de la federación'
             git push
           fi
+
+      # La web de la federación no deja conectar a algunas máquinas de GitHub (con otra suele ir bien).
+      # Si la generación falló por eso, se lanza otra ejecución, que va a otra máquina: como mucho 3
+      # seguidas; si no, se deja para la próxima hora. Otro tipo de fallo no se relanza.
+      - name: Relanzar en otra máquina si la federación no dejó conectar
+        if: failure() && steps.generar.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INTENTO: ${{ inputs.intento || '0' }}
+        run: |
+          if ! grep -q 'No se pudo descargar https://resultadosvoleibol.isquad.es' generar.log; then
+            echo "El fallo no es de conexión con la federación: no se relanza."
+            exit 0
+          fi
+          if [ "$INTENTO" -ge 3 ]; then
+            echo "::warning::Ya van $INTENTO relanzamientos seguidos; se deja para la próxima hora."
+            exit 0
+          fi
+          siguiente=$((INTENTO + 1))
+          echo "La federación no ha dejado conectar a esta máquina; se relanza en otra ($siguiente de 3)."
+          gh workflow run calendario.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f intento="$siguiente"
