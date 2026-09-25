@@ -139,6 +139,15 @@ main { padding: 8px 0 40px; }
   background: var(--pista); color: #fff; text-decoration: none; font: 700 .88rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
 }
 .boton-bus:hover { background: var(--libre); }
+.acciones-partido { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.acciones-partido .boton-bus { margin-top: 0; }
+.boton-wa {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border-radius: 999px;
+  border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta); text-decoration: none; cursor: pointer;
+  font: 700 .88rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+}
+.boton-wa:hover { border-color: var(--tinta-2); }
+.boton-wa.wa { border-color: #25D366; }
 .categoria { font: 700 .92rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
 .equipos { margin-top: 5px; font: 600 1.14rem/1.25 var(--cond); letter-spacing: .01em; }
 .equipos .vs { font-weight: 500; color: var(--tinta-2); margin: 0 6px; text-transform: lowercase; }
@@ -229,7 +238,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   .dia-num { font-size: 2.2rem; }
 }
 @media print {
-  .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus { display: none !important; }
+  .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus, .acciones-partido { display: none !important; }
   .solo-impresion { display: block; margin: 6px 0 0; font-weight: 600; }
   body { background: #fff; color: #000; font-size: 12px; }
   .cabecera { background: none; color: #000; padding: 0; }
@@ -557,6 +566,39 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     return '<a class="boton-bus" href="' + esc('mailto:' + para + '?' + q.join('&')) + '">✉ Pedir bus</a>';
   }
 
+  // Botones para el grupo de WhatsApp de las familias: copiar el mensaje o abrir WhatsApp con él.
+  function botonesWhatsApp(p) {
+    if (!p.wa || yaJugado(p)) return '';
+    return '<button type="button" class="boton-wa copiar" data-i="' + D.partidos.indexOf(p) + '">📋 Copiar</button>' +
+      '<a class="boton-wa wa" href="' + esc('https://wa.me/?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">WhatsApp</a>';
+  }
+  // Copia al portapapeles; si el navegador no deja (página sin https o antigua), con un <textarea>.
+  function copiar(texto, boton) {
+    var antes = boton.getAttribute('data-texto') || boton.textContent;
+    boton.setAttribute('data-texto', antes);
+    function hecho(ok) {
+      boton.textContent = ok ? '✓ Copiado' : 'No se pudo copiar';
+      $('estado').textContent = ok ? 'Mensaje copiado' : 'No se pudo copiar el mensaje';
+      clearTimeout(boton.espera);
+      boton.espera = setTimeout(function () { boton.textContent = antes; }, 2000);
+    }
+    function aMano() {
+      var t = document.createElement('textarea');
+      t.value = texto;
+      t.setAttribute('readonly', '');
+      t.style.position = 'fixed';
+      t.style.opacity = '0';
+      document.body.appendChild(t);
+      t.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(t);
+      hecho(ok);
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texto).then(function () { hecho(true); }, aMano);
+    else aMano();
+  }
+
   // Marcador del lado del club (en los partidos de visitante se da la vuelta; en un derbi, local-visitante).
   function delClub(p, par) { return p.vo && !p.lo ? [par[1], par[0]] : par; }
   function textoResultado(p) {
@@ -575,10 +617,13 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var pab = p.pab
       ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
       : 'Pabellón por confirmar';
+    // "Pedir bus" y los botones de WhatsApp, en una fila que se ajusta al ancho.
+    var bus = enlaceBus(p), wa = botonesWhatsApp(p);
+    var acciones = bus || wa ? '<div class="acciones-partido">' + bus + wa + '</div>' : '';
     return '<article class="partido" data-cat="' + esc(p.ck) + '">' + textoHora(p) +
       '<div><div class="categoria">' + esc(p.cat) + (proximo ? '<span class="proximo-marca">Próximo</span>' : '') + '</div>' +
       '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' + (p.r ? textoResultado(p) : textoViaje(p)) +
-      '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div>' + enlaceBus(p) + '</div>' +
+      '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div>' + acciones + '</div>' +
       '<span class="condicion ' + esc(p.cond) + '">' + cond + '</span></article>';
   }
 
@@ -716,6 +761,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     if (h) h.focus({ preventScroll: true });
   }
   main.addEventListener('click', function (ev) {
+    var cp = ev.target.closest('.copiar');
+    if (cp) { copiar(D.partidos[+cp.getAttribute('data-i')].wa, cp); return; }
     if (ev.target.id === 'quitar') {
       st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
       guardar(); marcarChips(); pintar(); return;
