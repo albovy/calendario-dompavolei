@@ -84,9 +84,10 @@ test('salidas: casa, fuera, 2º partido, tiempo a mano y pabellón desconocido',
     '11 12:00 casa=false viaje= salida=- inicio=11:00 seg=false',
   ]);
   assert.equal(ps[2].salidaPrimero, ps[1]);
+  // El partido sin hora también sabe dónde se juega (municipio y km), pero no tiene viaje propio.
   assert.deepEqual(ps.map((p) => [p.viajeFuente, p.municipio, p.km]), [
     ['', 'OURENSE', 0.7], ['osrm', 'MONFORTE DE LEMOS', 46.1], ['osrm', 'MONFORTE DE LEMOS', 46.1],
-    ['manual', '', null], ['', '', null], ['osrm', 'MONFORTE DE LEMOS', 46.1], ['', '', null],
+    ['manual', '', null], ['', '', null], ['osrm', 'MONFORTE DE LEMOS', 46.1], ['', 'MONFORTE DE LEMOS', 46.1],
   ]);
 
   assert.deepEqual(ps.map((p) => lineasSalida(p, cfg).join(' || ')), [
@@ -100,6 +101,33 @@ test('salidas: casa, fuera, 2º partido, tiempo a mano y pabellón desconocido',
   ]);
   assert.deepEqual(ps.map(textoSalida), ['En casa', '09:30', '2º partido', '16:15', 'Sin calcular', '16:00', '']);
   assert.deepEqual(lineasSalida(ps[0], null), []);
+});
+
+test('en casa por el pabellón aunque el partido no tenga hora todavía (sin salida ni calentamiento)', () => {
+  const cfg = configSalidas({ salidas: { ...ORIGEN, tiempos_viaje_minutos: { 'PAZO DOS DEPORTES': 0 } } });
+  const ps = [
+    partido('2026-10-04 00:00', 'ANEXO OS REMEDIOS - PISTA 1', 'CF1', 'sinhora'),
+    partido('2026-10-04 00:00', 'ANEXO OS REMEDIOS - PISTA 1', 'XF1', 'pendiente'),
+    partido('2026-10-04 12:00', 'ANEXO OS REMEDIOS - PISTA 1', 'CF1'),              // el mismo día y equipo, con hora
+    partido('2026-10-10 00:00', 'PAZO DOS DEPORTES PISTA 2', 'SM1', 'pendiente'),   // tiempo a mano de 0 minutos
+    partido('2026-10-11 00:00', 'A PINGUELA - PISTA 1', 'SF1', 'sinhora'),          // lejos
+    partido('2026-10-11 00:00', 'PABELLON DESCONOCIDO', 'IF1', 'pendiente'),
+  ];
+  anadirSalidas(ps, PABELLONES, cfg);
+  assert.deepEqual(ps.map((p) => `${p.estado} casa=${p.enCasa} salida=${hm(p.salida)} cal=${hm(p.calentamiento)} `
+    + `viaje=${p.viajeMin ?? ''} inicio=${hm(p.inicio)} seg=${p.segundo} mun=${p.municipio} km=${p.km ?? ''}`), [
+    'sinhora casa=true salida=- cal=- viaje= inicio=00:00 seg=false mun=OURENSE km=0.7',
+    'pendiente casa=true salida=- cal=- viaje= inicio=00:00 seg=false mun=OURENSE km=0.7',
+    // El partido sin hora no cuenta como el primero del día: el de las 12:00 no es un «2º partido».
+    'confirmada casa=true salida=- cal=11:00 viaje= inicio=11:00 seg=false mun=OURENSE km=0.7',
+    'pendiente casa=true salida=- cal=- viaje= inicio=00:00 seg=false mun= km=',
+    'sinhora casa=false salida=- cal=- viaje= inicio=00:00 seg=false mun=MONFORTE DE LEMOS km=46.1',
+    'pendiente casa=false salida=- cal=- viaje= inicio=00:00 seg=false mun= km=',
+  ]);
+  // Sin viaje propio (ni «manual»), y el calendario y el resumen siguen sin horas para ellos.
+  assert.deepEqual(ps.map((p) => p.viajeFuente), ['', '', '', '', '', '']);
+  assert.deepEqual(ps.map((p) => lineasSalida(p, cfg).length), [0, 0, 1, 0, 0, 0]);
+  assert.deepEqual(ps.map(textoSalida), ['', '', 'En casa', '', '', '']);
 });
 
 test('un tiempo a mano de 0 minutos es "en casa"; margen y redondeos', () => {
@@ -224,11 +252,16 @@ test('resolverPabellones: con la caché al día no se consulta nada ni se reescr
   const dir = carpetaTemporal();
   try {
     const ruta = join(dir, 'pabellones.json');
-    const cache = { 'A PINGUELA - PISTA 1': { id_campo: '68', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER', lat: 42.51356, lon: -7.52425, km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-09-24' } };
+    // "OTRO" (de un partido sin fecha ni hora) ya se buscó hoy sin encontrarlo: no se repite hasta mañana.
+    const cache = {
+      'A PINGUELA - PISTA 1': { id_campo: '68', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER', lat: 42.51356, lon: -7.52425, km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-09-24' },
+      OTRO: { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-09-25' },
+    };
     writeFileSync(ruta, JSON.stringify(cache));
     const antes = readFileSync(ruta, 'utf8');
     const ps = [partido('2026-10-04 11:30', 'A PINGUELA - PISTA 1', 'CF1'), partido('2026-10-05 00:00', 'OTRO', 'CF1', 'pendiente')];
-    const [r, pedidas] = await conFetch(() => { throw new Error('no debería consultar'); }, () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta));
+    const [r, pedidas] = await conFetch(() => { throw new Error('no debería consultar'); },
+      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta, fechaPared(2026, 9, 25)));
     assert.deepEqual(pedidas, []);
     assert.deepEqual(r['A PINGUELA - PISTA 1'], cache['A PINGUELA - PISTA 1']);
     assert.equal(readFileSync(ruta, 'utf8'), antes);
@@ -270,6 +303,34 @@ test('resolverPabellones: pabellón nuevo, sin datos y dirección que faltaba', 
     const guardado = readFileSync(ruta, 'utf8');
     assert.deepEqual(Object.keys(JSON.parse(guardado)), ['NINGUNO', 'NUEVO PABELLON - PISTA 1', 'VIEJO']);
     assert.ok(guardado.startsWith('{\n    "NINGUNO": {\n        "fuente": "sin-datos",'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resolverPabellones: también busca los pabellones de los partidos sin hora (para saber si son en casa)', async (t) => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    const ps = [
+      partido('2026-10-04 00:00', 'ANEXO OS REMEDIOS - PISTA 1', 'CF1', 'sinhora'),
+      partido('2026-10-11 00:00', 'ANEXO OS REMEDIOS - PISTA 1', 'XF1', 'pendiente'),
+      partido('2026-10-11 00:00', '', 'IF1', 'pendiente'),
+    ];
+    const responder = (url, datos) => {
+      if (url.includes('router.project-osrm.org')) return JSON.stringify({ code: 'Ok', routes: [{ distance: 700, duration: 60 }] });
+      if (datos.accion === 'obtener_pabellones') return JSON.stringify({ data: [{ id_campo: '7', nombre: 'ANEXO OS REMEDIOS', municipio: 'OURENSE' }] });
+      if (datos.accion === 'obtener_info_campo') return JSON.stringify({ data: [{ direccion: 'RÚA PARDO DE CELA, 2', latitud: '42.3438638', longitud: '-7.8701618' }] });
+      throw new Error(`no previsto: ${url}`);
+    };
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(responder,
+      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta, fechaPared(2026, 9, 25))));
+    assert.deepEqual(pedidas.slice(0, 2), ['obtener_pabellones', 'obtener_info_campo']);
+    assert.equal(pedidas.length, 3);
+    assert.deepEqual(Object.keys(JSON.parse(readFileSync(ruta, 'utf8'))), ['ANEXO OS REMEDIOS - PISTA 1']);
+    assert.deepEqual([cache['ANEXO OS REMEDIOS - PISTA 1'].municipio, cache['ANEXO OS REMEDIOS - PISTA 1'].km], ['OURENSE', 0.7]);
+    anadirSalidas(ps, cache, CFG);
+    assert.deepEqual(ps.map((p) => [p.enCasa, p.municipio]), [[true, 'OURENSE'], [true, 'OURENSE'], [false, '']]);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

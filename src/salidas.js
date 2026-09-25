@@ -211,6 +211,8 @@ export async function rutaCoche(lat1, lon1, lat2, lon2) {
 // hoy: Date de pared con la fecha de hoy (la de la generación).
 // Como en el .ps1 (un @{}), la caché no distingue mayúsculas: el pabellón "Lejos - Pista 1" usa la
 // entrada "LEJOS - PISTA 1" (claveSinCaja), y si se actualiza, conserva su nombre.
+// A diferencia del .ps1, también se buscan los pabellones de los partidos que aún no tienen hora: así
+// se sabe desde el principio si son en casa (los del pabellón del club salen «en casa» y con municipio).
 export async function resolverPabellones(partidos, cfgSalidas, desdeCampos, rutaCache, hoy = ahoraMadrid()) {
   // Coordenadas y tiempo en coche desde el origen para cada pabellón de los partidos (con caché).
   const cfg = cfgSalidas;
@@ -219,7 +221,7 @@ export async function resolverPabellones(partidos, cfgSalidas, desdeCampos, ruta
   const hoyTxt = fmt(hoy, 'yyyy-MM-dd');
   let campos = null;
   let cambios = false;
-  const nombres = ordenarUnicos(partidos.filter((p) => p.pabellon && conHora(p)).map((p) => p.pabellon));
+  const nombres = ordenarUnicos(partidos.filter((p) => p.pabellon).map((p) => p.pabellon));
   for (const n of nombres) {
     const k = claveSinCaja(cache, n);
     const e = cache[k];
@@ -284,44 +286,57 @@ export async function resolverPabellones(partidos, cfgSalidas, desdeCampos, ruta
 
 // --- Salida de cada partido ---------------------------------------------------------------------
 
+// Dónde se juega el partido: apunta en p el municipio y los km del pabellón (si está en la caché) y
+// devuelve si es en casa (a menos de radio_casa_km del origen o con un tiempo a mano de 0 minutos), los
+// minutos de viaje en bus (null si no se saben) y de dónde sale ese tiempo ('osrm', 'estimado',
+// 'manual' o '').
+function lugarDelPartido(p, pabellones, cfg) {
+  const e = p.pabellon ? pabellones[claveSinCaja(pabellones, p.pabellon)] : null;
+  let viaje = null;
+  let casa = false;
+  let fuente = '';
+  if (e && e.lat != null) {
+    p.municipio = txt(e.municipio);
+    p.km = e.km ?? null;
+    if (distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon)) <= cfg.radioCasaKm) {
+      casa = true;
+    } else if (e.minutos_coche != null) {
+      viaje = Math.ceil(Number(e.minutos_coche) * cfg.factorBus / cfg.redondeoViaje) * cfg.redondeoViaje;
+      fuente = txt(e.fuente);
+    }
+  }
+  // Un tiempo puesto a mano en config.json manda sobre el calculado (0 = en casa).
+  const claveP = clave(p.pabellon);
+  for (const [k, minutos] of cfg.manual) {
+    if (claveP && k && claveP.includes(k)) {
+      viaje = minutos;
+      casa = viaje === 0;
+      fuente = 'manual';
+      break;
+    }
+  }
+  return { casa, viaje, fuente };
+}
+
 // pabellones: la caché de resolverPabellones. Como en el .ps1 (dos @{}), ni el pabellón ni los equipos
 // distinguen mayúsculas (claveSinCaja).
 export function anadirSalidas(partidos, pabellones, cfgSalidas) {
-  // Calcula calentamiento, viaje en bus y salida de cada partido con hora.
+  // Calcula calentamiento, viaje en bus y salida de cada partido con hora. Los que aún no tienen hora
+  // solo saben dónde se juegan (en casa o no, municipio y km): la salida y el calentamiento llegan
+  // cuando la federación publica la hora (el .ps1 los dejaba sin nada).
   const cfg = cfgSalidas;
   const primeros = new Map();
   for (const p of [...partidos].sort((a, b) => a.fecha - b.fecha)) {
-    if (!conHora(p)) continue;
-    const e = p.pabellon ? pabellones[claveSinCaja(pabellones, p.pabellon)] : null;
-    let viaje = null;
-    let casa = false;
-    if (e && e.lat != null) {
-      p.municipio = txt(e.municipio);
-      p.km = e.km ?? null;
-      if (distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon)) <= cfg.radioCasaKm) {
-        casa = true;
-      } else if (e.minutos_coche != null) {
-        viaje = Math.ceil(Number(e.minutos_coche) * cfg.factorBus / cfg.redondeoViaje) * cfg.redondeoViaje;
-        p.viajeFuente = txt(e.fuente);
-      }
-    }
-    // Un tiempo puesto a mano en config.json manda sobre el calculado (0 = en casa).
-    const claveP = clave(p.pabellon);
-    for (const [k, minutos] of cfg.manual) {
-      if (claveP && k && claveP.includes(k)) {
-        viaje = minutos;
-        casa = viaje === 0;
-        p.viajeFuente = 'manual';
-        break;
-      }
-    }
+    const { casa, viaje, fuente } = lugarDelPartido(p, pabellones, cfg);
     p.enCasa = casa;
+    if (!conHora(p)) continue;
+    if (fuente) p.viajeFuente = fuente;
     p.viajeMin = casa ? null : viaje;
     p.calentamiento = sumarMinutos(p.fecha, -cfg.calentamiento);
 
     // Concentraciones: si el mismo equipo ya juega antes ese día en el mismo pabellón, no hay otra salida.
     const nuestros = [...p.nuestros].sort(compararTexto).join('/');
-    const grupo = claveSinCaja(primeros, `${fmt(p.fecha, 'yyyyMMdd')}|${nuestros}|${claveP}`);
+    const grupo = claveSinCaja(primeros, `${fmt(p.fecha, 'yyyyMMdd')}|${nuestros}|${clave(p.pabellon)}`);
     if (primeros.has(grupo)) {
       p.segundo = true;
       p.salidaPrimero = primeros.get(grupo);
