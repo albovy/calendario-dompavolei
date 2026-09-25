@@ -50,11 +50,23 @@ function contienePalabra(texto, palabra) {
   return new RegExp(`\\b${escapada}\\b`, 'i').test(texto);
 }
 
+// Marcador (o set) del lado del club: en los partidos de visitante se da la vuelta.
+function delClub(p, par) { return p.condicion === 'visitante' ? [par[1], par[0]] : par; }
+
+// Con resultado: "✅ IF1 3-0 RIVAL" (o ❌), con el marcador del club primero; en un derbi, "🏐 CF1 3-1 CF2".
+function tituloResultado(p, corto) {
+  const [a, b] = delClub(p, p.resultado.marcador);
+  if (p.condicion === 'derbi') return `🏐 ${corto(p.local)} ${a}-${b} ${corto(p.visitante)}`;
+  return `${a > b ? '✅' : '❌'} ${corto(p.nuestros[0])} ${a}-${b} ${p.rival}`;
+}
+
 // Título corto para que se lea bien en el calendario del móvil: "🚌 IF1 vs RIVAL (10:00)".
 // La hora entre paréntesis es la del partido cuando el evento empieza antes (salida del bus o
-// calentamiento); los equipos del club van sin el nombre del club delante (prefijo).
+// calentamiento); los equipos del club van sin el nombre del club delante (prefijo). Ya jugado, con
+// el resultado (tituloResultado).
 function tituloEvento(p, inicio, prefijo) {
   const corto = (n) => (prefijo && n.startsWith(`${prefijo} `) ? n.slice(prefijo.length + 1) : n);
+  if (p.resultado) return tituloResultado(p, corto);
   const partido = p.condicion === 'derbi'
     ? `${corto(p.local)} vs ${corto(p.visitante)}`
     : `${corto(p.nuestros[0])} vs ${p.rival}`;
@@ -69,6 +81,11 @@ function tituloEvento(p, inicio, prefijo) {
 // Detalle breve: horas del día (si hay horas de salida), el partido y la competición. El pabellón
 // ya va en la ubicación del evento.
 function detalleEvento(p, cfgSalidas) {
+  if (p.resultado) {
+    // Ya jugado: los sets, el partido y la competición (las horas de salida ya no hacen falta).
+    const sets = p.resultado.sets.map((s) => delClub(p, s).join('-')).join(' · ');
+    return [...(sets ? [`Sets: ${sets}`] : []), `${p.local} - ${p.visitante}`, p.competicion].join('\n');
+  }
   const lineas = [...lineasSalida(p, cfgSalidas)];
   if (p.estado === 'sinhora') lineas.push('Hora por confirmar');
   else if (p.estado === 'pendiente') lineas.push('Fecha y hora por confirmar (día de la jornada prevista)');

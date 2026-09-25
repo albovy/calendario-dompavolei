@@ -321,3 +321,20 @@ describe('lineaIcs', () => {
     assert.equal(lineaIcs(e), `${'a'.repeat(73)}\r\n 🏐b\r\n`);
   });
 });
+
+test('crearIcs: con resultado, el marcador en el título (el del club primero) y los sets en el detalle', () => {
+  const opciones = { prefijo: 'DOMPAVOLEI' };
+  const titulo = (p) => propiedad(crearIcs([p], 'Cal', 'Desc', 120, GENERADO, SALIDAS, opciones), 'SUMMARY')[0];
+  const detalle = (p) => propiedad(crearIcs([p], 'Cal', 'Desc', 120, GENERADO, SALIDAS, opciones), 'DESCRIPTION')[0];
+  const ganado = partidoFuera({ resultado: { marcador: [0, 3], sets: [[24, 26], [23, 25], [20, 25]] } });
+  assert.equal(titulo(ganado), 'SUMMARY:✅ IF1 3-0 CLUB VOLEIBOL LALÍN');
+  assert.equal(detalle(ganado), 'DESCRIPTION:Sets: 26-24 · 25-23 · 25-20\\nCLUB VOLEIBOL LALÍN - DOMPAVOLEI IF1\\nLIGA GALEGA INFANTIL F');
+  const perdido = partido({ resultado: { marcador: [1, 3], sets: [[25, 20], [20, 25], [18, 25], [22, 25]] } });
+  assert.equal(titulo(perdido), 'SUMMARY:❌ CF1 1-3 CV VIGO');
+  const derbi = partido({
+    visitante: 'DOMPAVOLEI CF2', esVisitante: true, condicion: 'derbi', nuestros: ['DOMPAVOLEI CF1', 'DOMPAVOLEI CF2'], rival: '',
+    resultado: { marcador: [3, 1], sets: [] },
+  });
+  assert.equal(titulo(derbi), 'SUMMARY:🏐 CF1 3-1 CF2');
+  assert.equal(detalle(derbi), 'DESCRIPTION:DOMPAVOLEI CF1 - DOMPAVOLEI CF2\\nLIGA GALEGA CADETE F');
+});
