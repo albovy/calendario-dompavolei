@@ -61,6 +61,10 @@ const SALIDAS = {
   redondeoViaje: 15, redondeo: 15, radioCasaKm: 1, manual: new Map(),
 };
 
+test('plantilla.html: la cabecera no lleva las rayas de la pista (la red y las líneas de ataque cruzaban el texto)', () => {
+  assert.doesNotMatch(PLANTILLA, /\.pista::(before|after)/);
+});
+
 test('plantilla.html: un solo __TITULO__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
   assert.equal(veces(PLANTILLA, '__TITULO__'), 1);
   assert.equal(veces(PLANTILLA, '__DATOS__'), 1);

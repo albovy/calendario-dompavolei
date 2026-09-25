@@ -46,21 +46,12 @@ a { color: inherit; }
 .solo-impresion { display: none; }
 .envoltura { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
 
-/* Cabecera: una pista vista desde arriba */
+/* Cabecera: una pista vista desde arriba (solo el marco: la red y las líneas de ataque cruzaban el texto) */
 .cabecera { background: var(--libre); color: #fff; padding: 22px 0 26px; }
 .pista {
   position: relative; background: var(--pista); border: 2px solid rgba(255,255,255,.55);
   padding: 26px 28px 24px; overflow: hidden;
 }
-.pista::before, .pista::after { content: ''; position: absolute; top: 0; bottom: 0; pointer-events: none; }
-.pista::before {  /* líneas de ataque */
-  left: 33.333%; right: 33.333%;
-  border-left: 2px solid rgba(255,255,255,.22); border-right: 2px solid rgba(255,255,255,.22);
-}
-.pista::after {   /* la red */
-  left: calc(50% - 2px); width: 4px; background: rgba(255,255,255,.42);
-}
-.pista > * { position: relative; z-index: 1; }
 .antetitulo { font: 600 .95rem/1 var(--cond); letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin: 0 0 10px; }
 h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 0; max-width: 16ch; }
 .resumen { margin: 14px 0 0; font: 500 1.05rem/1.4 var(--cond); letter-spacing: .02em; }
@@ -243,7 +234,6 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   body { background: #fff; color: #000; font-size: 12px; }
   .cabecera { background: none; color: #000; padding: 0; }
   .pista { background: none; border: 0; padding: 0 0 8px; }
-  .pista::before, .pista::after { display: none; }
   .partido { break-inside: avoid; padding: 6px 8px; }
   .dia { break-inside: avoid-page; margin-top: 14px; }
   .condicion.local, .condicion.derbi { background: none; color: #000; border-color: #000; }
