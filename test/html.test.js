@@ -61,6 +61,31 @@ const SALIDAS = {
   redondeoViaje: 15, redondeo: 15, radioCasaKm: 1, manual: new Map(),
 };
 
+// Contraste WCAG entre dos colores "#rrggbb" (1 a 21).
+function contraste(a, b) {
+  const luz = (hex) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [x, y] = [luz(a), luz(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+}
+
+test('plantilla.html: modo oscuro con la paleta Night Winter y contraste suficiente (WCAG AA)', () => {
+  const bloque = /@media \(prefers-color-scheme: dark\) \{\s*:root \{([^}]*)\}/.exec(PLANTILLA)[1];
+  const t = Object.fromEntries([...bloque.matchAll(/--([a-z0-9-]+):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2].toLowerCase()]));
+  assert.deepEqual([t.fondo, t.libre, t.pista, t.borde, t.activo, t['tinta-2'], t.tinta],
+    ['#141c33', '#141c33', '#2f456f', '#2f456f', '#5374ac', '#8bafd0', '#eff5fa']);
+  for (const [texto, fondo, minimo] of [
+    [t.tinta, t.fondo, 4.5], [t.tinta, t.superficie, 4.5], [t['tinta-2'], t.superficie, 4.5], [t['tinta-2'], t.fondo, 4.5],
+    ['#ffffff', t.activo, 4.5], ['#ffffff', t.pista, 4.5], [t.gana, t.superficie, 4.5], [t.pierde, t.superficie, 4.5],
+    [t['c-senior'], t.superficie, 3], [t['c-infantil'], t.superficie, 3],
+  ]) {
+    assert.ok(contraste(texto, fondo) >= minimo, `${texto} sobre ${fondo}: ${contraste(texto, fondo).toFixed(2)} < ${minimo}`);
+  }
+});
+
 test('plantilla.html: un solo __TITULO__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
   assert.equal(veces(PLANTILLA, '__TITULO__'), 1);
   assert.equal(veces(PLANTILLA, '__DATOS__'), 1);
