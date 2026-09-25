@@ -9,8 +9,10 @@
 <link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700&amp;display=swap">
 <style>
 /* Página nueva «Salidas desde Os Remedios» (maqueta v3). Diseño:
-   docs/superpowers/specs/2026-09-25-rediseno-salidas-design.md. Sin colores de categoría: el color solo
-   dice qué es firme (tinta), qué es lo próximo (aguamarina) y qué falta por confirmar (ámbar). */
+   docs/superpowers/specs/2026-09-25-rediseno-salidas-design.md. El color dice qué es firme (tinta), qué es
+   lo próximo o lo nuestro (aguamarina) y qué falta por confirmar (ámbar); además, cada categoría tiene el
+   suyo (punto en los chips y barra de cada partido, como en la página de siempre), en tonos apagados que
+   no se confunden con el aguamarina ni con el ámbar. */
 :root {
   --fondo: #ECEFF2;      /* fondo de la página y de la fila de chips; días pasados sin tarjeta */
   --sup: #FFFFFF;        /* barra superior, pestañas, filas */
@@ -23,6 +25,9 @@
   --agua-r: #5EC4B9;     /* barra de la próxima salida, raya de la pestaña activa */
   --ambar: #955300;      /* lo que no es firme */
   --elegido: #121B2E; --elegido-t: #FFFFFF;
+  /* Categorías: violeta, verde, azul, coral, frambuesa, oliva, marino pizarra y topo */
+  --c-benjamin: #7A4FB5; --c-alevin: #2E7D4F; --c-infantil: #2F6FB8; --c-cadete: #C0463A;
+  --c-juvenil: #A8356E;  --c-junior: #6B7A1F; --c-senior: #3D4F72;   --c-otra: #7D6B55;
   --cond: 'Barlow Condensed', 'Arial Narrow', 'Segoe UI', sans-serif;
   --txt: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
@@ -30,8 +35,14 @@
   :root {
     --fondo: #131519; --sup: #1C1F25; --borde: #2C3139; --control: #6B7380; --tinta: #E8EAEE; --tinta2: #A4ABB5;
     --marino-t: #A9BCE3; --agua: #63D0C3; --agua-r: #5EC4B9; --ambar: #F0B65A; --elegido: #E8EAEE; --elegido-t: #131519;
+    --c-benjamin: #B79BE6; --c-alevin: #7CCB98; --c-infantil: #7FB2EE; --c-cadete: #F08A7E;
+    --c-juvenil: #E68AB8;  --c-junior: #C9CF6B; --c-senior: #A9B8D6;   --c-otra: #CDB99A;
   }
 }
+[data-cat="benjamin"] { --c: var(--c-benjamin); } [data-cat="alevin"] { --c: var(--c-alevin); }
+[data-cat="infantil"] { --c: var(--c-infantil); } [data-cat="cadete"] { --c: var(--c-cadete); }
+[data-cat="juvenil"] { --c: var(--c-juvenil); } [data-cat="junior"] { --c: var(--c-junior); }
+[data-cat="senior"] { --c: var(--c-senior); } [data-cat="otra"] { --c: var(--c-otra); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--fondo); color: var(--tinta); font: 400 16px/1.4 var(--txt); }
@@ -106,12 +117,19 @@ svg { flex: none; }
    quede dentro de la fila y la recorte: si no, se coloca respecto a .fijos y, con muchos equipos, alarga
    la página de lado. */
 .chips { position: relative; flex: 1 1 auto; min-width: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 5px; margin: -5px; }
+/* Si no caben todos los chips, se funden en el borde derecho: se ve que la fila sigue y se puede deslizar.
+   El hueco de la derecha deja que el último chip salga entero del fundido al llegar al final. */
+.chips { padding-right: 28px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: none; min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--control);
   background: var(--sup); color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .02em; cursor: pointer; white-space: nowrap;
 }
 .chip[aria-pressed="true"] { background: var(--elegido); border-color: var(--elegido); color: var(--elegido-t); }
+.chip[data-cat] { display: inline-flex; align-items: center; gap: 7px; }
+.punto { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip .cat-chip { font-weight: 500; color: var(--tinta2); }
+.chip[aria-pressed="true"] .cat-chip { color: var(--elegido-t); }
 .btn-filtros {
   flex: none; margin-left: auto; min-height: 44px; padding: 0 4px; border: 0; background: none; cursor: pointer;
   color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .02em; white-space: nowrap;
@@ -147,8 +165,9 @@ main { display: block; padding-bottom: 32px; }
 .fila {
   display: grid; grid-template-columns: 86px minmax(0, 1fr) auto; gap: 0 12px; align-items: start;
   padding: 13px 12px; background: var(--sup); border-bottom: 1px solid var(--borde);
+  box-shadow: inset 4px 0 0 var(--c);    /* barra del color de la categoría */
 }
-.fila.prox { box-shadow: inset 4px 0 0 var(--agua-r); }
+.fila.prox { background: color-mix(in srgb, var(--agua-r) 10%, var(--sup)); }
 .fila.jugada { background: transparent; }
 .hora .etq { display: block; font: 700 12px/1 var(--cond); letter-spacing: .12em; text-transform: uppercase; color: var(--marino-t); }
 .hora .etq.gris { color: var(--tinta2); }
@@ -204,6 +223,7 @@ main { display: block; padding-bottom: 32px; }
 .clas { margin-top: 18px; }
 .clas-titulo { margin: 0; display: flex; align-items: baseline; gap: 8px; font: 700 20px/1.1 var(--cond); letter-spacing: .03em; }
 .clas-titulo span { font: 500 15px/1 var(--txt); letter-spacing: 0; color: var(--tinta2); }
+.clas-titulo .punto { align-self: center; }
 .clas-grupo { margin: 4px 0 8px; font-size: 14px; color: var(--tinta2); }
 .tabla-envoltura { overflow-x: auto; }
 .tabla-clas { width: 100%; border-collapse: collapse; background: var(--sup); font: 500 16px/1.2 var(--cond); font-variant-numeric: tabular-nums; }
@@ -240,7 +260,7 @@ main { display: block; padding-bottom: 32px; }
 .celda .num { display: inline-grid; place-items: center; min-width: 24px; height: 24px; font: 700 15px/1 var(--cond); }
 .celda.fuera-mes .num { color: var(--tinta2); }
 .celda.hoy .num { border-radius: 50%; box-shadow: 0 0 0 2px var(--agua-r); }
-.mini { display: flex; flex-wrap: wrap; column-gap: 4px; margin-top: 3px; font: 700 13px/1.15 var(--cond); overflow-wrap: anywhere; }
+.mini { display: flex; flex-wrap: wrap; column-gap: 4px; margin-top: 3px; padding-left: 4px; border-left: 3px solid var(--c, transparent); font: 700 13px/1.15 var(--cond); overflow-wrap: anywhere; }
 .mini .mh { font-weight: 500; color: var(--tinta2); font-variant-numeric: tabular-nums; }
 .mas { display: block; margin-top: 3px; font: 600 12px/1 var(--cond); color: var(--tinta2); }
 
@@ -268,7 +288,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   body { font-size: 12px; }
   .barra .ancho { min-height: 0; padding-top: 4px; padding-bottom: 4px; }
   .fila { break-inside: avoid; padding: 6px 8px; }
-  .fila.prox { box-shadow: inset 3px 0 0 #000; }
+  .fila.prox { background: none; }
   .dia { margin-top: 12px; }
   .dia-cab { break-after: avoid; }
   .cond.local, .cond.derbi { background: none; color: #000; border-color: #000; }
@@ -545,8 +565,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   var chips = $('chips');
   if (conPartidos.length < 2) chips.classList.add('oculto');
   chips.innerHTML = '<button type="button" class="chip" data-eq="">Todos</button>' + conPartidos.map(function (e) {
-    return '<button type="button" class="chip" data-eq="' + esc(e.n) + '" title="' + esc(e.n + ' · ' + e.cat) + '">' +
-      esc(corto(e.n)) + '<span class="sr-only"> (' + esc(e.cat) + ')</span></button>';
+    return '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" title="' + esc(e.n + ' · ' + e.cat) + '">' +
+      '<span class="punto" aria-hidden="true"></span>' + esc(corto(e.n)) + ' <span class="cat-chip">' + esc(e.cat) + '</span></button>';
   }).join('');
   function marcarChips() {
     Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (b) {
@@ -796,7 +816,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     var cod = nuestros(p).map(corto).join(' · '), riv = rival(p);
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
     var acc = botonesWhatsApp(p, i) + enlaceBus(p);
-    return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-i="' + i + '">' +
+    return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-cat="' + esc(p.ck) + '" data-i="' + i + '">' +
       columnaHora(p, jug) +
       // Entre el equipo y el destino, un icono de ubicación: «IF1 en MARÍN», no el «infantil de Marín».
       '<div class="info"><div class="dest"><span class="cod">' + esc(cod) + '</span><span class="sr-only"> en </span>' +
@@ -817,7 +837,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       return '<tr' + (f.o ? ' class="nuestro"' : '') + '><td>' + f.p + '</td><td class="eq">' + esc(f.n) + '</td><td class="pts">' + f.pt +
         '</td><td>' + f.pj + '</td><td>' + f.pg + '</td><td>' + f.pp + '</td><td>' + f.sf + '-' + f.sc + '</td></tr>';
     }).join('');
-    return '<section class="clas"><h2 class="clas-titulo">' + esc(corto(c.eq)) +
+    return '<section class="clas"><h2 class="clas-titulo"' + (e ? ' data-cat="' + esc(e.ck) + '"' : '') + '>' +
+      (e ? '<span class="punto" aria-hidden="true"></span>' : '') + esc(corto(c.eq)) +
       (e ? '<span>' + esc(e.cat) + '</span>' : '') + '</h2><p class="clas-grupo">' + esc(c.comp) + ' · ' + esc(c.g) + '</p>' +
       '<div class="tabla-envoltura"><table class="tabla-clas"><thead><tr><th scope="col">#</th><th scope="col" class="eq">Equipo</th>' +
       '<th scope="col" title="Puntos">Pts</th><th scope="col" title="Partidos jugados">PJ</th><th scope="col" title="Ganados">G</th>' +
@@ -916,11 +937,11 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       var eqs = [];
       ps.forEach(function (p) {
         var k = claveEquipo(p), e = eqs.filter(function (x) { return x.k === k; })[0];
-        if (!e) { e = { k: k, cod: nuestros(p).map(corto).join(' · '), s: '' }; eqs.push(e); }
+        if (!e) { e = { k: k, cod: nuestros(p).map(corto).join(' · '), ck: p.ck, s: '' }; eqs.push(e); }
         if (p.s && !e.s) e.s = p.s;
       });
       eqs.slice(0, 2).forEach(function (e) {
-        html += '<span class="mini"><b>' + esc(e.cod) + '</b>' + (e.s ? ' <span class="mh">' + esc(e.s) + '</span>' : '') + '</span>';
+        html += '<span class="mini" data-cat="' + esc(e.ck) + '"><b>' + esc(e.cod) + '</b>' + (e.s ? ' <span class="mh">' + esc(e.s) + '</span>' : '') + '</span>';
       });
       if (eqs.length > 2) html += '<span class="mas">+' + (eqs.length - 2) + '</span>';
       html += '</div>';

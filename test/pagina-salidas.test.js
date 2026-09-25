@@ -54,8 +54,48 @@ test('plantilla-salidas.html: tokens de color del diseño en claro y en oscuro, 
   assert.match(PLANTILLA, /@media \(prefers-color-scheme: dark\)/);
   assert.equal(PLANTILLA.split('fonts.bunny.net/css?').length - 1, 1);
   assert.ok(PLANTILLA.includes('family=barlow:400,500,600|barlow-condensed:500,600,700'));
-  // Sin colores de categoría ni amarillo balón de la página de siempre.
-  assert.doesNotMatch(PLANTILLA, /--c-infantil|--balon|#FFC915/);
+  // Sin el amarillo balón de la página de siempre.
+  assert.doesNotMatch(PLANTILLA, /--balon|#FFC915/);
+});
+
+// Contraste WCAG entre dos colores "#rrggbb" (1 a 21).
+function contraste(a, b) {
+  const luz = (hex) => {
+    const [r, g, bl] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [x, y] = [luz(a), luz(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+}
+
+test('plantilla-salidas.html: un color por categoría (como en la página de siempre), en claro y en oscuro, que se ve sobre las filas', () => {
+  const oscuro = PLANTILLA.indexOf('@media (prefers-color-scheme: dark)');
+  const tokens = (css) => Object.fromEntries([...css.matchAll(/--(c-[a-z]+|sup):\s*(#[0-9A-Fa-f]{6})/g)].map((m) => [m[1], m[2]]));
+  const claro = tokens(PLANTILLA.slice(0, oscuro));
+  const noche = tokens(PLANTILLA.slice(oscuro, PLANTILLA.indexOf('}', PLANTILLA.indexOf('}', oscuro) + 1)));
+  const cats = ['benjamin', 'alevin', 'infantil', 'cadete', 'juvenil', 'junior', 'senior', 'otra'];
+  for (const [modo, t] of [['claro', claro], ['oscuro', noche]]) {
+    for (const c of cats) {
+      const color = t[`c-${c}`];
+      assert.ok(color, `falta --c-${c} en ${modo}`);
+      // La barra y el punto son elementos gráficos: WCAG 1.4.11 pide 3:1 con lo que tienen al lado.
+      assert.ok(contraste(color, t.sup) >= 3, `--c-${c} ${color} sobre ${t.sup} (${modo}): ${contraste(color, t.sup).toFixed(2)}`);
+    }
+    // Ninguna categoría se confunde con el aguamarina (lo nuestro / lo próximo) ni con el ámbar (por confirmar).
+    assert.ok(!Object.values(t).some((v) => ['#5EC4B9', '#0A7A70', '#63D0C3', '#955300', '#F0B65A'].includes(v.toUpperCase())), modo);
+  }
+  for (const c of cats) assert.match(PLANTILLA, new RegExp(`\\[data-cat="${c}"\\] \\{ --c: var\\(--c-${c}\\); \\}`));
+});
+
+test('salidas: cada fila lleva a la izquierda la barra del color de su categoría; la próxima salida, además, un fondo aguamarina suave', () => {
+  const partidos = [partido({ s: '07:15', vj: 105 }), partido({ f: '2026-09-27', cat: 'Cadete F', ck: 'cadete' })];
+  const html = abrirPagina(datos(partidos, { sal: SAL })).contenido.innerHTML;
+  assert.match(fila(html, 0).html, /^class="fila prox" data-cat="infantil"/);
+  assert.match(fila(html, 1).html, /^class="fila" data-cat="cadete"/);
+  const reglas = reglasCss(PLANTILLA).filter((r) => !r.impresion);
+  assert.ok(reglas.some((r) => r.selector === '.fila' && /box-shadow: inset 4px 0 0 var\(--c\)/.test(r.cuerpo)), 'barra de categoría');
+  assert.ok(reglas.some((r) => r.selector === '.fila.prox' && /background: color-mix\(in srgb, var\(--agua-r\)/.test(r.cuerpo)), 'fondo de la próxima');
 });
 
 // --- Selector «Diseño antiguo | Diseño nuevo» -----------------------------------------------------------
@@ -437,18 +477,17 @@ test('salidas: chips con el código corto de cada equipo con partidos, y «Todos
   const chips = abrirPagina(d).porId('chips').innerHTML;
   assert.deepEqual([...chips.matchAll(/data-eq="([^"]*)"/g)].map((m) => m[1]), ['', 'DOMPAVOLEI IF1', 'DOMPAVOLEI CF1']);
   assert.deepEqual(texto(chips).split(' ').filter((x) => /^(Todos|IF1|CF1)$/.test(x)), ['Todos', 'IF1', 'CF1']);
+  // Como en la página de siempre: el punto del color de la categoría, el código y la categoría.
+  assert.match(chips, /<button type="button" class="chip" data-cat="infantil" data-eq="DOMPAVOLEI IF1"[^>]*><span class="punto" aria-hidden="true"><\/span>IF1 <span class="cat-chip">Infantil F<\/span><\/button>/);
+  assert.match(chips, /data-cat="cadete" data-eq="DOMPAVOLEI CF1"[^>]*><span class="punto" aria-hidden="true"><\/span>CF1 <span class="cat-chip">Cadete F<\/span>/);
 });
 
 test('salidas: los chips que no caben se desplazan dentro de su fila, sin mover la página de lado a 375 px', () => {
-  // Cada chip lleva la categoría para los lectores de pantalla en un .sr-only (position: absolute). Si la
-  // fila de chips no está posicionada, esos textos se colocan respecto a la fila fija (.fijos, sticky), se
-  // salen del recorte de .chips y, con 6 o más equipos, la página entera se desplazaba en horizontal.
-  const chips = abrirPagina(datos([partido()])).porId('chips').innerHTML;
-  assert.match(chips, /<span class="sr-only">/);
-  assert.match(reglasCss(PLANTILLA).find((r) => r.selector === '.sr-only').cuerpo, /position: absolute/);
+  // La fila de chips se desplaza en horizontal dentro de sí misma y está posicionada, para que nada de
+  // dentro (p. ej. un .sr-only, que es absolute) se coloque respecto a la fila fija y alargue la página.
   const fila = reglasCss(PLANTILLA).filter((r) => !r.impresion && r.selector === '.chips');
   assert.ok(fila.some((r) => /overflow-x: auto/.test(r.cuerpo)), 'la fila de chips no se desplaza');
-  assert.ok(fila.some((r) => /position: relative/.test(r.cuerpo)), 'la fila de chips no contiene sus .sr-only');
+  assert.ok(fila.some((r) => /position: relative/.test(r.cuerpo)), 'la fila de chips no está posicionada');
 });
 
 test('salidas: la fila fija (chips y «Filtros») no tapa lo que tiene el foco: scroll-padding-top con su alto', () => {
