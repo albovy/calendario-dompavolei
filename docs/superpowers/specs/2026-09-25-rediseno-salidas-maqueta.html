@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Maqueta v3 · DOMPAVOLEI</title>
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700&display=block">
+<style>
+:root{--fondo:#ECEFF2;--sup:#FFFFFF;--tinta:#121B2E;--tinta2:#4E5866;--borde:#D5DAE1;--control:#7D8796;--marino-t:#1E335F;--agua:#0A7A70;--agua-r:#5EC4B9;--ambar:#955300;--elegido:#121B2E;--elegido-t:#FFFFFF;
+--cond:'Barlow Condensed','Arial Narrow',sans-serif;--txt:'Barlow',system-ui,sans-serif}
+.oscuro{--fondo:#131519;--sup:#1C1F25;--tinta:#E8EAEE;--tinta2:#A4ABB5;--borde:#2C3139;--control:#6B7380;--marino-t:#A9BCE3;--agua:#63D0C3;--ambar:#F0B65A;--elegido:#E8EAEE;--elegido-t:#131519}
+*{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--tinta);font:400 16px/1.4 var(--txt)}
+svg{flex:none}
+.env{padding:0 16px 24px}
+.barra{display:flex;align-items:center;gap:12px;height:64px;background:var(--sup);padding:0 16px;border-bottom:1px solid var(--borde)}
+.barra .escudo{width:40px;height:40px;border-radius:6px;background:#fff;display:grid;place-items:center;overflow:hidden}
+.barra .escudo img{width:36px;height:36px;object-fit:contain}
+.marca{font:700 21px/1 var(--cond);letter-spacing:.02em}.marca small{display:block;margin-top:3px;font:500 14px/1 var(--txt);color:var(--tinta2);letter-spacing:0}
+.btn-cal{margin-left:auto;min-height:44px;font:600 16px/1 var(--cond);letter-spacing:.03em;border:1.5px solid var(--tinta);border-radius:10px;padding:0 14px;background:none;color:var(--tinta)}
+.tabs{display:flex;gap:24px;background:var(--sup);padding:0 16px;border-bottom:1px solid var(--borde)}
+.tabs b{font:600 17px/1 var(--cond);letter-spacing:.03em;padding:14px 0 11px;color:var(--tinta2);border-bottom:3px solid transparent}
+.tabs b.on{color:var(--tinta);border-color:var(--agua-r)}
+.chips{display:flex;gap:8px;align-items:center;padding:10px 16px;background:var(--fondo);border-bottom:1px solid var(--borde)}
+.chip{min-height:44px;display:grid;place-items:center;font:600 16px/1 var(--cond);padding:0 14px;border-radius:10px;border:1.5px solid var(--borde);background:var(--sup)}
+.chip.on{background:var(--elegido);color:var(--elegido-t);border-color:var(--elegido)}
+.filt{margin-left:auto;font:600 16px/1 var(--cond);color:var(--tinta);padding:0 4px}
+.tab-h{display:flex;align-items:center;justify-content:space-between;margin:16px 0 4px}
+.tab-h h2{margin:0;font:600 14px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;color:var(--tinta2)}
+.seg{font:600 14px/1 var(--cond);letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--borde);border-radius:8px;display:flex;overflow:hidden}
+.seg span{padding:9px 11px}.seg span.on{background:var(--elegido);color:var(--elegido-t)}
+.dia{font:600 16px/1 var(--cond);letter-spacing:.08em;text-transform:uppercase;margin:18px 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+.dia i{font:500 15px/1 var(--txt);font-style:normal;color:var(--tinta2);letter-spacing:0;text-transform:none}
+.dia.pasado{color:var(--tinta2)}
+/* Una fila por partido */
+.fila{display:grid;grid-template-columns:86px 1fr auto;gap:0 12px;align-items:start;background:var(--sup);padding:13px 12px;border-bottom:1px solid var(--borde)}
+.fila.prox{box-shadow:inset 4px 0 0 var(--agua-r)}
+.fila.jugada{background:transparent}
+.hora .etq{display:block;font:700 12px/1 var(--cond);letter-spacing:.12em;text-transform:uppercase;color:var(--marino-t)}
+.hora .etq.gris{color:var(--tinta2)}
+.hora .h{display:block;margin-top:4px;font:700 30px/1 var(--cond);font-variant-numeric:tabular-nums}
+.hora .h.gris{color:var(--tinta2)}
+.hora .ph{display:block;margin-top:5px;font:500 14px/1.2 var(--txt);color:var(--tinta2)}
+.hora .pend{display:block;font:600 16px/1.1 var(--cond);letter-spacing:.06em;text-transform:uppercase;color:var(--ambar)}
+.dest{display:flex;align-items:baseline;gap:8px;min-width:0;flex-wrap:wrap}
+.cod{font:700 18px/1.1 var(--cond);letter-spacing:.02em}
+.lugar{font:600 18px/1.1 var(--cond);letter-spacing:.04em;text-transform:uppercase}
+.proxm{display:block;margin-top:4px;font:600 13px/1 var(--cond);letter-spacing:.1em;text-transform:uppercase;color:var(--agua)}
+.rival{margin-top:4px;font:500 15px/1.3 var(--txt)}
+.sub{margin-top:3px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font:400 15px/1.3 var(--txt);color:var(--tinta2)}
+.cond{font:700 12px/1 var(--cond);letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:999px;border:1.5px solid var(--tinta2);color:var(--tinta2)}
+.cond.local{background:var(--tinta);border-color:var(--tinta);color:var(--sup)}
+.res{margin-top:4px;font:700 17px/1.2 var(--cond);font-variant-numeric:tabular-nums}.res.gana{color:var(--agua)}.res.pierde{color:var(--tinta2)}
+.res small{margin-left:6px;font:500 14px/1 var(--txt);color:var(--tinta2)}
+.chev{color:var(--tinta2);font:600 20px/1 var(--cond);padding-top:2px}
+.acc{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.b{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 10px;white-space:nowrap;border-radius:999px;border:1.5px solid var(--control);background:var(--sup);color:var(--tinta);font:600 14px/1 var(--cond);letter-spacing:.02em;text-decoration:none}
+.b.wa{background:var(--tinta);border-color:var(--tinta);color:var(--sup)}
+</style></head><body>
+<script>if (/oscuro/.test(location.search)) document.documentElement.classList.add('oscuro');</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-copia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></symbol>
+</svg>
+<div class="barra"><span class="escudo"><img src="../../../escudo.png" alt=""></span><div class="marca">DOMPAVOLEI<small>Temporada 2026/27</small></div><button class="btn-cal">+ Calendario</button></div>
+<div class="tabs"><b class="on">Calendario</b><b>Clasificación</b></div>
+<div class="chips"><span class="chip on">Todos</span><span class="chip">IF1</span><span class="chip">CF1</span><span class="chip">XF1</span><span class="filt">Filtros</span></div>
+<div class="env">
+<div class="tab-h"><h2>Salidas desde Os Remedios</h2><div class="seg"><span class="on">Lista</span><span>Mes</span></div></div>
+
+<div class="dia">Sábado 26 sept. <i>mañana</i></div>
+<div class="fila prox">
+  <div class="hora"><span class="etq">Salida</span><span class="h">07:15</span><span class="ph">partido 10:00</span></div>
+  <div><div class="dest"><span class="cod">IF1</span><span class="lugar">Marín</span></div><span class="proxm">Próxima salida</span>
+    <div class="rival">vs SEI SAN NARCISO IF</div>
+    <div class="sub">Infantil F <span class="cond">Visitante</span></div></div>
+  <span class="chev">›</span>
+  <div class="acc"><a class="b wa"><svg width="15" height="15"><use href="#i-msg"/></svg>WhatsApp</a><a class="b"><svg width="15" height="15"><use href="#i-copia"/></svg>Copiar</a><a class="b"><svg width="15" height="15"><use href="#i-mail"/></svg>Pedir bus</a></div>
+</div>
+<div class="fila">
+  <div class="hora"><span class="etq gris">2º partido</span><span class="h">11:30</span><span class="ph">bus de 07:15</span></div>
+  <div><div class="dest"><span class="cod">IF1</span><span class="lugar">Marín</span></div>
+    <div class="rival">vs CV OLEIROS IFA</div>
+    <div class="sub">Infantil F <span class="cond local">Local</span></div></div>
+  <span class="chev">›</span>
+</div>
+<div class="fila">
+  <div class="hora"><span class="etq">Salida</span><span class="h">09:30</span><span class="ph">partido 11:30</span></div>
+  <div><div class="dest"><span class="cod">XF1</span><span class="lugar">Monforte de Lemos</span></div>
+    <div class="rival">vs CV CIUDAD DE A CORUÑA JF B</div>
+    <div class="sub">Juvenil F <span class="cond">Visitante</span></div></div>
+  <span class="chev">›</span>
+  <div class="acc"><a class="b wa"><svg width="15" height="15"><use href="#i-msg"/></svg>WhatsApp</a><a class="b"><svg width="15" height="15"><use href="#i-copia"/></svg>Copiar</a><a class="b"><svg width="15" height="15"><use href="#i-mail"/></svg>Pedir bus</a></div>
+</div>
+<div class="fila">
+  <div class="hora"><span class="etq gris">2º partido</span><span class="h">13:00</span><span class="ph">bus de 09:30</span></div>
+  <div><div class="dest"><span class="cod">XF1</span><span class="lugar">Monforte de Lemos</span></div>
+    <div class="rival">vs RIBEIRA SACRA A</div>
+    <div class="sub">Juvenil F <span class="cond">Visitante</span></div></div>
+  <span class="chev">›</span>
+</div>
+
+<div class="dia">Domingo 27 sept.</div>
+<div class="fila">
+  <div class="hora"><span class="etq">Salida</span><span class="h">08:15</span><span class="ph">partido 11:30</span></div>
+  <div><div class="dest"><span class="cod">CF1</span><span class="lugar">Palmeira</span></div>
+    <div class="rival">vs PESCADOR XAV SANXENXO</div>
+    <div class="sub">Cadete F <span class="cond local">Local</span></div></div>
+  <span class="chev">›</span>
+  <div class="acc"><a class="b wa"><svg width="15" height="15"><use href="#i-msg"/></svg>WhatsApp</a><a class="b"><svg width="15" height="15"><use href="#i-copia"/></svg>Copiar</a><a class="b"><svg width="15" height="15"><use href="#i-mail"/></svg>Pedir bus</a></div>
+</div>
+
+<div class="dia">Domingo 4 oct. <i>fecha por confirmar</i></div>
+<div class="fila">
+  <div class="hora"><span class="etq gris">En casa</span><span class="pend" style="margin-top:4px">Hora por confirmar</span></div>
+  <div><div class="dest"><span class="cod">CF1</span><span class="lugar">Anexo Os Remedios</span></div>
+    <div class="rival">vs XUVENIL TEIS B</div>
+    <div class="sub">Cadete F <span class="cond local">Local</span></div></div>
+  <span class="chev">›</span>
+</div>
+
+<div class="dia pasado">Sábado 19 sept. <i>jugados</i></div>
+<div class="fila jugada">
+  <div class="hora"><span class="etq gris">Salió</span><span class="h gris">07:30</span><span class="ph">partido 10:00</span></div>
+  <div><div class="dest"><span class="cod">IF1</span><span class="lugar">Lugo</span></div>
+    <div class="rival">vs EMEVE COLEXIO SAN LORENZO IF</div>
+    <div class="res gana">Ganado 3-0<small>26-24 · 25-23 · 25-20</small></div></div>
+  <span class="chev">›</span>
+</div>
+</div>
+</body></html>
