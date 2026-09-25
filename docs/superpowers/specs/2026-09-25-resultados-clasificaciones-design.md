@@ -71,7 +71,8 @@ estado "Finalizado" con marcador. Aplazados o suspendidos: sin resultado.
   federación. Al filtrar por un equipo, su tabla sale también encima de sus partidos.
 - **Calendario (.ics, general y por equipo)**: cuando hay resultado, el título pasa de
   "🚌 IF1 vs PONTEVEDRA IF2 (11:30)" a "✅ IF1 3-0 PONTEVEDRA IF2" (o "❌ …" si se pierde;
-  "🏐 CF1 3-1 CF2" en un derbi). Los sets van en la primera línea del detalle.
+  "🏐 CF1 3-1 CF2" en un derbi). El detalle pasa a ser los sets, el partido y la competición
+  (las horas de salida ya no hacen falta).
 - El Excel no cambia.
 
 ## Piezas

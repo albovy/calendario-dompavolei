@@ -3,10 +3,12 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
-  anotarGrupos, anotarResultados, buscarFila, competicionesSinNumero, esperaResultado, gruposAConsultar, leerArbol,
-  leerClasificacion, leerGrupos, leerResultados, leerToken,
+  actualizarResultados, anotarGrupos, anotarResultados, buscarFila, competicionesSinNumero, esperaResultado,
+  gruposAConsultar, leerArbol, leerCacheResultados, leerClasificacion, leerGrupos, leerResultados, leerToken,
 } from '../src/resultados.js';
 import { fechaPared } from '../src/util.js';
 
@@ -174,4 +176,151 @@ test('gruposAConsultar: lo pendiente de resultado, el repaso diario y los grupos
   // Grupo nunca consultado: se consulta ya.
   cache.grupos['3818'].consultado = '';
   assert.deepEqual(plan([jugado], fechaPared(2026, 9, 26, 10, 0)).grupos, ['3818']);
+});
+
+const IDS = new Set([DOMPA]);
+const TOKEN = '8c513fc98f8c16511d3876664456eef6';
+// Partidos del IF1 en el Apertura (19/09 primera fase; 26/09 y 03/10 segunda fase).
+const PARTIDOS = [
+  partido(fechaPared(2026, 9, 19, 10, 0), 'EMEVÉ COLEXIO SAN LORENZO IF', 'DOMPAVOLEI IF1'),
+  partido(fechaPared(2026, 9, 19, 11, 30), 'DOMPAVOLEI IF1', 'CLUB VOLEIBOL PONTEVEDRA IF2'),
+  partido(fechaPared(2026, 9, 26, 10, 0), 'SEI SAN NARCISO IF', 'DOMPAVOLEI IF1'),
+  partido(fechaPared(2026, 9, 26, 11, 30), 'DOMPAVOLEI IF1', 'CV OLEIROS IFA'),
+  partido(fechaPared(2026, 10, 3), 'CV OLEIROS IFA', 'DOMPAVOLEI IF1', { estado: 'sinhora' }),
+  partido(fechaPared(2026, 10, 3), 'SEI SAN NARCISO IF', 'DOMPAVOLEI IF1', { estado: 'sinhora' }),
+];
+const PAGINAS = {
+  portada: `<script>token = "${TOKEN}";</script>`,
+  arbol: JSON.stringify([{ id: '387', nombre: 'TORNEO APERTURA 2026', competiciones: [{ id: '1511', nombre: APERTURA, torneos: [{ id: '4064' }, { id: '3818' }] }] }]),
+  'grupo 4064': pagina('grupo-4064.html'),
+  'grupo 3818': pagina('grupo-3818.html'),
+  'clasificacion 4064': pagina('clasificacion-4064.html'),
+  'clasificacion 3818': pagina('clasificacion-3818.html'),
+};
+
+// fetch que responde como iSquad con PAGINAS (o con "cambios") y apunta qué se pide.
+function federacion(pedidas, cambios = {}) {
+  return async (url, opciones = {}) => {
+    const u = new URL(String(url));
+    const id = u.searchParams.get('id');
+    let nombre = u.href;
+    if (u.pathname.endsWith('/tree')) {
+      nombre = 'arbol';
+      assert.equal(u.searchParams.get('token'), TOKEN);
+      assert.equal(new URLSearchParams(String(opciones.body)).get('id_temporada'), '2627');
+    } else if (u.pathname.endsWith('/competicion.php')) nombre = 'portada';
+    else if (u.pathname.endsWith('/competicion_completa.php')) nombre = `grupo ${id}`;
+    else if (u.pathname.endsWith('/clasificacion.php')) nombre = `clasificacion ${id}`;
+    pedidas.push(nombre);
+    const texto = Object.hasOwn(cambios, nombre) ? cambios[nombre] : PAGINAS[nombre];
+    if (texto instanceof Error) throw texto;
+    if (texto === undefined) return new Response('', { status: 404, statusText: 'Not Found' });
+    return new Response(texto);
+  };
+}
+
+// Ejecuta actualizarResultados con la federación simulada; devuelve { cache, pedidas, avisos }.
+async function actualizar(t, ruta, ahora, cambios = {}) {
+  const pedidas = [];
+  const avisos = [];
+  const consola = t.mock.method(console, 'log', (texto) => avisos.push(texto));
+  const original = globalThis.fetch;
+  globalThis.fetch = federacion(pedidas, cambios);
+  try {
+    const cache = await actualizarResultados({ partidos: PARTIDOS, ids: IDS, ruta, anio: 2026, ahora, esperas: [] });
+    return { cache, pedidas, avisos };
+  } finally {
+    globalThis.fetch = original;
+    consola.mock.restore();
+  }
+}
+
+function carpeta() { return mkdtempSync(join(tmpdir(), 'resultados-')); }
+
+test('actualizarResultados: la primera vez busca la competición, sus grupos, resultados y clasificaciones', async (t) => {
+  const dir = carpeta();
+  try {
+    const ruta = join(dir, 'resultados.json');
+    const { cache, pedidas, avisos } = await actualizar(t, ruta, AHORA);
+    assert.deepEqual(pedidas, ['portada', 'arbol', 'grupo 4064', 'grupo 3818', 'clasificacion 4064', 'clasificacion 3818']);
+    assert.deepEqual(avisos, []);
+    assert.deepEqual(cache.competiciones[APERTURA], { id: '1511', torneos: ['4064', '3818'], revisado: '2026-09-26 00:30' });
+    assert.deepEqual(Object.keys(cache.grupos), ['3818', '4064']);
+    assert.equal(cache.grupos['4064'].clasificacion[0].equipo, 'DOMPAVOLEI IF1');
+    assert.equal(cache.grupos['3818'].clasificacion.length, 3);
+    assert.deepEqual(JSON.parse(readFileSync(ruta, 'utf8')), JSON.parse(JSON.stringify(cache)));
+
+    // Una hora después no hay nada pendiente: no se pide nada y el archivo no cambia.
+    const guardado = readFileSync(ruta, 'utf8');
+    const otra = await actualizar(t, ruta, fechaPared(2026, 9, 26, 1, 30));
+    assert.deepEqual(otra.pedidas, []);
+    assert.equal(readFileSync(ruta, 'utf8'), guardado);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('actualizarResultados: lo recién jugado se mira cada hora; la clasificación, solo si cambian los partidos', async (t) => {
+  const dir = carpeta();
+  try {
+    const ruta = join(dir, 'resultados.json');
+    await actualizar(t, ruta, AHORA);
+    // 26/09 a las 14:00: los partidos de las 10:00 y las 11:30 ya tendrían que tener resultado.
+    assert.deepEqual((await actualizar(t, ruta, fechaPared(2026, 9, 26, 14, 0))).pedidas, ['grupo 3818']);
+    // A las 15:00 siguen sin resultado, pero otro partido del grupo ha cambiado: grupo y clasificación.
+    const cambiado = { 'grupo 3818': pagina('grupo-3818.html').replace('Pendiente', 'Aplazado') };
+    assert.deepEqual((await actualizar(t, ruta, fechaPared(2026, 9, 26, 15, 0), cambiado)).pedidas, ['grupo 3818', 'clasificacion 3818']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('actualizarResultados: si la federación no responde, avisa y sigue con lo que había', async (t) => {
+  const dir = carpeta();
+  try {
+    const ruta = join(dir, 'resultados.json');
+    const caida = new TypeError('fetch failed', { cause: new Error('Connect Timeout Error') });
+    const { cache, pedidas, avisos } = await actualizar(t, ruta, AHORA, { portada: caida });
+    assert.deepEqual(pedidas, ['portada']);
+    assert.deepEqual(cache.grupos, {});
+    assert.equal(existsSync(ruta), false);
+    assert.equal(avisos.length, 1);
+    assert.match(avisos[0], /^ {2}! No se pudieron actualizar los resultados \(No se pudo descargar https:\/\/resultadosvoleibol\.isquad\.es\/competicion\.php\?.*\); se usan los que había\.$/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('actualizarResultados: una competición que no está en la web de resultados se vuelve a mirar al día siguiente', async (t) => {
+  const dir = carpeta();
+  try {
+    const ruta = join(dir, 'resultados.json');
+    const vacio = { arbol: '[]' };
+    const primera = await actualizar(t, ruta, AHORA, vacio);
+    assert.deepEqual(primera.pedidas, ['portada', 'arbol']);
+    assert.deepEqual(primera.avisos, [`  ! La competición «${APERTURA}» no está en la web de resultados de la federación; se vuelve a mirar mañana.`]);
+    assert.deepEqual((await actualizar(t, ruta, fechaPared(2026, 9, 26, 12, 0), vacio)).pedidas, []);
+    assert.deepEqual((await actualizar(t, ruta, fechaPared(2026, 9, 26, 20, 30))).pedidas.slice(0, 3), ['portada', 'arbol', 'grupo 4064']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('leerCacheResultados: de otra temporada, de otros clubs o ilegible, se empieza de cero', (t) => {
+  const dir = carpeta();
+  try {
+    const ruta = join(dir, 'resultados.json');
+    const vacia = { temporada: 2026, clubs: [DOMPA], competiciones: {}, grupos: {} };
+    assert.deepEqual(leerCacheResultados(ruta, 2026, IDS), vacia);
+    writeFileSync(ruta, JSON.stringify({ ...vacia, temporada: 2025, grupos: { 1: {} } }));
+    assert.deepEqual(leerCacheResultados(ruta, 2026, IDS), vacia);
+    writeFileSync(ruta, JSON.stringify({ ...vacia, clubs: ['1'], grupos: { 1: {} } }));
+    assert.deepEqual(leerCacheResultados(ruta, 2026, IDS), vacia);
+    writeFileSync(ruta, '{');
+    const consola = t.mock.method(console, 'log', () => {});
+    assert.deepEqual(leerCacheResultados(ruta, 2026, IDS), vacia);
+    assert.match(consola.mock.calls[0].arguments[0], /resultados\.json no se puede leer/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -9,13 +9,21 @@
 // cuando hace falta (gruposAConsultar); todo se guarda en resultados.json. Nunca se descargan actas,
 // previos ni plantillas: solo nombres de equipos y marcadores (en los equipos hay menores).
 
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { URL_BASE, peticion } from './isquad.js';
 import { conHora } from './partidos.js';
 import {
-  clave, comoLista, esObjeto, fechaValida, fmt, leerJson, sha1, soloDia, sumarDias, sumarMinutos, txt, unaLinea,
+  aviso, clave, compararTexto, comoLista, esObjeto, fechaValida, fmt, leerJson, sha1, soloDia, sumarDias,
+  sumarMinutos, txt, unaLinea,
 } from './util.js';
 
-const HORAS_REPASO = 20;    // cada cuánto se repasan un grupo sin terminar y la lista de grupos
-const DIAS_ESPERA = 14;     // días que se insiste cada hora en un resultado que no llega
+// El árbol de competiciones está en la otra web de iSquad.
+export const URL_ARBOL = 'https://voleibol.isquad.es';
+const TERRITORIAL = '20';        // Federación Galega de Voleibol
+const AMBITO = '6';              // así la llaman las páginas de resultados (la agenda usa el 20)
+const HORAS_REPASO = 20;         // cada cuánto se repasan un grupo sin terminar y la lista de grupos
+const DIAS_ESPERA = 14;          // días que se insiste cada hora en un resultado que no llega
+const ESPERAS_RESULTADOS = [15]; // un solo reintento: los resultados no son imprescindibles
 
 // --- Lectura de las páginas de iSquad ------------------------------------------------------------
 
@@ -291,4 +299,122 @@ export function gruposAConsultar(cache, partidos, ahora) {
     if (!g.consultado || (!g.terminado && horasDesde(g.consultado, ahora) >= HORAS_REPASO)) grupos.add(t);
   }
   return { descubrir, grupos };
+}
+
+// --- resultados.json ------------------------------------------------------------------------------
+
+function cacheVacia(anio, ids) {
+  return { temporada: anio, clubs: [...ids].sort(), competiciones: {}, grupos: {} };
+}
+
+// resultados.json de la temporada anio y de estos clubs; si es de otra o no se puede leer, vacía.
+export function leerCacheResultados(ruta, anio, ids) {
+  if (existsSync(ruta)) {
+    try {
+      const c = leerJson(readFileSync(ruta, 'utf8'));
+      if (c?.temporada === anio && comoLista(c.clubs).map(txt).sort().join(',') === [...ids].sort().join(',')
+        && esObjeto(c.competiciones) && esObjeto(c.grupos)) {
+        return { ...cacheVacia(anio, ids), competiciones: c.competiciones, grupos: c.grupos };
+      }
+    } catch (e) {
+      aviso(`resultados.json no se puede leer (${e.message}); se vuelven a buscar los resultados.`);
+    }
+  }
+  return cacheVacia(anio, ids);
+}
+
+function guardarCacheResultados(cache, ruta) {
+  // Competiciones por orden alfabético (los grupos, por número): cambios fáciles de leer en Git.
+  const competiciones = Object.fromEntries(Object.keys(cache.competiciones).sort(compararTexto)
+    .map((k) => [k, cache.competiciones[k]]));
+  writeFileSync(ruta, `${JSON.stringify({ ...cache, competiciones }, null, 1)}\n`, 'utf8');
+}
+
+// --- Descarga --------------------------------------------------------------------------------------
+
+function pagina(archivo, torneo, competicion) {
+  return `${archivo}?seleccion=0&id=${torneo}&id_ambito=${AMBITO}&id_territorial=${TERRITORIAL}`
+    + `&id_superficie=1&iframe=0&id_competicion=${competicion}`;
+}
+
+// Dirección de la clasificación de un grupo en la web de la federación.
+export function urlClasificacion(torneo, competicion) {
+  return `${URL_BASE}/${pagina('clasificacion.php', torneo, competicion)}`;
+}
+
+// Árbol de competiciones de la temporada (hace falta el código de acceso de una página cualquiera).
+async function arbolCompeticiones(anio, pedir) {
+  const token = leerToken(await pedir(`competicion.php?seleccion=0&id_territorial=${TERRITORIAL}&id_ambito=${AMBITO}&id_superficie=1`));
+  if (!token) throw new Error('la web de resultados ha cambiado: no se encuentra su código de acceso');
+  const temporada = `${String(anio % 100).padStart(2, '0')}${String((anio + 1) % 100).padStart(2, '0')}`;
+  const json = await pedir(`json/api/call.php/resultados/campeonato/tree?token=${token}`,
+    { ambitos: AMBITO, seleccion: '0', id_superficie: '1', id_temporada: temporada }, URL_ARBOL);
+  return leerArbol(json);
+}
+
+// Descarga lo que haga falta y devuelve la caché (resultados.json) al día. Si la federación falla,
+// avisa y devuelve lo que hubiera. partidos: los del club (de convertirPartidos); solo cuentan los de
+// la temporada anio. ahora: Date de pared. guardar: false para no escribir resultados.json.
+export async function actualizarResultados({ partidos, ids, ruta, anio, ahora, guardar = true, esperas = ESPERAS_RESULTADOS }) {
+  const cache = leerCacheResultados(ruta, anio, ids);
+  const propios = partidos.filter((p) => p.temporada === anio);
+  if (!propios.length) return cache;
+  const antes = JSON.stringify(cache);
+  const nombres = new Set(propios.flatMap((p) => p.nuestros).map(clave));
+  const esNuestro = (nombre, club) => ids.has(txt(club)) || nombres.has(clave(nombre));
+  const pedir = (ruta2, datos = null, base = URL_BASE) => peticion(ruta2, datos, { base, esperas });
+  try {
+    const sinNumero = competicionesSinNumero(cache, propios, ahora);
+    if (sinNumero.length) {
+      const arbol = await arbolCompeticiones(anio, pedir);
+      for (const nombre of sinNumero) {
+        const e = arbol.get(clave(nombre));
+        if (!e) aviso(`La competición «${nombre}» no está en la web de resultados de la federación; se vuelve a mirar mañana.`);
+        cache.competiciones[nombre] = e ? { id: e.id, torneos: e.torneos, revisado: '' } : { id: '', torneos: [], revisado: marca(ahora) };
+      }
+    }
+    const { descubrir, grupos } = gruposAConsultar(cache, propios, ahora);
+    // Páginas de grupo que hay que descargar: [torneo, competición]. Para la lista de grupos vale una
+    // cualquiera de la competición; mejor una del club.
+    const cola = [];
+    for (const nombre of descubrir) {
+      const nuestros = gruposDe(cache, nombre).map(([t]) => t);
+      const torneo = nuestros.find((t) => grupos.has(t)) ?? nuestros[0] ?? cache.competiciones[nombre].torneos[0];
+      if (torneo) cola.push([torneo, nombre]);
+    }
+    for (const t of grupos) cola.push([t, cache.grupos[t].competicion]);
+    const hechos = [];
+    while (cola.length) {
+      const [torneo, nombre] = cola.shift();
+      if (hechos.includes(torneo)) continue;
+      hechos.push(torneo);
+      const c = cache.competiciones[nombre];
+      const html = await pedir(pagina('competicion_completa.php', torneo, c.id));
+      const lista = leerGrupos(html);
+      const filas = leerResultados(html);
+      if (!lista || !filas) throw new Error('la página de un grupo no tiene el formato de siempre');
+      anotarGrupos(cache, nombre, c.id, lista, esNuestro);
+      c.revisado = marca(ahora);
+      if (cache.grupos[torneo]) anotarResultados(cache.grupos[torneo], filas, esNuestro, ahora);
+      // Grupos del club que acaban de aparecer (p. ej. los de la segunda fase).
+      for (const [t, g] of gruposDe(cache, nombre)) if (!g.consultado && !hechos.includes(t)) cola.push([t, nombre]);
+    }
+    // La clasificación solo cambia si cambian los partidos del grupo.
+    for (const t of hechos) {
+      const g = cache.grupos[t];
+      if (!g || g.firma_clasificacion === g.firma) continue;
+      g.clasificacion = leerClasificacion(await pedir(pagina('clasificacion.php', t, g.id_competicion)));
+      g.firma_clasificacion = g.firma;
+    }
+  } catch (e) {
+    aviso(`No se pudieron actualizar los resultados (${txt(e.message).split('\n')[0]}); se usan los que había.`);
+  }
+  if (guardar && JSON.stringify(cache) !== antes) {
+    try {
+      guardarCacheResultados(cache, ruta);
+    } catch (e) {
+      aviso(`No se pudo guardar resultados.json: ${e.message}`);
+    }
+  }
+  return cache;
 }
