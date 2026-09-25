@@ -187,6 +187,9 @@ main { display: block; padding-bottom: 32px; }
 .eq .punto.hueco { background: none; }
 .eq .nom { min-width: 0; overflow-wrap: anywhere; }
 .eq .tanteo { margin-left: auto; padding-left: 8px; font: 700 18px/1 var(--cond); font-variant-numeric: tabular-nums; }
+/* «vs» entre los dos equipos, en la columna de los nombres (el hueco ocupa lo que el punto). */
+.vs { display: flex; align-items: center; gap: 7px; font: 600 12px/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta2); }
+.vs .punto.hueco { background: none; }
 /* Debajo, adónde se va (con su icono) y la píldora local / visitante. */
 .dest { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
 .dest .hacia { flex: none; color: var(--tinta2); }
@@ -864,7 +867,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       '<div class="info">' + (marca ? '<span class="proxm">' + marca + '</span>' : '') +
       // Los dos equipos, uno debajo del otro y en el orden del partido: primero el local. De visitante,
       // el nuestro va en segundo lugar.
-      '<div class="eqs">' + lineaEquipo(p.l, p.lo, p.r ? p.r.m[0] : '', false) + lineaEquipo(p.v, p.vo, p.r ? p.r.m[1] : '', true) + '</div>' +
+      '<div class="eqs">' + lineaEquipo(p.l, p.lo, p.r ? p.r.m[0] : '', false) +
+      '<div class="vs" aria-hidden="true"><span class="punto hueco"></span>vs</div>' + lineaEquipo(p.v, p.vo, p.r ? p.r.m[1] : '', true) + '</div>' +
       // Adónde se va, con un icono de ubicación, y la píldora local / visitante.
       '<div class="dest"><svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
       '<span class="sr-only">En </span><span class="lugar">' + esc(destino(p)) + '</span>' +

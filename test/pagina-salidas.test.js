@@ -195,6 +195,11 @@ test('salidas: los dos equipos uno debajo del otro, primero el local; el nuestro
   // El nuestro lleva el punto de su color; el rival, un hueco del mismo ancho para que los nombres queden en columna.
   assert.match(fila(html, 0).html, /<div class="eq rival"><span class="punto hueco" aria-hidden="true"><\/span><span class="nom">SEI SAN NARCISO IF<\/span><\/div>/);
   assert.match(fila(html, 0).html, /<div class="eq nuestro"><span class="punto" aria-hidden="true"><\/span><span class="sr-only">contra <\/span><span class="nom">DOMPA INFANTIL<\/span><\/div>/);
+  // Entre los dos, una línea «vs» en la misma columna que los nombres (los lectores de pantalla ya dicen «contra»).
+  for (let i = 0; i < 3; i++) {
+    assert.match(fila(html, i).html, /<\/div><div class="vs" aria-hidden="true"><span class="punto hueco"><\/span>vs<\/div><div class="eq /);
+    assert.equal(fila(html, i).html.split('class="vs"').length, 2);
+  }
 });
 
 test('salidas: el nombre de cada equipo, con la F o la M solo si hay los dos sexos y con número solo si hay varios de la categoría', () => {
