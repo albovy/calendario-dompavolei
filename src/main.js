@@ -6,6 +6,7 @@
 //
 //   - <nombre>.ics   Calendario para Google Calendar, Outlook, iPhone o Android.
 //   - <nombre>.html  Página con los partidos (lista y vista mensual), imprimible.
+//   - salidas.html   La misma página con el diseño nuevo («Salidas desde Os Remedios»), en pruebas.
 //   - <nombre>.xlsx  Hoja de Excel con los partidos.
 //   - equipos/*.ics  Un calendario por cada equipo del club (para entrenadores y familias).
 //
@@ -30,7 +31,7 @@
 //   --sin-equipos       No genera los calendarios por equipo.
 //   --listar-clubs      Muestra los clubs disponibles con su ID y termina.
 //   --config            config.json a usar (o su carpeta); pabellones.json y resultados.json se guardan
-//                       junto a él.
+//                       junto a él, y el escudo del club (escudo.png, para salidas.html) se busca ahí.
 //                       Por defecto, los de la carpeta actual.
 //
 // Si algo falla, escribe "  ERROR: ..." y termina con código 1. Un fallo del propio programa (TypeError...)
@@ -43,7 +44,7 @@ import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { crearHistorial } from './historial.js';
-import { crearHtml } from './html.js';
+import { crearHtml, crearHtmlSalidas } from './html.js';
 import { crearIcs } from './ics.js';
 import { buscarClubs, catalogoClubs, fechaCruda, partidosApi } from './isquad.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
@@ -54,6 +55,10 @@ import {
   minusculas, ordenarUnicos, paso, prefijoComun, slug, soloDia, txt,
 } from './util.js';
 import { crearXlsx } from './xlsx.js';
+
+// La página con el diseño nuevo: siempre con este nombre (el selector «Diseño antiguo | Diseño nuevo» de las
+// dos páginas enlaza con él).
+const ARCHIVO_SALIDAS = 'salidas.html';
 
 const USO = 'node src/main.js [--club X] [--temporada 2026-27] [--desde aaaa-mm-dd] [--hasta aaaa-mm-dd] '
   + '[--salida carpeta] [--nombre-base nombre] [--duracion-minutos N] [--historial ruta] [--sin-equipos] '
@@ -107,8 +112,8 @@ export function leerOpciones(args) {
   };
 }
 
-// config.json, pabellones.json, temporada-anterior.json y resultados.json van juntos: en la carpeta actual
-// o en la de --config.
+// config.json, pabellones.json, temporada-anterior.json, resultados.json y escudo.png van juntos: en la
+// carpeta actual o en la de --config.
 export function rutasConfig(ruta) {
   let config = resolve('config.json');
   if (ruta) {
@@ -119,6 +124,7 @@ export function rutasConfig(ruta) {
     pabellones: join(dirname(config), 'pabellones.json'),
     temporadaAnterior: join(dirname(config), 'temporada-anterior.json'),
     resultados: join(dirname(config), 'resultados.json'),
+    escudo: join(dirname(config), 'escudo.png'),
   };
 }
 
@@ -474,11 +480,13 @@ export async function principal(args, ahora = new Date()) {
   writeFileSync(join(carpetaSalida, archivoIcs),
     crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
-  const html = crearHtml({
+  const opcionesHtml = {
     partidos, equipos, nombreClub, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
-  });
-  writeFileSync(join(carpetaSalida, archivoHtml), html, 'utf8');
+  };
+  writeFileSync(join(carpetaSalida, archivoHtml), crearHtml(opcionesHtml), 'utf8');
+  // La página con el diseño nuevo, al lado de la de siempre, para compararlas.
+  writeFileSync(join(carpetaSalida, ARCHIVO_SALIDAS), crearHtmlSalidas({ ...opcionesHtml, rutaEscudo: rutas.escudo }), 'utf8');
   if (opciones.historial) {
     const rutaHistorial = resolve(opciones.historial);
     mkdirSync(dirname(rutaHistorial), { recursive: true });
@@ -519,6 +527,7 @@ export async function principal(args, ahora = new Date()) {
   console.log('');
   console.log(`  Archivos generados en: ${carpetaSalida}`);
   console.log(`    ${archivoHtml}  <- abrir en el navegador (lista, mes, imprimir)`);
+  console.log(`    ${ARCHIVO_SALIDAS}  <- la misma página con el diseño nuevo (en pruebas)`);
   console.log(`    ${archivoIcs}   <- calendario para importar (copia fija)`);
   console.log(`    ${archivoXlsx}  <- Excel`);
   if (conEquipos) console.log(`    equipos${sep}  <- un calendario .ics por equipo (${equipos.length})`);

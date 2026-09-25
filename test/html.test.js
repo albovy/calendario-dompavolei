@@ -2,12 +2,15 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { codificarHtml, crearHtml } from '../src/html.js';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { codificarHtml, crearHtml, crearHtmlSalidas } from '../src/html.js';
 import { fechaPared } from '../src/util.js';
 
-// Sin CR, como la lee html.js (Git puede sacarla con CRLF en Windows).
+// Sin CR, como las lee html.js (Git puede sacarlas con CRLF en Windows).
 const PLANTILLA = readFileSync(new URL('../src/plantilla.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const PLANTILLA_SALIDAS = readFileSync(new URL('../src/plantilla-salidas.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const INICIO_DATOS = '<script id="datos" type="application/json">';
 const BARRA = String.fromCharCode(92);
 const SEPARADOR_LINEA = String.fromCharCode(0x2028);
@@ -284,4 +287,75 @@ test('crearHtml: mensaje de WhatsApp en el primer partido del día de cada equip
   assert.equal(lineas[3], '🚌 *Salida: 15:00* desde Os Remedios');
   // 19:00 + 90 min + 30 de viaje = 21:00.
   assert.equal(lineas.at(-1), '🔙 Vuelta a Os Remedios hacia las 21:00 (aprox.)');
+});
+
+// --- Página nueva (salidas.html) --------------------------------------------------------------------
+
+test('plantilla-salidas.html: un solo __TITULO__ y __DATOS__, y los datos en <script id="datos">', () => {
+  assert.equal(veces(PLANTILLA_SALIDAS, '__TITULO__'), 1);
+  assert.equal(veces(PLANTILLA_SALIDAS, '__DATOS__'), 1);
+  assert.ok(PLANTILLA_SALIDAS.includes(`${INICIO_DATOS}__DATOS__</script>`));
+  assert.ok(PLANTILLA_SALIDAS.includes('<title>__TITULO__</title>'));
+});
+
+test('crearHtmlSalidas: la plantilla nueva con los mismos datos que crearHtml y el escudo como data URI', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'escudo-'));
+  try {
+    const rutaEscudo = join(dir, 'escudo.png');
+    const png = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0xFF, 0xFE, 0x3E, 0x3F]);
+    writeFileSync(rutaEscudo, png);
+    const p1 = partido({
+      local: 'CV VIGO', visitante: 'DOMPAVOLEI IF1', esLocal: false, esVisitante: true, condicion: 'visitante',
+      salida: fechaPared(2026, 10, 3, 14, 45), calentamiento: fechaPared(2026, 10, 3, 16, 30), viajeMin: 75, municipio: 'Vigo',
+    });
+    const p2 = partido({ fecha: fechaPared(2026, 10, 10), estado: 'sinhora', enCasa: true, municipio: 'Ourense' });
+    const op = opciones({
+      partidos: [p1, p2], salidas: SALIDAS, duracion: 90,
+      urlPublicada: 'https://example.github.io/calendario/calendario.ics',
+      clasificaciones: [{ equipo: 'DOMPAVOLEI IF1', competicion: 'LIGA', grupo: 'G', url: 'u', actualizado: null, filas: [] }],
+    });
+    const html = crearHtmlSalidas({ ...op, rutaEscudo });
+    const { escudo, ...resto } = datosDe(html);
+    assert.equal(escudo, `data:image/png;base64,${png.toString('base64')}`);
+    assert.deepEqual(resto, datosDe(crearHtml(op)));
+    assert.equal(Object.keys(datosDe(html)).at(-1), 'escudo');
+
+    // Fuera de __TITULO__ y __DATOS__, la página es plantilla-salidas.html sin tocar; el título, el de siempre.
+    const [antes, despuesTitulo] = PLANTILLA_SALIDAS.split('__TITULO__');
+    const [medio, despues] = despuesTitulo.split('__DATOS__');
+    assert.equal(html, antes + 'Partidos &#183; DOMPAVOLEI &#183; 2026/27' + medio + jsonDe(html) + despues);
+
+    // La página de siempre no lleva el escudo aunque se le pase la ruta.
+    assert.equal(Object.hasOwn(datosDe(crearHtml({ ...op, rutaEscudo })), 'escudo'), false);
+    // Sin escudo.png (o sin ruta), "".
+    assert.equal(datosDe(crearHtmlSalidas({ ...op, rutaEscudo: join(dir, 'no-existe.png') })).escudo, '');
+    assert.equal(datosDe(crearHtmlSalidas(op)).escudo, '');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('crearHtmlSalidas: un escudo que no se puede leer avisa y la página sale sin él', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'escudo-'));
+  try {
+    const avisos = [];
+    t.mock.method(console, 'log', (texto) => avisos.push(texto));
+    // Una carpeta en lugar del archivo: no se puede leer como imagen.
+    assert.equal(datosDe(crearHtmlSalidas({ ...opciones(), rutaEscudo: dir })).escudo, '');
+    assert.equal(avisos.length, 1);
+    assert.match(avisos[0], /^ {2}! No se pudo leer el escudo \(.+\); la página nueva sale sin él\.$/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('crearHtmlSalidas: nombres con </script> y <!-- también van escapados en la página nueva', () => {
+  const raro = '</script><!-- <script>';
+  const p = partido({ local: raro, pabellon: raro });
+  const html = crearHtmlSalidas(opciones({ partidos: [p], equipos: [equipo(raro, [p])], nombreClub: raro }));
+  assert.ok(!jsonDe(html).includes('<'));
+  assert.equal(veces(html, '</script>'), veces(PLANTILLA_SALIDAS, '</script>'));
+  assert.equal(veces(html, '<!--'), veces(PLANTILLA_SALIDAS, '<!--'));
+  assert.equal(datosDe(html).club, raro);
+  assert.ok(html.includes(`<title>${codificarHtml(`Partidos · ${raro} · 2026/27`)}</title>`));
 });

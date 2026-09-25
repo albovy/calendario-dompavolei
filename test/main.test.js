@@ -311,6 +311,7 @@ test('en agosto, sin partidos aún en la temporada nueva, se genera la anterior'
       () => principal(['--config', dir, '--salida', salida, '--historial', historial], ahora)));
     assert.deepEqual(readdirSync(salida).sort(), [
       'calendario-dompavolei-2026-27.html', 'calendario-dompavolei-2026-27.ics', 'calendario-dompavolei-2026-27.xlsx', 'equipos',
+      'salidas.html',
     ]);
     assert.equal(eventos(join(salida, 'calendario-dompavolei-2026-27.ics')), 2);
     assert.equal(eventos(join(salida, 'equipos', 'dompavolei-if1.ics')), 2);
@@ -345,7 +346,7 @@ test('rango parcial: nombre propio, sin calendarios por equipo; horas de salida 
     const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
       () => principal(['--config', join(dir, 'config.json'), '--salida', salida, '--desde', '2026-09-26', '--hasta', '2026-09-27'], ahora)));
     const base = 'calendario-dompavolei-2026-27-20260926-20260927';
-    assert.deepEqual(readdirSync(salida).sort(), [`${base}.html`, `${base}.ics`, `${base}.xlsx`]);
+    assert.deepEqual(readdirSync(salida).sort(), [`${base}.html`, `${base}.ics`, `${base}.xlsx`, 'salidas.html']);
     assert.equal(eventos(join(salida, `${base}.ics`)), 2);
     assert.ok(consola.includes('  Calculando horas de salida desde Os Remedios...'));
     assert.ok(consola.some((l) => /^ {2}sáb 26\/09 +11:30 +en casa +Infantil F +DOMPAVOLEI IF1 - RIVAL$/.test(l)), consola.join('\n'));
@@ -356,9 +357,20 @@ test('rango parcial: nombre propio, sin calendarios por equipo; horas de salida 
 
 function paginaDatos(nombre) { return readFileSync(new URL(`./datos/${nombre}`, import.meta.url), 'utf8'); }
 
+// Los datos (JSON) que lleva una página generada.
+function datosDePagina(ruta) {
+  const html = readFileSync(ruta, 'utf8');
+  const inicio = '<script id="datos" type="application/json">';
+  const i = html.indexOf(inicio) + inicio.length;
+  return JSON.parse(html.slice(i, html.indexOf('</script>', i)));
+}
+
 test('resultados: el .ics y la página llevan el marcador y la clasificación; se guarda resultados.json', async () => {
   const dir = carpetaConConfig();
   try {
+    // El escudo del club, junto a config.json: la página nueva (salidas.html) lo lleva dentro.
+    const png = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3]);
+    writeFileSync(join(dir, 'escudo.png'), png);
     const salida = join(dir, 'salida');
     const filas = [
       fila('2026-09-19 10:00:00', 'EMEVÉ COLEXIO SAN LORENZO IF', 'DOMPAVOLEI IF1', '206572578', DOMPA),
@@ -382,6 +394,13 @@ test('resultados: el .ics y la página llevan el marcador y la clasificación; s
     assert.match(readFileSync(join(salida, 'cal.html'), 'utf8'), /"clas":\[\{"eq":"DOMPAVOLEI IF1","comp":"TORNEO APERTURA INFANTIL F","g":"SEGUNDA FASE - GRUPO 1"/);
     assert.equal(JSON.parse(readFileSync(join(dir, 'resultados.json'), 'utf8')).temporada, 2026);
     assert.ok(consola.includes('  1 resultado(s) y 1 clasificación(es).'), consola.join('\n'));
+
+    // La página nueva, junto a la de siempre: los mismos datos más el escudo.
+    assert.deepEqual(readdirSync(salida).sort(), ['cal.html', 'cal.ics', 'cal.xlsx', 'equipos', 'salidas.html']);
+    const { escudo, ...datosNueva } = datosDePagina(join(salida, 'salidas.html'));
+    assert.equal(escudo, `data:image/png;base64,${png.toString('base64')}`);
+    assert.deepEqual(datosNueva, datosDePagina(join(salida, 'cal.html')));
+    assert.ok(consola.some((l) => /^ {4}salidas\.html +<- /.test(l)), consola.join('\n'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

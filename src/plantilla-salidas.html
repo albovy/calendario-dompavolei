@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>__TITULO__</title>
+<style>
+  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: #ECEFF2; color: #121B2E; }
+  @media (prefers-color-scheme: dark) { body { background: #131519; color: #E8EAEE; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="club">Salidas</h1>
+  <p id="estado">Diseño nuevo en preparación.</p>
+</main>
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+// Esqueleto de la página nueva «Salidas desde Os Remedios» (salidas.html). La plantilla de verdad se
+// escribe siguiendo docs/superpowers/specs/2026-09-25-rediseno-salidas-design.md. html.js pone el título
+// y los datos: los mismos que los de plantilla.html más "escudo" (data URI de escudo.png o '').
+(function () {
+  'use strict';
+  var D = JSON.parse(document.getElementById('datos').textContent);
+  document.getElementById('club').textContent = D.club + ' · ' + D.temporada;
+  document.getElementById('estado').textContent = D.partidos.length + ' partidos. Diseño nuevo en preparación.';
+})();
+</script>
+</body>
+</html>
