@@ -12,7 +12,7 @@ const AVISOS = [aviso(15, 2), aviso(30, 3), aviso(60, 4), aviso(90, 5)];
 
 // Ejecuta peticion con fetch simulado (responder(n) da la respuesta a la llamada n o lanza el error) y
 // el reloj simulado. Devuelve { resultado, error, avisos, llamadas }.
-async function simular(t, responder, ruta = 'json/partidos_equipos_consultas.php', datos = { accion: 'x' }) {
+async function simular(t, responder, ruta = 'json/partidos_equipos_consultas.php', datos = { accion: 'x' }, opciones = undefined) {
   const llamadas = [];
   const avisos = [];
   const original = globalThis.fetch;
@@ -24,7 +24,7 @@ async function simular(t, responder, ruta = 'json/partidos_equipos_consultas.php
   t.mock.timers.enable({ apis: ['setTimeout'] });
   try {
     let terminado = false;
-    const promesa = peticion(ruta, datos);
+    const promesa = peticion(ruta, datos, opciones);
     promesa.then(() => { terminado = true; }, () => { terminado = true; });
     while (!terminado) {
       await new Promise((seguir) => { setImmediate(seguir); });
@@ -125,4 +125,16 @@ test('peticion: el motivo del error nunca queda vacío', async (t) => {
   // Tiempo agotado (AbortSignal.timeout).
   assert.equal(await motivo(new DOMException('The operation was aborted due to timeout', 'TimeoutError')),
     mensajeError('la web no ha respondido a tiempo'));
+});
+
+test('peticion: otra web de iSquad y otras esperas', async (t) => {
+  const otra = await simular(t, () => new Response('[]'), 'json/api/call.php/x', { a: '1' }, { base: 'https://voleibol.isquad.es' });
+  assert.equal(otra.llamadas[0].url, 'https://voleibol.isquad.es/json/api/call.php/x');
+  const una = await simular(t, () => new Response('', { status: 503, statusText: 'Service Unavailable' }), 'json/x.php', null, { esperas: [] });
+  assert.equal(una.llamadas.length, 1);
+  assert.deepEqual(una.avisos, []);
+  assert.match(una.error.message, /respuesta 503 Service Unavailable/);
+  const dos = await simular(t, (n) => (n === 1 ? new Response('', { status: 503 }) : new Response('ok')), 'json/x.php', null, { esperas: [15] });
+  assert.equal(dos.resultado, 'ok');
+  assert.deepEqual(dos.avisos, ['  ! La web de la federación no responde; se vuelve a intentar en 15 s (intento 2 de 2)...']);
 });
