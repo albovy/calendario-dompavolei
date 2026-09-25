@@ -50,7 +50,8 @@ En cada partido por jugar, dos botones para avisar a las familias por WhatsApp: 
 - Junto a «Pedir bus», en una fila que se ajusta al ancho. No salen al imprimir ni en la vista Mes.
 - «Copiar»: portapapeles (`navigator.clipboard`; si no se puede, el método antiguo con un
   `<textarea>`); el botón dice «✓ Copiado» 2 s y se anuncia a los lectores de pantalla.
-- «WhatsApp»: enlace `https://wa.me/?text=…` en otra pestaña (en el móvil abre la aplicación).
+- «WhatsApp»: enlace `https://api.whatsapp.com/send?text=…` en otra pestaña (en el móvil abre la aplicación).
+  No `wa.me`: su redirección cambia los emojis por «�» (comprobado el 25/09/2026).
 
 ## Piezas
 

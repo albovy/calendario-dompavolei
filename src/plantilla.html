@@ -570,11 +570,12 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   }
 
   // Botones para el grupo de WhatsApp de las familias: copiar el mensaje o abrir WhatsApp con él.
-  // Un partido con resultado ya se jugó, aunque no tenga hora (yaJugado no lo sabe).
+  // Un partido con resultado ya se jugó, aunque no tenga hora (yaJugado no lo sabe). El enlace va directo a
+  // api.whatsapp.com: el atajo wa.me cambia los emojis por «�» al redirigir.
   function botonesWhatsApp(p) {
     if (!p.wa || p.r || yaJugado(p)) return '';
     return '<button type="button" class="boton-wa copiar" data-i="' + D.partidos.indexOf(p) + '">📋 Copiar</button>' +
-      '<a class="boton-wa wa" href="' + esc('https://wa.me/?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">WhatsApp</a>';
+      '<a class="boton-wa wa" href="' + esc('https://api.whatsapp.com/send?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">WhatsApp</a>';
   }
   // Copia al portapapeles; si el navegador no deja (página sin https o antigua), con un <textarea>.
   function copiar(texto, boton) {

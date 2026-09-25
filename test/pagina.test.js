@@ -141,7 +141,20 @@ test('página: botones de WhatsApp solo en los partidos por jugar sin resultado'
   const html = abrirPagina(datos(partidos)).contenido.innerHTML;
   assert.match(html, /Ganado 3-1/);
   assert.deepEqual(conCopiar(html), [1, 2]);
-  assert.equal(html.split('https://wa.me/').length - 1, 2);
+  assert.equal(html.split('https://api.whatsapp.com/send?text=').length - 1, 2);
+});
+
+// El atajo wa.me cambia los emojis por «�» al redirigir (comprobado el 25/09/2026: ?text=%F0%9F%8F%90
+// sale como %EF%BF%BD en api.whatsapp.com); por eso el enlace va directo a api.whatsapp.com/send.
+test('página: el enlace «WhatsApp» va directo a api.whatsapp.com con el mensaje entero, emojis incluidos', () => {
+  const mensaje = '🏐 *DOMPAVOLEI IF1* (Infantil F)\n📅 *Sábado 26 de septiembre*\n⏰ 🏟️ A & B #1 +2';
+  const html = abrirPagina(datos([partido({ wa: mensaje })])).contenido.innerHTML;
+  const enlaces = [...html.matchAll(/class="boton-wa wa" href="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
+  assert.equal(enlaces.length, 1);
+  const prefijo = 'https://api.whatsapp.com/send?text=';
+  assert.ok(enlaces[0].startsWith(prefijo), enlaces[0]);
+  assert.equal(decodeURIComponent(enlaces[0].slice(prefijo.length)), mensaje);
+  assert.ok(!html.includes('wa.me'));
 });
 
 test('página: «Copiar» sin navigator.clipboard (método antiguo): copia y el foco vuelve al botón', () => {
