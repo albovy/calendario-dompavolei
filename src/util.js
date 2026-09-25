@@ -10,6 +10,8 @@ import { createHash } from 'node:crypto';
 
 export const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 export const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
+  'octubre', 'noviembre', 'diciembre'];
 
 // Marca de orden de bytes (BOM) que pueden traer delante los textos de iSquad y los JSON.
 export const BOM = String.fromCharCode(0xFEFF);
