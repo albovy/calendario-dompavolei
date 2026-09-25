@@ -83,6 +83,13 @@ h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: 
 /* Filtros */
 .filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
 .fila-filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.pestanas { display: flex; gap: 4px; margin-bottom: 4px; border-bottom: 1.5px solid var(--borde); }
+.pestanas button {
+  margin-bottom: -1.5px; padding: 8px 14px 9px; border: 0; border-bottom: 3px solid transparent; background: transparent;
+  color: var(--tinta-2); cursor: pointer; font: 700 1.05rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+}
+.pestanas button[aria-pressed="true"] { color: var(--tinta); border-bottom-color: var(--foco); }
+.pestanas button:focus-visible { outline-offset: -3px; }
 .equipos-chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 6px 10px; margin: 0 -6px; scrollbar-width: thin; }
 .chip {
   --c: var(--c-otra); flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px;
@@ -270,10 +277,13 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
 <nav class="filtros" aria-label="Filtros">
   <div class="envoltura">
+    <div class="pestanas" id="pestanas" role="group" aria-label="Sección">
+      <button type="button" data-seccion="calendario">Calendario</button><button type="button" data-seccion="clas">Clasificación</button>
+    </div>
     <div class="equipos-chips" id="chips" role="group" aria-label="Equipos"></div>
     <div class="fila-filtros">
-      <div class="segmentado" role="group" aria-label="Vista">
-        <button type="button" data-vista="lista">Lista</button><button type="button" data-vista="mes">Mes</button><button type="button" data-vista="clas" id="btn-clas">Clasificación</button>
+      <div class="segmentado" role="group" aria-label="Vista" id="seg-vista">
+        <button type="button" data-vista="lista">Lista</button><button type="button" data-vista="mes">Mes</button>
       </div>
       <div class="segmentado" role="group" aria-label="Periodo" id="seg-periodo">
         <button type="button" data-per="proximos">Próximos</button><button type="button" data-per="todo">Toda la temporada</button>
@@ -347,20 +357,25 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
   // Filtros (se recuerdan en este navegador).
   var CLAVE = 'calendario-voley:' + D.club;
-  var st = { eq: [], cond: 'todos', per: 'proximos', vista: 'lista', mes: null };
+  // seccion: la pestaña (calendario o clasificación); vista: lista o mes, dentro del calendario.
+  var st = { eq: [], cond: 'todos', per: 'proximos', vista: 'lista', seccion: 'calendario', mes: null };
   try {
     var g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
-    if (g && typeof g === 'object') ['eq', 'cond', 'per', 'vista'].forEach(function (k) { if (g[k] != null) st[k] = g[k]; });
+    if (g && typeof g === 'object') ['eq', 'cond', 'per', 'vista', 'seccion'].forEach(function (k) { if (g[k] != null) st[k] = g[k]; });
   } catch (e) {}
   if (!Array.isArray(st.eq)) st.eq = [];
   st.eq = st.eq.filter(function (n) { return nombresConPartidos.indexOf(n) >= 0; });
   if (['todos', 'local', 'visitante'].indexOf(st.cond) < 0) st.cond = 'todos';
   if (['proximos', 'todo'].indexOf(st.per) < 0) st.per = 'proximos';
-  if (['lista', 'mes', 'clas'].indexOf(st.vista) < 0) st.vista = 'lista';
+  if (['lista', 'mes'].indexOf(st.vista) < 0) st.vista = 'lista';
+  if (['calendario', 'clas'].indexOf(st.seccion) < 0) st.seccion = 'calendario';
   var tablas = D.clas || [];
-  if (!tablas.length) { $('btn-clas').classList.add('oculto'); if (st.vista === 'clas') st.vista = 'lista'; }
+  // Sin clasificaciones (p. ej. a principio de temporada) no hay pestañas: solo el calendario.
+  if (!tablas.length) { $('pestanas').classList.add('oculto'); st.seccion = 'calendario'; }
   var perElegido = st.per;   // el periodo que eligió la persona (saltar a un día pasado no lo cambia)
-  function guardar() { try { localStorage.setItem(CLAVE, JSON.stringify({ eq: st.eq, cond: st.cond, per: perElegido, vista: st.vista })); } catch (e) {} }
+  function guardar() {
+    try { localStorage.setItem(CLAVE, JSON.stringify({ eq: st.eq, cond: st.cond, per: perElegido, vista: st.vista, seccion: st.seccion })); } catch (e) {}
+  }
 
   function nuestros(p) { var r = []; if (p.lo) r.push(p.l); if (p.vo) r.push(p.v); return r; }
   function ladoOk(p) {
@@ -444,6 +459,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   });
   document.querySelector('.filtros').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b || b.classList.contains('chip')) return;
+    if (b.dataset.seccion) st.seccion = b.dataset.seccion;
     if (b.dataset.vista) st.vista = b.dataset.vista;
     if (b.dataset.per) st.per = perElegido = b.dataset.per;
     if (b.dataset.cond) st.cond = b.dataset.cond;
@@ -451,12 +467,15 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   });
 
   function marcarSegmentos() {
-    Array.prototype.forEach.call(document.querySelectorAll('.segmentado button'), function (b) {
-      var on = (b.dataset.vista && b.dataset.vista === st.vista) || (b.dataset.per && b.dataset.per === st.per) || (b.dataset.cond && b.dataset.cond === st.cond);
+    Array.prototype.forEach.call(document.querySelectorAll('.segmentado button, .pestanas button'), function (b) {
+      var on = (b.dataset.seccion && b.dataset.seccion === st.seccion) || (b.dataset.vista && b.dataset.vista === st.vista) ||
+        (b.dataset.per && b.dataset.per === st.per) || (b.dataset.cond && b.dataset.cond === st.cond);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    $('seg-periodo').classList.toggle('oculto', st.vista !== 'lista');
-    $('seg-cond').classList.toggle('oculto', st.vista === 'clas');
+    var clas = st.seccion === 'clas';
+    $('seg-vista').classList.toggle('oculto', clas);
+    $('seg-periodo').classList.toggle('oculto', clas || st.vista !== 'lista');
+    $('seg-cond').classList.toggle('oculto', clas);
   }
 
   var main = $('contenido');
@@ -673,14 +692,18 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
   function anunciar(n) {
     var partes = [st.eq.length ? 'Equipos: ' + st.eq.map(corto).join(', ') : 'Todos los equipos'];
-    if (st.vista === 'lista') partes.push(st.per === 'proximos' ? 'próximos partidos' : 'toda la temporada');
-    if (st.vista === 'clas') partes.push('clasificación');
-    else if (st.cond !== 'todos') partes.push(st.cond === 'local' ? 'solo como local' : 'solo como visitante');
-    $('estado').textContent = (st.vista === 'clas' ? plural(n, 'clasificación', 'clasificaciones') : plural(n, 'partido', 'partidos')) + ' · ' + partes.join(' · ');
+    var clas = st.seccion === 'clas';
+    if (clas) partes.push('clasificación');
+    else {
+      if (st.vista === 'lista') partes.push(st.per === 'proximos' ? 'próximos partidos' : 'toda la temporada');
+      if (st.cond !== 'todos') partes.push(st.cond === 'local' ? 'solo como local' : 'solo como visitante');
+    }
+    $('estado').textContent = (clas ? plural(n, 'clasificación', 'clasificaciones') : plural(n, 'partido', 'partidos')) + ' · ' + partes.join(' · ');
     $('filtro-imp').textContent = partes.join(' · ') + ' · actualizado el ' + D.generado;
   }
 
   function irADia(f) {
+    st.seccion = 'calendario';
     st.vista = 'lista';
     if (f < hoy) st.per = 'todo';   // solo para esta visita: no se guarda como preferencia
     guardar(); pintar();
@@ -706,7 +729,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
   function pintar(foco) {
     marcarSegmentos();
-    var n = st.vista === 'mes' ? pintarMes() : st.vista === 'clas' ? pintarClas() : pintarLista();
+    var n = st.seccion === 'clas' ? pintarClas() : st.vista === 'mes' ? pintarMes() : pintarLista();
     anunciar(n);
     if (foco) { var el = $(foco); if (el && !el.disabled) el.focus(); }
   }
