@@ -1,11 +1,12 @@
 // Página HTML con los partidos (lista, vista mensual, clasificaciones, filtros, imprimir): la plantilla
 // (plantilla.html) con los datos dentro, en JSON. Nació como traducción de New-Html de
-// calendario-voley.ps1; desde septiembre de 2026 enseña también resultados y clasificaciones, que el
-// .ps1 no tiene.
+// calendario-voley.ps1; desde septiembre de 2026 enseña también resultados y clasificaciones y el
+// mensaje para el grupo de WhatsApp, que el .ps1 no tiene.
 
 import { readFileSync } from 'node:fs';
 import { conHora } from './partidos.js';
 import { aEntero, claveSinCaja, fmt, hora, ordenarUnicos, txt } from './util.js';
+import { mensajesWhatsApp } from './whatsapp.js';
 
 // La página, con __TITULO__ y __DATOS__ (salió del here-string $Script:PlantillaHtml del .ps1).
 // Sin CR: aunque Git la saque con CRLF en Windows, la página sale igual que en GitHub Actions.
@@ -66,6 +67,8 @@ export function crearHtml({ partidos, equipos, nombreClub, temporada, ics, xlsx,
   const pared = generado instanceof Date ? generado : generado.pared;
   const bus = pedirBus ? { ...pedirBus, dur: aEntero(duracion) } : null;
   const pub = RE_PUBLICADA.exec(txt(urlPublicada));
+  // Mensaje para el grupo de WhatsApp de las familias (en el primer partido del día de cada equipo).
+  const mensajes = mensajesWhatsApp(partidos, { salidas, pedirBus, duracion: aEntero(duracion) || 120, pabellones, hoy: pared });
   const datos = {
     club: txt(nombreClub),
     temporada: txt(temporada),
@@ -100,6 +103,7 @@ export function crearHtml({ partidos, equipos, nombreClub, temporada, ics, xlsx,
       sp: p.salidaPrimero ? hora(p.salidaPrimero.salida) : '',
       mun: txt(p.municipio),
       r: p.resultado ? { m: p.resultado.marcador, s: p.resultado.sets } : null,
+      wa: mensajes.get(p) ?? '',
     })),
     clas: clasificaciones.map((c) => ({
       eq: c.equipo,

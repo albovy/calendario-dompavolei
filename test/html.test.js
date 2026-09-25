@@ -132,9 +132,9 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
     { n: 'DOMPAVOLEI SM', cat: 'Senior M', ck: 'senior', ics: '', np: 0 },
   ]);
   assert.deepEqual(Object.keys(d.partidos[0]),
-    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun', 'r']);
+    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun', 'r', 'wa']);
   const comun = { cat: 'Infantil F', ck: 'infantil', comp: 'LIGA INFANTIL F' };
-  assert.deepEqual(d.partidos, [
+  assert.deepEqual(d.partidos.map(({ wa, ...resto }) => resto), [
     { f: '2026-10-03', h: '17:30', e: 'c', ...comun, l: 'CV VIGO', v: 'DOMPAVOLEI IF1', lo: false, vo: true,
       pab: 'PAV. DAS TRAVESAS', cond: 'visitante', s: '14:45', ca: '16:00', vj: 75, casa: false, seg: false, sp: '', mun: 'Vigo', r: null },
     // 2º partido del día en el mismo pabellón: sin calentamiento ni viaje propios; la salida es la del primero.
@@ -147,6 +147,8 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
     { f: '2026-10-24', h: '12:00', e: 'p', ...comun, l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false,
       pab: 'PM A PINGUELA', cond: 'local', s: '', ca: '10:30', vj: 0, casa: true, seg: false, sp: '', mun: 'Monforte de Lemos', r: null },
   ]);
+  // Mensaje de WhatsApp: p1 abre el día 3/10 (p2 va en su mensaje); p4 tiene la fecha sin confirmar.
+  assert.deepEqual(d.partidos.map((x) => Boolean(x.wa)), [true, false, true, false, true]);
   assert.deepEqual(d.clas, []);
 
   // Fuera de __TITULO__ y __DATOS__, la página es la plantilla sin tocar.
@@ -171,7 +173,7 @@ test('crearHtml: sin salidas, sin pabellones y sin dirección publicada', () => 
 test('crearHtml: los valores que faltan salen como null, sin perder la propiedad', () => {
   const p = partido({ estado: 'rara', categoria: undefined, municipio: undefined });
   const d = datosDe(crearHtml(opciones({ partidos: [p] })));
-  assert.equal(Object.keys(d.partidos[0]).length, 20);
+  assert.equal(Object.keys(d.partidos[0]).length, 21);
   assert.equal(d.partidos[0].e, null);
   assert.equal(d.partidos[0].cat, null);
   assert.equal(d.partidos[0].mun, '');
@@ -265,4 +267,17 @@ test('crearHtml: resultados de los partidos y clasificaciones', () => {
     url: 'https://resultadosvoleibol.isquad.es/clasificacion.php?id=4064', act: '26/09 00:30',
     filas: [{ p: 1, n: 'DOMPAVOLEI IF1', pt: 6, pj: 2, pg: 2, pp: 0, sf: 6, sc: 0, o: true }],
   }]);
+});
+
+test('crearHtml: mensaje de WhatsApp en el primer partido del día de cada equipo', () => {
+  const salidas = { ...SALIDAS, origen: 'Os Remedios' };
+  const p1 = partido({ salida: fechaPared(2026, 10, 3, 15, 0), calentamiento: fechaPared(2026, 10, 3, 16, 30), viajeMin: 30 });
+  const p2 = partido({ fecha: fechaPared(2026, 10, 3, 19, 0), segundo: true });
+  const d = datosDe(crearHtml(opciones({ partidos: [p1, p2], salidas, duracion: 90 })));
+  assert.equal(d.partidos[1].wa, '');
+  const lineas = d.partidos[0].wa.split('\n');
+  assert.equal(lineas[0], '🏐 *DOMPAVOLEI IF1* (Infantil F)');
+  assert.equal(lineas[3], '🚌 *Salida: 15:00* desde Os Remedios');
+  // 19:00 + 90 min + 30 de viaje = 21:00.
+  assert.equal(lineas.at(-1), '🔙 Vuelta a Os Remedios hacia las 21:00 (aprox.)');
 });
