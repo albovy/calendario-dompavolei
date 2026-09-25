@@ -418,3 +418,56 @@ export async function actualizarResultados({ partidos, ids, ruta, anio, ahora, g
   }
   return cache;
 }
+
+// --- Para el calendario y la página ------------------------------------------------------------------
+
+// p.resultado = { marcador: [local, visitante], sets: [[l, v], ...] } si su partido está "Finalizado" en
+// la federación; si no, null. Solo los de la temporada de la caché.
+export function anadirResultados(partidos, cache) {
+  for (const p of partidos) {
+    const e = p.temporada === cache.temporada ? buscarFila(p, cache.grupos) : null;
+    p.resultado = e && finalizado(e.fila)
+      ? { marcador: [...e.fila.marcador], sets: e.fila.sets.map((s) => [...s]) }
+      : null;
+  }
+}
+
+// ¿Es "a" mejor grupo actual que "b"? El del próximo partido más cercano; si ninguno tiene, el del
+// último partido.
+function mejorGrupo(a, b) {
+  if (a.proximo && b.proximo) return a.proximo < b.proximo;
+  if (a.proximo || b.proximo) return Boolean(a.proximo);
+  return a.ultimo > b.ultimo;
+}
+
+// Clasificación del grupo actual de cada equipo del club (en el orden de equipos):
+// [{ equipo, competicion, grupo, url, actualizado (Date de pared o null), filas: [{ ...fila, nuestro }] }].
+// Los equipos sin clasificación no salen. hoy: Date de pared.
+export function clasificaciones(equipos, cache, ids, hoy) {
+  const dia = fmt(hoy, 'yyyy-MM-dd');
+  const lista = [];
+  for (const e of equipos) {
+    const k = clave(e.nombre);
+    let elegido = null;
+    for (const [torneo, g] of Object.entries(cache.grupos)) {
+      if (!Array.isArray(g.clasificacion) || !g.clasificacion.length) continue;
+      if (!comoLista(g.equipos).some((n) => clave(n) === k)) continue;
+      const suyos = comoLista(g.partidos).filter((f) => clave(f.local) === k || clave(f.visitante) === k);
+      const proximo = suyos.filter((f) => !finalizado(f) && f.dia >= dia).map((f) => f.dia).sort()[0] ?? '';
+      const ultimo = suyos.map((f) => f.dia).sort().pop() ?? '';
+      const candidato = { torneo, g, proximo, ultimo };
+      if (!elegido || mejorGrupo(candidato, elegido)) elegido = candidato;
+    }
+    if (!elegido) continue;
+    const { torneo, g } = elegido;
+    lista.push({
+      equipo: e.nombre,
+      competicion: g.competicion,
+      grupo: g.nombre,
+      url: urlClasificacion(torneo, g.id_competicion),
+      actualizado: leerMarca(g.consultado),
+      filas: g.clasificacion.map((f) => ({ ...f, nuestro: ids.has(txt(f.club)) || clave(f.equipo) === k })),
+    });
+  }
+  return lista;
+}

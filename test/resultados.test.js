@@ -7,8 +7,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  actualizarResultados, anotarGrupos, anotarResultados, buscarFila, competicionesSinNumero, esperaResultado,
-  gruposAConsultar, leerArbol, leerCacheResultados, leerClasificacion, leerGrupos, leerResultados, leerToken,
+  actualizarResultados, anadirResultados, anotarGrupos, anotarResultados, buscarFila, clasificaciones,
+  competicionesSinNumero, esperaResultado, gruposAConsultar, leerArbol, leerCacheResultados, leerClasificacion,
+  leerGrupos, leerResultados, leerToken,
 } from '../src/resultados.js';
 import { fechaPared } from '../src/util.js';
 
@@ -323,4 +324,31 @@ test('leerCacheResultados: de otra temporada, de otros clubs o ilegible, se empi
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('anadirResultados: marcador y sets de los partidos finalizados; el resto, null', () => {
+  const cache = cacheDePrueba();
+  const [ida, hoy] = [PARTIDOS[0], PARTIDOS[3]].map((p) => ({ ...p }));
+  const anterior = { ...PARTIDOS[0], temporada: 2025 };
+  anadirResultados([ida, hoy, anterior], cache);
+  assert.deepEqual(ida.resultado, { marcador: [0, 3], sets: [[24, 26], [23, 25], [20, 25]] });
+  assert.equal(hoy.resultado, null);
+  assert.equal(anterior.resultado, null);
+});
+
+test('clasificaciones: la del grupo del próximo partido del equipo o, si no le quedan, la del último', () => {
+  const cache = cacheDePrueba();
+  cache.grupos['4064'].clasificacion = leerClasificacion(pagina('clasificacion-4064.html'));
+  cache.grupos['3818'].clasificacion = leerClasificacion(pagina('clasificacion-3818.html'));
+  const equipos = [{ nombre: 'DOMPAVOLEI IF1' }, { nombre: 'DOMPAVOLEI CF1' }];
+  const lista = clasificaciones(equipos, cache, IDS, fechaPared(2026, 9, 25, 12, 0));
+  assert.equal(lista.length, 1);   // el CF1 no tiene grupos en la caché
+  const [if1] = lista;
+  assert.deepEqual([if1.equipo, if1.competicion, if1.grupo], ['DOMPAVOLEI IF1', APERTURA, 'SEGUNDA FASE - GRUPO 1']);
+  assert.equal(if1.url, 'https://resultadosvoleibol.isquad.es/clasificacion.php?seleccion=0&id=3818&id_ambito=6&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1511');
+  assert.equal(if1.actualizado.getTime(), AHORA.getTime());
+  assert.deepEqual(if1.filas.filter((f) => f.nuestro).map((f) => f.equipo), ['DOMPAVOLEI IF1']);
+  // Sin partidos por jugar en ningún grupo: la del último jugado.
+  cache.grupos['3818'].equipos = [];
+  assert.equal(clasificaciones(equipos, cache, IDS, fechaPared(2026, 9, 25, 12, 0))[0].grupo, 'PRIMERA FASE - GRUPO H');
 });
