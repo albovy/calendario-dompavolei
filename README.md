@@ -23,6 +23,9 @@ del grupo de cada equipo. Salen de la web de resultados de la federación (la mi
 solo se consultan los grupos del club y solo cuando hace falta (un partido que acaba de jugarse, un repaso
 diario), y se guardan en `resultados.json`. Nunca se descargan actas ni plantillas.
 
+En los partidos por jugar, los botones **Copiar** y **WhatsApp** preparan un mensaje para el grupo de las
+familias: día, salida y lugar, pabellón con mapa, calentamiento, partidos y vuelta aproximada.
+
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 
 Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://nodejs.org/) instalado):
