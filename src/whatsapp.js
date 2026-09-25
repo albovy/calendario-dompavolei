@@ -3,7 +3,7 @@
 // primer partido del día de ese equipo, que es donde la página pone los botones «Copiar» y «WhatsApp».
 
 import { conHora } from './partidos.js';
-import { DIAS, MESES, clave, claveSinCaja, fmt, hora, soloDia, sumarMinutos, txt } from './util.js';
+import { DIAS, MESES, clave, claveSinCaja, compararTexto, fmt, hora, soloDia, sumarMinutos, txt } from './util.js';
 
 const SANGRIA = '    ';
 const CUARTO_DE_HORA = 15 * 60000;
@@ -59,9 +59,11 @@ function mensaje(grupo, { salidas, pedirBus, duracion, pabellones }) {
   else l.push('🏟️ Pabellón por confirmar');
   if (guia.calentamiento) l.push(`🔥 Calentamiento: ${hora(guia.calentamiento)}`);
   for (const x of grupo) l.push(lineaPartido(x, p.condicion === 'derbi', guia.pabellon));
-  // Vuelta: como en el correo de "Pedir bus", fin del último partido + viaje, al alza a 15 min.
+  // Vuelta: el mismo cálculo que el correo de "Pedir bus": fin del último partido en el pabellón de la
+  // salida + viaje, al alza a 15 min. Los partidos en otro pabellón no cuentan (tienen su propia salida).
   if (guia.salida && guia.viajeMin != null) {
-    const llegada = sumarMinutos(conHoras[conHoras.length - 1].fecha, duracion + guia.viajeMin);
+    const ultimo = conHoras.filter((x) => x.pabellon === guia.pabellon).at(-1);
+    const llegada = sumarMinutos(ultimo.fecha, duracion + guia.viajeMin);
     const redondeada = new Date(Math.ceil(llegada.getTime() / CUARTO_DE_HORA) * CUARTO_DE_HORA);
     l.push(`🔙 Vuelta a ${origen} hacia las ${hora(redondeada)} (aprox.)`);
   }
@@ -69,7 +71,8 @@ function mensaje(grupo, { salidas, pedirBus, duracion, pabellones }) {
 }
 
 // Mensajes de los partidos de hoy en adelante (hoy: Date de pared): Map partido -> texto, solo en el
-// primer partido del día de cada equipo. Los partidos con la fecha sin confirmar no llevan mensaje.
+// primer partido del día de cada equipo. Los partidos con la fecha sin confirmar no llevan mensaje; si
+// algún partido del día del equipo ya tiene resultado, el día ya empezó y tampoco.
 // salidas: el de configSalidas o null; pedirBus: el de configPedirBus o null; duracion: minutos de un
 // partido; pabellones: la caché de resolverPabellones o null.
 export function mensajesWhatsApp(partidos, { salidas = null, pedirBus = null, duracion = 120, pabellones = null, hoy }) {
@@ -77,10 +80,14 @@ export function mensajesWhatsApp(partidos, { salidas = null, pedirBus = null, du
   const grupos = new Map();
   for (const p of [...partidos].sort((a, b) => a.fecha - b.fecha)) {
     if (p.estado === 'pendiente' || soloDia(p.fecha).getTime() < desde) continue;
-    const k = `${fmt(p.fecha, 'yyyy-MM-dd')}|${p.nuestros.join('|')}`;
+    // El equipo como en anadirSalidas: en un derbi, los dos en cualquier orden, y sin distinguir
+    // mayúsculas (claveSinCaja): "Dompavolei IF1" es el mismo equipo que "DOMPAVOLEI IF1".
+    const equipo = [...p.nuestros].sort(compararTexto).join('/');
+    const k = claveSinCaja(grupos, `${fmt(p.fecha, 'yyyy-MM-dd')}|${equipo}`);
     if (!grupos.has(k)) grupos.set(k, []);
     grupos.get(k).push(p);
   }
   const opciones = { salidas, pedirBus, duracion, pabellones };
-  return new Map([...grupos.values()].map((g) => [g[0], mensaje(g, opciones)]));
+  const porJugar = [...grupos.values()].filter((g) => !g.some((x) => x.resultado));
+  return new Map(porJugar.map((g) => [g[0], mensaje(g, opciones)]));
 }

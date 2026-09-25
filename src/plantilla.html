@@ -526,7 +526,10 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   // Botón "Pedir bus": abre el correo con la petición ya redactada para la empresa de autobuses.
   function hm(min) { return dos(Math.floor(min / 60) % 24) + ':' + dos(min % 60); }
   function aMin(h) { var t = h.split(':'); return +t[0] * 60 + +t[1]; }
-  function mismoEquipo(a, b) { return nuestros(a).join('/') === nuestros(b).join('/'); }
+  // El mismo equipo (en un derbi, los dos) en cualquier orden y sin distinguir mayúsculas, como
+  // anadirSalidas al decidir qué es un «2º partido» y el mensaje de WhatsApp al juntar los del día.
+  function claveEquipo(p) { return nuestros(p).map(function (n) { return n.toUpperCase(); }).sort().join('/'); }
+  function mismoEquipo(a, b) { return claveEquipo(a) === claveEquipo(b); }
   function enlaceBus(p) {
     if (!D.bus || !p.s || yaJugado(p)) return '';
     var grupo = D.partidos.filter(function (x) { return x.f === p.f && x.pab === p.pab && conHora(x) && mismoEquipo(x, p); });
@@ -567,8 +570,9 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   }
 
   // Botones para el grupo de WhatsApp de las familias: copiar el mensaje o abrir WhatsApp con él.
+  // Un partido con resultado ya se jugó, aunque no tenga hora (yaJugado no lo sabe).
   function botonesWhatsApp(p) {
-    if (!p.wa || yaJugado(p)) return '';
+    if (!p.wa || p.r || yaJugado(p)) return '';
     return '<button type="button" class="boton-wa copiar" data-i="' + D.partidos.indexOf(p) + '">📋 Copiar</button>' +
       '<a class="boton-wa wa" href="' + esc('https://wa.me/?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">WhatsApp</a>';
   }
@@ -582,7 +586,10 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       clearTimeout(boton.espera);
       boton.espera = setTimeout(function () { boton.textContent = antes; }, 2000);
     }
+    // select() lleva el foco al <textarea> y, al quitarlo, se iría a <body>: se devuelve adonde estaba
+    // (el botón), para que quien usa el teclado o un lector de pantalla no vuelva al principio.
     function aMano() {
+      var previo = document.activeElement;
       var t = document.createElement('textarea');
       t.value = texto;
       t.setAttribute('readonly', '');
@@ -593,6 +600,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(t);
+      if (previo && previo.focus) previo.focus({ preventScroll: true });
       hecho(ok);
     }
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(texto).then(function () { hecho(true); }, aMano);

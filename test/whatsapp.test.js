@@ -47,13 +47,121 @@ test('mensajesWhatsApp: fuera, en bus y con dos partidos el mismo día: un mensa
   ].join('\n'));
 });
 
-test('mensajesWhatsApp: vuelta redondeada al alza a 15 min; un partido en otro pabellón', () => {
+test('mensajesWhatsApp: vuelta redondeada al alza a 15 min; un partido en otro pabellón no cuenta para la vuelta', () => {
   const a = partido({ salida: fechaPared(2026, 9, 26, 7, 15), calentamiento: fechaPared(2026, 9, 26, 9, 0), viajeMin: 100 });
-  const b = partido({ fecha: fechaPared(2026, 9, 26, 12, 0), local: 'CV OLEIROS IFA', rival: 'CV OLEIROS IFA', pabellon: 'OTRO PABELLÓN' });
-  const lineas = mensajesWhatsApp([a, b], OPCIONES).get(a).split('\n');
-  assert.equal(lineas.at(-2), '🆚 12:00 contra CV OLEIROS IFA (en OTRO PABELLÓN)');
-  // 12:00 + 120 min de partido + 100 de viaje = 15:40 -> 15:45.
-  assert.equal(lineas.at(-1), '🔙 Vuelta a Os Remedios hacia las 15:45 (aprox.)');
+  const b = partido({ fecha: fechaPared(2026, 9, 26, 11, 30), local: 'CV OLEIROS IFA', rival: 'CV OLEIROS IFA', segundo: true });
+  const c = partido({ fecha: fechaPared(2026, 9, 26, 17, 0), local: 'CV VIGO IFA', rival: 'CV VIGO IFA', pabellon: 'OTRO PABELLÓN' });
+  const lineas = mensajesWhatsApp([a, b, c], OPCIONES).get(a).split('\n');
+  assert.equal(lineas.at(-2), '🆚 17:00 contra CV VIGO IFA (en OTRO PABELLÓN)');
+  // Como el correo de «Pedir bus»: el último partido en el pabellón de la salida (11:30) + 120 min de
+  // partido + 100 de viaje = 15:10 -> 15:15. El de las 17:00, en otro pabellón, no cuenta.
+  assert.equal(lineas.at(-1), '🔙 Vuelta a Os Remedios hacia las 15:15 (aprox.)');
+});
+
+test('mensajesWhatsApp: vuelta como el correo de «Pedir bus» aunque el equipo juegue luego en casa', () => {
+  const lejos = partido({
+    pabellon: 'LEJOS', municipio: 'Lugo', salida: fechaPared(2026, 9, 26, 7, 15), calentamiento: fechaPared(2026, 9, 26, 9, 0), viajeMin: 105,
+  });
+  const casa = partido({
+    fecha: fechaPared(2026, 9, 26, 19, 0), local: 'DOMPAVOLEI IF1', visitante: 'CV OLEIROS IFA', esLocal: true, esVisitante: false,
+    condicion: 'local', rival: 'CV OLEIROS IFA', pabellon: 'ANEXO OS REMEDIOS - PISTA 1', municipio: 'Ourense', enCasa: true,
+    calentamiento: fechaPared(2026, 9, 26, 18, 0),
+  });
+  const lineas = mensajesWhatsApp([lejos, casa], OPCIONES).get(lejos).split('\n');
+  assert.equal(lineas.at(-2), '🆚 19:00 contra CV OLEIROS IFA (en ANEXO OS REMEDIOS - PISTA 1)');
+  // 10:00 + 120 + 105 = 13:45, la llegada del correo; no 19:00 + 120 + 105.
+  assert.equal(lineas.at(-1), '🔙 Vuelta a Os Remedios hacia las 13:45 (aprox.)');
+});
+
+test('mensajesWhatsApp: un mensaje por equipo y día: dos equipos el mismo día, cada uno con el suyo', () => {
+  const if1 = partido({ salida: fechaPared(2026, 9, 26, 7, 15), calentamiento: fechaPared(2026, 9, 26, 9, 0), viajeMin: 105 });
+  const if1Segundo = partido({ fecha: fechaPared(2026, 9, 26, 11, 30), local: 'CV OLEIROS IFA', rival: 'CV OLEIROS IFA', segundo: true });
+  const xf1 = partido({
+    fecha: fechaPared(2026, 9, 26, 11, 0), local: 'CV MONFORTE XF', visitante: 'DOMPAVOLEI XF1', nuestros: ['DOMPAVOLEI XF1'],
+    rival: 'CV MONFORTE XF', categoria: 'Juvenil F', pabellon: 'A PINGUELA - PISTA 1', municipio: 'Monforte de Lemos',
+    salida: fechaPared(2026, 9, 26, 8, 30), calentamiento: fechaPared(2026, 9, 26, 10, 0), viajeMin: 90,
+  });
+  const xf1Segundo = partido({
+    fecha: fechaPared(2026, 9, 26, 13, 0), local: 'CV LUGO XF', visitante: 'DOMPAVOLEI XF1', nuestros: ['DOMPAVOLEI XF1'],
+    rival: 'CV LUGO XF', categoria: 'Juvenil F', pabellon: 'A PINGUELA - PISTA 1', municipio: 'Monforte de Lemos', segundo: true,
+  });
+  const m = mensajesWhatsApp([xf1Segundo, if1Segundo, xf1, if1], { ...OPCIONES, pabellones: null });
+  assert.deepEqual([...m.keys()], [if1, xf1]);
+  assert.deepEqual(m.get(if1).split('\n').filter((l) => /^(🏐|🚌|🆚|🔙)/u.test(l)), [
+    '🏐 *DOMPAVOLEI IF1* (Infantil F)',
+    '🚌 *Salida: 07:15* desde Os Remedios',
+    '🆚 10:00 contra SEI SAN NARCISO IF',
+    '🆚 11:30 contra CV OLEIROS IFA',
+    '🔙 Vuelta a Os Remedios hacia las 15:15 (aprox.)',
+  ]);
+  assert.equal(m.get(xf1), [
+    '🏐 *DOMPAVOLEI XF1* (Juvenil F)',
+    '📅 *Sábado 26 de septiembre*',
+    '',
+    '🚌 *Salida: 08:30* desde Os Remedios',
+    '    (Rúa Pardo de Cela, 2, Ourense)',
+    '🏟️ A PINGUELA - PISTA 1 (Monforte de Lemos)',
+    '    https://www.google.com/maps/search/?api=1&query=A%20PINGUELA%20-%20PISTA%201%2C%20Monforte%20de%20Lemos',
+    '🔥 Calentamiento: 10:00',
+    '🆚 11:00 contra CV MONFORTE XF',
+    '🆚 13:00 contra CV LUGO XF',
+    // 13:00 + 120 + 90 = 16:30.
+    '🔙 Vuelta a Os Remedios hacia las 16:30 (aprox.)',
+  ].join('\n'));
+});
+
+test('mensajesWhatsApp: el mismo equipo con los equipos en otro orden (derbi) u otras mayúsculas: un solo mensaje', () => {
+  // Como anadirSalidas: el de las 12:00 es el «2º partido» del de las 10:00 y va con su salida.
+  const ida = partido({
+    local: 'DOMPAVOLEI IF1', visitante: 'DOMPAVOLEI IF2', esLocal: true, condicion: 'derbi', nuestros: ['DOMPAVOLEI IF1', 'DOMPAVOLEI IF2'],
+    rival: '', salida: fechaPared(2026, 9, 26, 7, 15), calentamiento: fechaPared(2026, 9, 26, 9, 0), viajeMin: 105,
+  });
+  const vuelta = partido({
+    fecha: fechaPared(2026, 9, 26, 12, 0), local: 'DOMPAVOLEI IF2', visitante: 'DOMPAVOLEI IF1', esLocal: true, condicion: 'derbi',
+    nuestros: ['DOMPAVOLEI IF2', 'DOMPAVOLEI IF1'], rival: '', calentamiento: fechaPared(2026, 9, 26, 11, 0), segundo: true,
+  });
+  const m = mensajesWhatsApp([ida, vuelta], OPCIONES);
+  assert.deepEqual([...m.keys()], [ida]);
+  assert.equal(m.get(ida), [
+    '🏐 *DOMPAVOLEI IF1 y DOMPAVOLEI IF2* (Infantil F)',
+    '📅 *Sábado 26 de septiembre*',
+    '',
+    '🚌 *Salida: 07:15* desde Os Remedios',
+    '    (Rúa Pardo de Cela, 2, Ourense)',
+    '🏟️ PABELLÓN COLEGIO SAN NARCISO PISTA 1 (Marín)',
+    '    https://www.google.com/maps/search/?api=1&query=42.3905,-8.7076',
+    '🔥 Calentamiento: 09:00',
+    '🆚 10:00 DOMPAVOLEI IF1 - DOMPAVOLEI IF2',
+    '🆚 12:00 DOMPAVOLEI IF2 - DOMPAVOLEI IF1',
+    // El bus espera al de las 12:00: 12:00 + 120 + 105 = 15:45.
+    '🔙 Vuelta a Os Remedios hacia las 15:45 (aprox.)',
+  ].join('\n'));
+
+  // iSquad escribe el nombre del equipo con otras mayúsculas en el segundo partido.
+  const primero = partido({ salida: fechaPared(2026, 10, 3, 7, 15), fecha: fechaPared(2026, 10, 3, 10, 0), viajeMin: 105 });
+  const otraCaja = partido({
+    fecha: fechaPared(2026, 10, 3, 12, 0), visitante: 'Dompavolei IF1', nuestros: ['Dompavolei IF1'], local: 'CV OLEIROS IFA',
+    rival: 'CV OLEIROS IFA', segundo: true,
+  });
+  const m2 = mensajesWhatsApp([primero, otraCaja], OPCIONES);
+  assert.deepEqual([...m2.keys()], [primero]);
+  assert.deepEqual(m2.get(primero).split('\n').slice(-3), [
+    '🆚 10:00 contra SEI SAN NARCISO IF',
+    '🆚 12:00 contra CV OLEIROS IFA',
+    '🔙 Vuelta a Os Remedios hacia las 15:45 (aprox.)',
+  ]);
+});
+
+test('mensajesWhatsApp: si algún partido del día del equipo ya tiene resultado, no hay mensaje', () => {
+  const resultado = { marcador: [3, 1], sets: [[25, 20], [20, 25], [25, 18], [25, 22]] };
+  // De hoy, sin hora, con el resultado ya recogido por el repaso diario de resultados.js.
+  const sinHora = partido({ fecha: fechaPared(2026, 9, 25), estado: 'sinhora', resultado });
+  // Concentración de hoy: el primero ya se jugó; el segundo aún no.
+  const jugado = partido({ fecha: fechaPared(2026, 9, 25, 10, 0), nuestros: ['DOMPAVOLEI XF1'], resultado });
+  const porJugar = partido({ fecha: fechaPared(2026, 9, 25, 12, 30), nuestros: ['DOMPAVOLEI XF1'], segundo: true });
+  const manana = partido();
+  const m = mensajesWhatsApp([sinHora, jugado, porJugar, manana], OPCIONES);
+  assert.deepEqual([...m.keys()], [manana]);
 });
 
 test('mensajesWhatsApp: en casa, sin bus ni vuelta', () => {
