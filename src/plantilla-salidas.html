@@ -818,11 +818,11 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
 
   // Marcador del lado del club (en los partidos de visitante se da la vuelta; en un derbi, local-visitante).
   function delClub(p, par) { return p.vo && !p.lo ? [par[1], par[0]] : par; }
-  // Debajo de los equipos (que ya llevan cada uno sus sets ganados): ganado o perdido, y los sets desde
-  // nuestro lado.
+  // Debajo de los equipos (que ya llevan cada uno sus sets ganados): ganado o perdido (desde nuestro lado)
+  // y los puntos de cada set en el orden del marcador, el local primero.
   function textoResultado(p) {
     var m = delClub(p, p.r.m);
-    var sets = p.r.s.map(function (s) { return delClub(p, s).join('-'); }).join(' · ');
+    var sets = p.r.s.map(function (s) { return s.join('-'); }).join(' · ');
     var derbi = p.cond === 'derbi';
     var cls = derbi ? 'derbi' : m[0] > m[1] ? 'gana' : 'pierde';
     var txt = derbi ? 'Resultado' : m[0] > m[1] ? 'Ganado' : 'Perdido';

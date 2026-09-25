@@ -340,16 +340,17 @@ test('salidas: sin horas de salida, «PRÓXIMO PARTIDO» en el primero por jugar
   assert.ok(!html.includes('Próxima salida'));
 });
 
-test('salidas: resultado desde el lado del club («Ganado 3-0» con los sets dados la vuelta de visitante)', () => {
+test('salidas: «Ganado»/«Perdido» desde el lado del club, pero los sets en el orden del marcador (el local primero)', () => {
   const partidos = [
     partido({ f: '2026-09-19', s: '07:30', r: { m: [0, 3], s: [[24, 26], [23, 25], [20, 25]] } }),
     partido({ f: '2026-09-20', l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false, cond: 'local', r: { m: [2, 3], s: [[25, 20], [20, 25], [25, 18], [22, 25], [10, 15]] } }),
   ];
   const html = abrirPagina(datos(partidos, { sal: SAL }), { almacen: conFiltros({ per: 'todo' }) }).contenido.innerHTML;
   // Como un marcador: los sets de cada equipo en su línea (local arriba) y, debajo, ganado o perdido con los sets.
+  // Los puntos de cada set, también como en el marcador: primero los del local, aunque el nuestro sea el visitante.
   assert.deepEqual(equipos(fila(html, 0).html).map((e) => [e.nombre, e.tanteo]), [['CV RIVAL', '0'], ['DOMPAVOLEI INFANTIL', '3']]);
   assert.deepEqual(equipos(fila(html, 1).html).map((e) => [e.nombre, e.tanteo]), [['DOMPAVOLEI INFANTIL', '2'], ['CV RIVAL', '3']]);
-  assert.match(fila(html, 0).html, /<div class="res gana">Ganado<small>26-24 · 25-23 · 25-20<\/small><\/div>/);
+  assert.match(fila(html, 0).html, /<div class="res gana">Ganado<small>24-26 · 23-25 · 20-25<\/small><\/div>/);
   assert.match(fila(html, 1).html, /<div class="res pierde">Perdido<small>25-20 · 20-25 · 25-18 · 22-25 · 10-15<\/small><\/div>/);
 });
 
