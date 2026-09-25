@@ -159,9 +159,11 @@ main { display: block; padding-bottom: 32px; }
 .hora .pend { display: block; margin-top: 4px; font: 600 16px/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--ambar); }
 .hora .pend:first-child { margin-top: 0; }
 .info { min-width: 0; }
-.dest { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; min-width: 0; }
+/* Equipo, icono de ubicación y destino en una línea; si el destino es largo, se parte él (el icono no se queda solo). */
+.dest { display: flex; align-items: baseline; gap: 0 6px; min-width: 0; }
+.dest .hacia { flex: none; align-self: center; color: var(--tinta2); }
 .cod { font: 700 18px/1.1 var(--cond); letter-spacing: .02em; }
-.lugar { font: 600 18px/1.1 var(--cond); letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
+.lugar { min-width: 0; font: 600 18px/1.1 var(--cond); letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
 .proxm { display: block; margin-top: 4px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--agua); }
 .rival { margin-top: 4px; font: 500 15px/1.3 var(--txt); overflow-wrap: anywhere; }
 .sub { margin-top: 3px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font: 400 15px/1.3 var(--txt); color: var(--tinta2); }
@@ -194,6 +196,8 @@ main { display: block; padding-bottom: 32px; }
 /* Detalle desplegable */
 .det { grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde); font: 400 15px/1.4 var(--txt); color: var(--tinta2); }
 .det p { margin: 0 0 4px; }
+.det .dl { display: flex; align-items: flex-start; gap: 8px; }
+.det .dl svg { flex: none; margin-top: 2px; color: var(--tinta2); }
 .det a { color: var(--tinta); font-weight: 500; text-underline-offset: 2px; }
 
 /* Clasificación */
@@ -282,6 +286,11 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   <symbol id="i-copia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
   <symbol id="i-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-lugar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="2"/><path d="M4 11h16M8 18v2M16 18v2M7.5 14.5h.01M16.5 14.5h.01"/></symbol>
+  <symbol id="i-calor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a6 6 0 0 0 6-6c0-2.5-1.5-4.5-3-6-.5 2-1.5 3-3 3.5.5-3-1-6.5-4-8.5 0 4-4 6.5-4 11a6 6 0 0 0 6 6Z"/><path d="M12 21a2.5 2.5 0 0 1-2.5-2.5c0-1.5 1.5-2.5 2.5-4 1 1.5 2.5 2.5 2.5 4A2.5 2.5 0 0 1 12 21Z"/></symbol>
+  <symbol id="i-casa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-copa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></symbol>
 </svg>
 
 <header class="barra">
@@ -652,13 +661,19 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     return '<div class="hora">' + r + '</div>';
   }
 
-  // Frase del viaje, para el detalle.
-  function textoViaje(p) {
-    if (!D.sal || !conHora(p)) return '';
-    if (p.seg) return p.sp || !p.casa ? 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '') : 'En casa, después del partido anterior';
-    if (p.casa) return 'En casa · calentamiento ' + p.ca;
-    if (p.s) return duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + nombrePropio(p.mun) : '') + ' · calentamiento ' + p.ca;
-    return 'Viaje sin calcular · calentamiento ' + p.ca;
+  // Líneas del viaje para el detalle, cada una con su icono: [icono, texto]. El calentamiento va en su
+  // propia línea (con la llama, como en el mensaje de WhatsApp), separado del viaje en bus.
+  function lineasViaje(p) {
+    if (!D.sal || !conHora(p)) return [];
+    if (p.seg) {
+      return [p.sp || !p.casa
+        ? ['i-bus', 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '')]
+        : ['i-casa', 'En casa, después del partido anterior']];
+    }
+    var calent = ['i-calor', 'Calentamiento ' + p.ca];
+    if (p.casa) return [['i-casa', 'En casa'], calent];
+    if (p.s) return [['i-bus', duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + nombrePropio(p.mun) : '')], calent];
+    return [['i-bus', 'Viaje sin calcular'], calent];
   }
 
   // Botón "Pedir bus": abre el correo con la petición ya redactada para la empresa de autobuses.
@@ -759,19 +774,19 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     return '<div class="res ' + cls + '">' + txt + ' ' + m[0] + '-' + m[1] + (sets ? '<small>' + esc(sets) + '</small>' : '') + '</div>';
   }
 
-  // Detalle desplegable (la flecha de la fila): pabellón con el mapa y su dirección, competición y viaje.
+  // Una línea del detalle: su icono y el contenido (ya en HTML).
+  function lineaDetalle(id, html) { return '<p class="dl">' + icono(id, 16) + '<span>' + html + '</span></p>'; }
+
+  // Detalle desplegable (la flecha de la fila): pabellón con el mapa y su dirección, competición, viaje y
+  // calentamiento, cada uno en su línea con su icono.
   function detalle(p, i) {
     var info = propia(D.pabs, p.pab) ? D.pabs[p.pab] : {};
-    var l = [];
-    if (p.pab) {
-      l.push('<p><a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) +
-        '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>' + (info.dir ? '<br>' + esc(info.dir) : '') + '</p>');
-    } else {
-      l.push('<p>Pabellón por confirmar</p>');
-    }
-    l.push('<p>' + esc(p.comp) + '</p>');
-    var v = textoViaje(p);
-    if (v) l.push('<p>' + esc(v) + '</p>');
+    var l = [lineaDetalle('i-lugar', p.pab
+      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) +
+        '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>' + (info.dir ? '<br>' + esc(info.dir) : '')
+      : 'Pabellón por confirmar')];
+    l.push(lineaDetalle('i-copa', esc(p.comp)));
+    lineasViaje(p).forEach(function (v) { l.push(lineaDetalle(v[0], esc(v[1]))); });
     return '<div class="det" id="det-' + i + '" hidden>' + l.join('') + '</div>';
   }
 
@@ -783,7 +798,10 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     var acc = botonesWhatsApp(p, i) + enlaceBus(p);
     return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-i="' + i + '">' +
       columnaHora(p, jug) +
-      '<div class="info"><div class="dest"><span class="cod">' + esc(cod) + '</span><span class="lugar">' + esc(destino(p)) + '</span></div>' +
+      // Entre el equipo y el destino, un icono de ubicación: «IF1 en MARÍN», no el «infantil de Marín».
+      '<div class="info"><div class="dest"><span class="cod">' + esc(cod) + '</span><span class="sr-only"> en </span>' +
+      '<svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
+      '<span class="lugar">' + esc(destino(p)) + '</span></div>' +
       (marca ? '<span class="proxm">' + marca + '</span>' : '') +
       '<div class="rival">vs ' + esc(riv) + '</div>' +
       '<div class="sub">' + esc(p.cat) + ' <span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +

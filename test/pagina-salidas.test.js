@@ -130,6 +130,13 @@ test('salidas: una fila por partido; el 2.º partido del día va en su propia fi
   assert.match(lista[1].html, /vs CV OLEIROS IFA/);
 });
 
+test('salidas: entre el código del equipo y el destino, un icono de ubicación («IF1 en MARÍN», no «IF1 MARÍN»)', () => {
+  const html = abrirPagina(datos([partido({ s: '07:15', vj: 105, mun: 'MARÍN' })], { sal: SAL })).contenido.innerHTML;
+  // El icono va oculto para los lectores de pantalla, que oyen «IF1 en MARÍN».
+  assert.match(html, /<span class="cod">(?:DOMPAVOLEI )?IF1<\/span><span class="sr-only"> en <\/span><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"\/><\/svg><span class="lugar">MARÍN<\/span>/);
+  assert.match(PLANTILLA, /<symbol id="i-lugar"/);
+});
+
 test('salidas: la columna de la hora en cada caso de la tabla del diseño', () => {
   const r = { m: [0, 3], s: [[24, 26], [23, 25], [20, 25]] };
   const partidos = [
@@ -206,11 +213,12 @@ test('salidas: código del equipo sin el prefijo y destino (municipio, o el pabe
   d.equipos.push({ n: 'DOMPAVOLEI CF1', cat: 'Cadete F', ck: 'cadete', ics: '', np: 1 });
   const html = abrirPagina(d).contenido.innerHTML;
   const destino = (i) => texto(/<div class="dest">([\s\S]*?)<\/div>/.exec(fila(html, i).html)[1]);
-  assert.equal(destino(0), 'IF1 MARÍN');
-  assert.equal(destino(1), 'IF1 ANEXO OS REMEDIOS');
-  assert.equal(destino(2), 'IF1 POLIDEPORTIVO TORRES COLOMER');
-  assert.equal(destino(3), 'IF1 Pabellón por confirmar');
-  assert.equal(destino(4), 'CF1 · IF1 LUGO');
+  // «en» es el texto para lectores de pantalla que acompaña al icono de ubicación.
+  assert.equal(destino(0), 'IF1 en MARÍN');
+  assert.equal(destino(1), 'IF1 en ANEXO OS REMEDIOS');
+  assert.equal(destino(2), 'IF1 en POLIDEPORTIVO TORRES COLOMER');
+  assert.equal(destino(3), 'IF1 en Pabellón por confirmar');
+  assert.equal(destino(4), 'CF1 · IF1 en LUGO');
   assert.match(fila(html, 0).html, /<div class="rival">vs CV RIVAL<\/div>/);
   assert.match(fila(html, 1).html, /<div class="rival">vs XUVENIL TEIS B<\/div>/);
   assert.match(fila(html, 4).html, /<div class="rival">vs IF1<\/div>/);
@@ -349,9 +357,13 @@ test('salidas: la flecha de cada fila abre y cierra su detalle (pabellón, mapa,
   assert.ok(t.includes('PABELLÓN COLEGIO SAN NARCISO - PISTA 1'), t);
   assert.ok(t.includes('CHAN DO MONTE, 27, 36900 MARÍN'), t);
   assert.ok(t.includes('LIGA INFANTIL F'), t);
-  assert.ok(t.includes('1 h 45 min en bus hasta Marín · calentamiento 09:00'), t);
-  assert.match(det[1], /href="https:\/\/www\.google\.com\/maps\/search\/\?api=1&amp;query=/);
-  assert.ok(texto(fila(html, 1).html).includes('Se va con el partido anterior (salida 07:15)'));
+  // Cada dato del detalle en su línea, con su icono: pabellón, competición, viaje en bus y calentamiento.
+  const linea = (icono, textoLinea) => new RegExp(`<p class="dl"><svg[^>]*><use href="#${icono}"/></svg><span>${textoLinea}`);
+  assert.match(det[1], linea('i-lugar', '<a href="https://www\\.google\\.com/maps/search/\\?api=1&amp;query='));
+  assert.match(det[1], linea('i-copa', 'LIGA INFANTIL F'));
+  assert.match(det[1], linea('i-bus', '1 h 45 min en bus hasta Marín</span>'));
+  assert.match(det[1], linea('i-calor', 'Calentamiento 09:00</span>'));
+  assert.match(fila(html, 1).html, linea('i-bus', 'Se va con el partido anterior \\(salida 07:15\\)</span>'));
   // Pulsar la flecha: se abre; otra vez: se cierra.
   const flecha = elemento(pagina.doc, 'button');
   flecha.classList.add('chev');
