@@ -183,6 +183,12 @@ main { display: block; padding-bottom: 32px; }
 .dest { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
 .dest .hacia { flex: none; color: var(--tinta2); }
 .lugar { min-width: 0; margin-right: 4px; font: 600 15px/1.2 var(--cond); letter-spacing: .05em; text-transform: uppercase; color: var(--tinta2); overflow-wrap: anywhere; }
+/* Con pabellón, el icono y el sitio son un enlace a Google Maps: subrayado suave, y 32 px de alto para el
+   dedo (el margen negativo lo compensa, así que la fila no crece). */
+.ir-mapa { display: inline-flex; align-items: center; gap: 6px; min-width: 0; min-height: 32px; margin: -7px 0; color: inherit; text-decoration: none; border-radius: 6px; }
+.ir-mapa .lugar { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); }
+.ir-mapa:hover .lugar, .ir-mapa:hover .hacia { color: var(--tinta); }
+.ir-mapa:hover .lugar { text-decoration-color: currentColor; }
 .proxm { display: block; margin: 0 0 5px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--agua); }
 .cond {
   padding: 5px 8px; border-radius: 999px; border: 1.5px solid var(--tinta2); color: var(--tinta2); white-space: nowrap;
@@ -290,6 +296,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   .dia { margin-top: 12px; }
   .dia-cab { break-after: avoid; }
   .cond.local, .cond.derbi { background: none; color: #000; border-color: #000; }
+  .ir-mapa .lugar { text-decoration: none; }
 }
 </style>
 </head>
@@ -665,6 +672,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     return p.mun || pabCorto(p.pab);
   }
 
+  // El pabellón en Google Maps (con el municipio, o «Galicia», para que no se vaya a otro con el mismo nombre).
+  function urlMapa(p) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')); }
+
   function icono(id, tam) { return '<svg width="' + (tam || 15) + '" height="' + (tam || 15) + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
 
   // Columna de la hora: rótulo pequeño + hora grande (texto normal, cifras tabulares) + una línea debajo.
@@ -828,12 +838,20 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   function detalle(p, i) {
     var info = propia(D.pabs, p.pab) ? D.pabs[p.pab] : {};
     var l = [lineaDetalle('i-lugar', p.pab
-      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) +
-        '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>' + (info.dir ? '<br>' + esc(info.dir) : '')
+      ? '<a href="' + esc(urlMapa(p)) + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>' + (info.dir ? '<br>' + esc(info.dir) : '')
       : 'Pabellón por confirmar')];
     l.push(lineaDetalle('i-copa', esc(p.comp)));
     lineasViaje(p).forEach(function (v) { l.push(lineaDetalle(v[0], esc(v[1]))); });
     return '<div class="det" id="det-' + i + '" hidden>' + l.join('') + '</div>';
+  }
+
+  // El icono y el sitio de la fila; con pabellón, enlace a su mapa (el nombre del pabellón, para los lectores).
+  function lugarFila(p) {
+    var dentro = '<svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
+      '<span class="sr-only">En </span><span class="lugar">' + esc(destino(p)) + '</span>';
+    if (!p.pab) return dentro;
+    return '<a class="ir-mapa" href="' + esc(urlMapa(p)) + '" target="_blank" rel="noopener" title="' + esc('Ver ' + p.pab + ' en Google Maps') + '">' +
+      dentro + '<span class="sr-only">' + esc(' (ver ' + p.pab + ' en Google Maps)') + '</span></a>';
   }
 
   // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.
@@ -849,10 +867,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       // el nuestro va en segundo lugar.
       '<div class="eqs">' + lineaEquipo(p.l, p.lo, p.r ? p.r.m[0] : '', false) +
       '<div class="vs" aria-hidden="true"><span class="punto hueco"></span>vs</div>' + lineaEquipo(p.v, p.vo, p.r ? p.r.m[1] : '', true) + '</div>' +
-      // Adónde se va, con un icono de ubicación, y la píldora local / visitante.
-      '<div class="dest"><svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
-      '<span class="sr-only">En </span><span class="lugar">' + esc(destino(p)) + '</span>' +
-      '<span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +
+      // Adónde se va, con un icono de ubicación, y la píldora local / visitante. Con pabellón, el icono y el
+      // sitio llevan a Google Maps (como el del detalle), sin tener que abrirlo.
+      '<div class="dest">' + lugarFila(p) + '<span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +
       (p.r ? textoResultado(p) : '') + '</div>' +
       '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + local + ' contra ' + visit) + '">' +
       icono('i-flecha', 16) + '</button>' +

@@ -199,9 +199,44 @@ test('página: el nombre de cada equipo, con la F o la M solo si hay los dos sex
 });
 
 test('página: debajo de los equipos, adónde se va (icono de ubicación) y la píldora local/visitante', () => {
-  const html = abrirPagina(datos([partido({ s: '07:15', vj: 105, mun: 'MARÍN' })], { sal: SAL })).contenido.innerHTML;
-  assert.match(html, /<div class="dest"><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"\/><\/svg><span class="sr-only">En <\/span><span class="lugar">MARÍN<\/span><span class="cond visitante">Visitante<\/span><\/div>/);
+  const partidos = [
+    partido({ s: '07:15', vj: 105, mun: 'MARÍN', pab: 'PABELLÓN COLEGIO SAN NARCISO - PISTA 1' }),
+    partido({ f: '2026-09-27', h: '12:00', ca: '11:00', casa: true, cond: 'local', l: 'DOMPAVOLEI IF1', v: 'CV RIVAL', lo: true, vo: false, pab: 'ANEXO OS REMEDIOS - PISTA 1' }),
+    partido({ f: '2026-09-28', pab: '', mun: '' }),
+  ];
+  const html = abrirPagina(datos(partidos, { sal: SAL })).contenido.innerHTML;
+  // El icono y el sitio son un enlace al pabellón en Google Maps (el mismo que el del detalle), en otra pestaña:
+  // sin tener que abrir el detalle. El texto no cambia; para los lectores, qué pabellón abre.
+  const mapa = (pab) => ('https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(pab)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  assert.match(fila(html, 0).html, new RegExp('<div class="dest"><a class="ir-mapa" href="' + mapa('PABELLÓN COLEGIO SAN NARCISO - PISTA 1, MARÍN') +
+    '" target="_blank" rel="noopener" title="Ver PABELLÓN COLEGIO SAN NARCISO - PISTA 1 en Google Maps"><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"/></svg>' +
+    '<span class="sr-only">En </span><span class="lugar">MARÍN</span><span class="sr-only"> \\(ver PABELLÓN COLEGIO SAN NARCISO - PISTA 1 en Google Maps\\)</span></a>' +
+    '<span class="cond visitante">Visitante</span></div>'));
+  const enlaceDetalle = /<p class="dl"><svg[^>]*><use href="#i-lugar"\/><\/svg><span><a href="([^"]+)"/.exec(fila(html, 0).html)[1];
+  assert.equal(/<a class="ir-mapa" href="([^"]+)"/.exec(fila(html, 0).html)[1], enlaceDetalle);
+  // En casa: el nombre corto del pabellón, también con su mapa (sin municipio: «, Galicia»).
+  assert.match(fila(html, 1).html, new RegExp('<a class="ir-mapa" href="' + mapa('ANEXO OS REMEDIOS - PISTA 1, Galicia') + '"[^>]*>[\\s\\S]*?<span class="lugar">ANEXO OS REMEDIOS</span>'));
+  // Sin pabellón no hay adónde llevar: texto, como antes.
+  assert.match(fila(html, 2).html, /<div class="dest"><svg class="hacia" [^>]*aria-hidden="true"><use href="#i-lugar"\/><\/svg><span class="sr-only">En <\/span><span class="lugar">Pabellón por confirmar<\/span><span class="cond visitante">Visitante<\/span><\/div>/);
+  assert.ok(!fila(html, 2).html.includes('ir-mapa'));
   assert.match(PLANTILLA, /<symbol id="i-lugar"/);
+});
+
+test('página: el enlace al mapa de la fila se ve como enlace, es fácil de pulsar y no abre ni cierra el detalle', () => {
+  const reglas = reglasCss(PLANTILLA).filter((r) => !r.impresion);
+  const regla = (sel) => reglas.find((r) => r.selector === sel)?.cuerpo ?? '';
+  assert.match(regla('.ir-mapa'), /min-height: 32px/);
+  assert.match(regla('.ir-mapa .lugar'), /text-decoration: underline/);
+  // Pulsarlo no toca el detalle (solo la flecha lo abre) ni se cancela: el navegador abre el mapa.
+  const pagina = abrirPagina(datos([partido({ mun: 'MARÍN' })]));
+  const panel = pagina.porId('det-0');
+  panel.hidden = true;
+  const enlace = elemento(pagina.doc, 'a');
+  enlace.classList.add('ir-mapa');
+  let cancelado = false;
+  pagina.contenido.oyentes.click({ target: enlace, preventDefault() { cancelado = true; } });
+  assert.equal(panel.hidden, true);
+  assert.equal(cancelado, false);
 });
 
 test('página: la columna de la hora en cada caso de la tabla del diseño', () => {
@@ -279,7 +314,8 @@ test('página: destino (municipio, o el pabellón en casa) y píldora local / vi
   const d = datos(partidos, { sal: SAL });
   d.equipos.push({ n: 'DOMPAVOLEI CF1', cat: 'Cadete F', ck: 'cadete', ics: '', np: 1 });
   const html = abrirPagina(d).contenido.innerHTML;
-  const destino = (i) => texto(/<div class="dest">([\s\S]*?)<\/div>/.exec(fila(html, i).html)[1]);
+  // Sin el «(ver … en Google Maps)» del enlace al mapa, que se prueba aparte.
+  const destino = (i) => texto(/<div class="dest">([\s\S]*?)<\/div>/.exec(fila(html, i).html)[1]).replace(/ \(ver .* en Google Maps\)/, '');
   // «En» es el texto para lectores de pantalla que acompaña al icono de ubicación.
   assert.equal(destino(0), 'En MARÍN Visitante');
   assert.equal(destino(1), 'En ANEXO OS REMEDIOS Local');
