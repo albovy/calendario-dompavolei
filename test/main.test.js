@@ -125,7 +125,7 @@ test('temporada y fechas', () => {
 
 test('clubs: config.json, --club por ID o por nombre, y nombres ambiguos', async () => {
   const cfg = { clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: ' Dompa ' }, { id: '', nombre: 'sin id' }, { id: 123 }] };
-  // nombre_corto (opcional): «DOMPA INFANTIL» en la página nueva.
+  // nombre_corto (opcional): «DOMPA INFANTIL» en la página.
   assert.deepEqual(await resolverClubs('', [], [], cfg), [{ id: DOMPA, nombre: 'DOMPAVOLEI', corto: 'Dompa' }, { id: '123', nombre: 'Club 123' }]);
   await assert.rejects(resolverClubs('', [], [], null), /No hay ningún club configurado en config.json/);
 
@@ -312,8 +312,7 @@ test('en agosto, sin partidos aún en la temporada nueva, se genera la anterior'
     const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
       () => principal(['--config', dir, '--salida', salida, '--historial', historial], ahora)));
     assert.deepEqual(readdirSync(salida).sort(), [
-      'calendario-dompavolei-2026-27-salidas.html', 'calendario-dompavolei-2026-27.html', 'calendario-dompavolei-2026-27.ics',
-      'calendario-dompavolei-2026-27.xlsx', 'equipos',
+      'calendario-dompavolei-2026-27.html', 'calendario-dompavolei-2026-27.ics', 'calendario-dompavolei-2026-27.xlsx', 'equipos',
     ]);
     assert.equal(eventos(join(salida, 'calendario-dompavolei-2026-27.ics')), 2);
     assert.equal(eventos(join(salida, 'equipos', 'dompavolei-if1.ics')), 2);
@@ -348,7 +347,7 @@ test('rango parcial: nombre propio, sin calendarios por equipo; horas de salida 
     const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
       () => principal(['--config', join(dir, 'config.json'), '--salida', salida, '--desde', '2026-09-26', '--hasta', '2026-09-27'], ahora)));
     const base = 'calendario-dompavolei-2026-27-20260926-20260927';
-    assert.deepEqual(readdirSync(salida).sort(), [`${base}-salidas.html`, `${base}.html`, `${base}.ics`, `${base}.xlsx`]);
+    assert.deepEqual(readdirSync(salida).sort(), [`${base}.html`, `${base}.ics`, `${base}.xlsx`]);
     assert.equal(eventos(join(salida, `${base}.ics`)), 2);
     assert.ok(consola.includes('  Calculando horas de salida desde Os Remedios...'));
     assert.ok(consola.some((l) => /^ {2}sáb 26\/09 +11:30 +en casa +Infantil F +DOMPAVOLEI IF1 - RIVAL$/.test(l)), consola.join('\n'));
@@ -370,7 +369,7 @@ function datosDePagina(ruta) {
 test('resultados: el .ics y la página llevan el marcador y la clasificación; se guarda resultados.json', async () => {
   const dir = carpetaConConfig();
   try {
-    // El escudo del club, junto a config.json: la página nueva (<nombre>-salidas.html) lo lleva dentro.
+    // El escudo del club, junto a config.json: la página lo lleva dentro.
     const png = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3]);
     writeFileSync(join(dir, 'escudo.png'), png);
     const salida = join(dir, 'salida');
@@ -397,26 +396,23 @@ test('resultados: el .ics y la página llevan el marcador y la clasificación; s
     assert.equal(JSON.parse(readFileSync(join(dir, 'resultados.json'), 'utf8')).temporada, 2026);
     assert.ok(consola.includes('  1 resultado(s) y 1 clasificación(es).'), consola.join('\n'));
 
-    // La página nueva, junto a la de siempre y con su mismo nombre: los mismos datos más el escudo.
-    assert.deepEqual(readdirSync(salida).sort(), ['cal-salidas.html', 'cal.html', 'cal.ics', 'cal.xlsx', 'equipos']);
-    const { escudo, ...datosNueva } = datosDePagina(join(salida, 'cal-salidas.html'));
-    assert.equal(escudo, `data:image/png;base64,${png.toString('base64')}`);
-    assert.deepEqual(datosNueva, datosDePagina(join(salida, 'cal.html')));
-    assert.ok(consola.some((l) => /^ {4}cal-salidas\.html +<- /.test(l)), consola.join('\n'));
+    // Una sola página, con el escudo dentro.
+    assert.deepEqual(readdirSync(salida).sort(), ['cal.html', 'cal.ics', 'cal.xlsx', 'equipos']);
+    assert.equal(datosDePagina(join(salida, 'cal.html')).escudo, `data:image/png;base64,${png.toString('base64')}`);
+    assert.ok(consola.some((l) => /^ {4}cal\.html +<- /.test(l)), consola.join('\n'));
+    assert.ok(!consola.some((l) => l.includes('-salidas')), consola.join('\n'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-// ¿Es la página de siempre (plantilla.html) o la nueva (plantilla-salidas.html)?
-function queDiseno(ruta) {
+// ¿Es la página del diseño nuevo, sin el selector de diseño ni nada del anterior?
+function esDisenoNuevo(ruta) {
   const html = readFileSync(ruta, 'utf8');
-  if (html.includes('<header class="cabecera">')) return 'antiguo';
-  if (html.includes('<header class="barra">')) return 'nuevo';
-  return '?';
+  return html.includes('<header class="barra">') && !html.includes('<header class="cabecera">') && !html.includes('selector-diseno');
 }
 
-test('la página nueva va con el nombre de la de siempre: no la pisa ni se mezcla con la de otra temporada', async () => {
+test('una sola página por temporada, con el diseño nuevo, su nombre y sus partidos', async () => {
   const dir = carpetaConConfig();
   try {
     const salida = join(dir, 'salida');
@@ -426,40 +422,79 @@ test('la página nueva va con el nombre de la de siempre: no la pisa ni se mezcl
     ];
     const generar = (...args) => enSilencio(() => conFetch(soloPartidos(filas),
       () => principal(['--config', dir, '--salida', salida, '--sin-equipos', ...args], new Date('2026-09-24T10:00:00Z'))));
-    // --nombre-base salidas: la de siempre es salidas.html y la nueva, salidas-salidas.html.
+    // Con --nombre-base, la página se llama así (y nada más: ni «-salidas» ni otra página).
     const [, consola] = await generar('--temporada', '2026-27', '--nombre-base', 'salidas');
-    assert.deepEqual(readdirSync(salida).sort(), ['salidas-salidas.html', 'salidas.html', 'salidas.ics', 'salidas.xlsx']);
-    assert.equal(queDiseno(join(salida, 'salidas.html')), 'antiguo');
-    assert.equal(queDiseno(join(salida, 'salidas-salidas.html')), 'nuevo');
-    assert.ok(consola.some((l) => /^ {4}salidas-salidas\.html +<- /.test(l)), consola.join('\n'));
-    // Dos temporadas en la misma carpeta: cada página nueva, al lado de la suya y con sus partidos.
+    assert.deepEqual(readdirSync(salida).sort(), ['salidas.html', 'salidas.ics', 'salidas.xlsx']);
+    assert.ok(esDisenoNuevo(join(salida, 'salidas.html')));
+    assert.ok(consola.some((l) => /^ {4}salidas\.html +<- /.test(l)), consola.join('\n'));
+    assert.ok(!consola.some((l) => l.includes('-salidas')), consola.join('\n'));
+    // Dos temporadas en la misma carpeta: cada una, su página con sus partidos.
     rmSync(salida, { recursive: true, force: true });
     await generar('--temporada', '2025-26');
     await generar('--temporada', '2026-27');
     const bases = ['calendario-dompavolei-2025-26', 'calendario-dompavolei-2026-27'];
-    assert.deepEqual(readdirSync(salida).filter((f) => f.endsWith('.html')).sort(), bases.flatMap((b) => [`${b}-salidas.html`, `${b}.html`]));
+    assert.deepEqual(readdirSync(salida).filter((f) => f.endsWith('.html')).sort(), bases.map((b) => `${b}.html`));
     for (const base of bases) {
-      assert.equal(queDiseno(join(salida, `${base}-salidas.html`)), 'nuevo');
-      const { escudo, ...nueva } = datosDePagina(join(salida, `${base}-salidas.html`));
-      assert.equal(escudo, '');
-      assert.deepEqual(nueva, datosDePagina(join(salida, `${base}.html`)), base);
-      // Las dos páginas enlazan en el ordenador con los .html del nombre de su .ics (ver pagina*.test.js).
-      assert.equal(nueva.ics, `${base}.ics`);
+      assert.ok(esDisenoNuevo(join(salida, `${base}.html`)), base);
+      const d = datosDePagina(join(salida, `${base}.html`));
+      assert.equal(d.escudo, '');   // no hay escudo.png junto a este config.json
+      assert.equal(d.ics, `${base}.ics`);
     }
-    assert.deepEqual(datosDePagina(join(salida, `${bases[0]}-salidas.html`)).partidos.map((p) => p.f), ['2025-10-04']);
-    assert.deepEqual(datosDePagina(join(salida, `${bases[1]}-salidas.html`)).partidos.map((p) => p.f), ['2026-10-03']);
+    assert.deepEqual(datosDePagina(join(salida, `${bases[0]}.html`)).partidos.map((p) => p.f), ['2025-10-04']);
+    assert.deepEqual(datosDePagina(join(salida, `${bases[1]}.html`)).partidos.map((p) => p.f), ['2026-10-03']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('la web publica la página nueva como salidas.html (la que enlaza «Diseño nuevo» en la web)', () => {
-  // El workflow genera con --nombre-base calendario: la página nueva sale como calendario-salidas.html y se
-  // copia a salidas.html, igual que calendario.html a index.html.
-  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'calendario.yml'), 'utf8');
+test('el nombre corto de la página: el de config.json; si no hay, el del club; con varios clubs, ninguno', async () => {
+  const filas = [fila('2026-10-03 12:00:00', 'RIVAL', 'DOMPAVOLEI CF1', '1', DOMPA)];
+  const corto = async (config) => {
+    const dir = carpetaConConfig(config);
+    try {
+      const salida = join(dir, 'salida');
+      await enSilencio(() => conFetch(soloPartidos(filas),
+        () => principal(['--config', dir, '--salida', salida, '--sin-equipos', '--nombre-base', 'cal', '--temporada', '2026-27'], new Date('2026-09-24T10:00:00Z'))));
+      return datosDePagina(join(salida, 'cal.html')).corto;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  };
+  assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: 'Dompa' }] }), 'Dompa');
+  assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }] }), 'DOMPAVOLEI');
+  assert.equal(await corto({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI', nombre_corto: 'Dompa' }, { id: '1', nombre: 'RIVAL' }] }), '');
+});
+
+// Lo que ejecuta bash en el bloque «run: |» de un paso del workflow: sus líneas sin la sangría común, como
+// las deja YAML.
+function pasoRun(workflow, nombre) {
+  const lineas = workflow.split('\n');
+  const i = lineas.findIndex((l) => l.trim() === `- name: ${nombre}`);
+  const j = lineas.findIndex((l, k) => k > i && /^\s+run: \|$/.test(l));
+  assert.ok(i >= 0 && j > i, `falta el paso «${nombre}» con run: |`);
+  const sangriaRun = lineas[j].search(/\S/);
+  const cuerpo = [];
+  for (let k = j + 1; k < lineas.length && (!lineas[k].trim() || lineas[k].search(/\S/) > sangriaRun); k++) cuerpo.push(lineas[k]);
+  const sangria = Math.min(...cuerpo.filter((l) => l.trim()).map((l) => l.search(/\S/)));
+  return cuerpo.map((l) => l.slice(sangria)).join('\n').trimEnd();
+}
+
+test('la web publica la página como index.html (y calendario.html); salidas.html, donde se probó el diseño, lleva a ella', () => {
+  // El workflow genera con --nombre-base calendario: la página sale como calendario.html y se copia a index.html.
+  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'calendario.yml'), 'utf8').replace(/\r\n/g, '\n');
   assert.match(workflow, /node src\/main\.js --salida web --nombre-base calendario /);
-  assert.match(workflow, /^[ \t]*cp web\/calendario\.html web\/index\.html\r?$/m);
-  assert.match(workflow, /^[ \t]*cp web\/calendario-salidas\.html web\/salidas\.html\r?$/m);
+  assert.doesNotMatch(workflow, /calendario-salidas/);
+  const lineas = pasoRun(workflow, 'Página de inicio').split('\n');
+  assert.equal(lineas[0], 'cp web/calendario.html web/index.html');
+  // salidas.html: una página mínima que lleva a la de inicio (el terminador del heredoc, en la columna 0).
+  assert.equal(lineas[1], "cat > web/salidas.html <<'FIN'");
+  assert.equal(lineas.at(-1), 'FIN');
+  const redireccion = lineas.slice(2, -1).join('\n');
+  assert.match(redireccion, /^<!DOCTYPE html>\n<html lang="es">/);
+  assert.match(redireccion, /<meta http-equiv="refresh" content="0; url=\.\/">/);
+  assert.match(redireccion, /<script>location\.replace\('\.\/'\);<\/script>/);
+  assert.match(redireccion, /<a href="\.\/">[^<]+<\/a>/);
+  assert.match(redireccion, /<\/html>$/);
 });
 
 test('si la federación no deja conectar a la máquina de GitHub, la publicación se relanza sola en otra (hasta 3 veces)', () => {

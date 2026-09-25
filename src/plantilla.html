@@ -6,315 +6,387 @@
 <meta name="color-scheme" content="light dark">
 <title>__TITULO__</title>
 <link rel="preconnect" href="https://fonts.bunny.net">
-<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700|big-shoulders-display:700,800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=barlow:400,500,600|barlow-condensed:500,600,700&amp;display=swap">
 <style>
+/* La página del calendario, «Salidas desde Os Remedios» (maqueta v3). Diseño:
+   docs/superpowers/specs/2026-09-25-rediseno-salidas-design.md. El color dice qué es firme (tinta), qué es
+   lo próximo o lo nuestro (aguamarina) y qué falta por confirmar (ámbar); además, cada categoría tiene el
+   suyo (punto en los chips y barra de cada partido, como en el diseño anterior), en tonos apagados que
+   no se confunden con el aguamarina ni con el ámbar. */
 :root {
-  --libre: #0A3A70;      /* zona libre alrededor de la pista */
-  --pista: #0E4C92;      /* azul de pista */
-  --balon: #FFC915;      /* amarillo balón: solo para lo más importante */
-  --balon-tinta: #2A2100;
-  --fondo: #EDF1F6;
-  --superficie: #FFFFFF;
-  --tinta: #0B1726;
-  --tinta-2: #4A5A6E;
-  --borde: #D5DDE8;
-  --visitante: #5B6B7F;
-  --foco: #0E4C92;
-  --gana: #1E7B45; --pierde: #B3261E;
-  --c-benjamin: #8E44AD; --c-alevin: #0B7361; --c-infantil: #2474C9; --c-cadete: #C45100;
-  --c-juvenil: #B0306A;  --c-junior: #1E8449; --c-senior: #34495E;   --c-otra: #8A6D00;
-  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --fondo: #ECEFF2;      /* fondo de la página y de la fila de chips; días pasados sin tarjeta */
+  --sup: #FFFFFF;        /* barra superior, pestañas, filas */
+  --borde: #D5DAE1;      /* separadores */
+  --control: #7D8796;    /* borde de botones y chips sin elegir */
+  --tinta: #121B2E;      /* texto; botón WhatsApp y píldora LOCAL rellenos */
+  --tinta2: #4E5866;     /* texto secundario; «Perdido» */
+  --marino-t: #1E335F;   /* rótulo «SALIDA» (marino del escudo) */
+  --agua: #0A7A70;       /* «PRÓXIMA SALIDA», «Ganado», foco */
+  --agua-r: #5EC4B9;     /* barra de la próxima salida, raya de la pestaña activa */
+  --ambar: #955300;      /* lo que no es firme */
+  --elegido: #121B2E; --elegido-t: #FFFFFF;
+  /* Categorías: violeta, verde, azul, coral, frambuesa, oliva, marino pizarra y topo */
+  --c-benjamin: #7A4FB5; --c-alevin: #2E7D4F; --c-infantil: #2F6FB8; --c-cadete: #C0463A;
+  --c-juvenil: #A8356E;  --c-junior: #6B7A1F; --c-senior: #3D4F72;   --c-otra: #7D6B55;
   --cond: 'Barlow Condensed', 'Arial Narrow', 'Segoe UI', sans-serif;
-  --texto: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --txt: 'Barlow', system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --fondo: #0A121D; --superficie: #111C2B; --tinta: #E6EDF5; --tinta-2: #9AABBF; --borde: #23344A; --visitante: #8C9BAE;
-    --foco: #FFC915;
-    --gana: #5BCB86; --pierde: #F2877E;
-    --c-benjamin: #C08BE0; --c-alevin: #3CC4A6; --c-infantil: #6AAAF0; --c-cadete: #F2994A;
-    --c-juvenil: #F27BB4;  --c-junior: #5BCB86; --c-senior: #A9B8CB;  --c-otra: #D9B642;
+    --fondo: #131519; --sup: #1C1F25; --borde: #2C3139; --control: #6B7380; --tinta: #E8EAEE; --tinta2: #A4ABB5;
+    --marino-t: #A9BCE3; --agua: #63D0C3; --agua-r: #5EC4B9; --ambar: #F0B65A; --elegido: #E8EAEE; --elegido-t: #131519;
+    --c-benjamin: #B79BE6; --c-alevin: #7CCB98; --c-infantil: #7FB2EE; --c-cadete: #F08A7E;
+    --c-juvenil: #E68AB8;  --c-junior: #C9CF6B; --c-senior: #A9B8D6;   --c-otra: #CDB99A;
   }
 }
+[data-cat="benjamin"] { --c: var(--c-benjamin); } [data-cat="alevin"] { --c: var(--c-alevin); }
+[data-cat="infantil"] { --c: var(--c-infantil); } [data-cat="cadete"] { --c: var(--c-cadete); }
+[data-cat="juvenil"] { --c: var(--c-juvenil); } [data-cat="junior"] { --c: var(--c-junior); }
+[data-cat="senior"] { --c: var(--c-senior); } [data-cat="otra"] { --c: var(--c-otra); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--fondo); color: var(--tinta); font: 400 16px/1.45 var(--texto); }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font: 400 16px/1.4 var(--txt); }
 a { color: inherit; }
-:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
-.cabecera :focus-visible { outline-color: var(--balon); }
+button { font: inherit; color: inherit; }
+svg { flex: none; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--agua); outline-offset: 2px; border-radius: 4px; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.solo-impresion { display: none; }
-.envoltura { max-width: 1060px; margin: 0 auto; padding: 0 16px; }
-
-/* Selector «Diseño antiguo | Diseño nuevo» (arriba del todo, para comparar con salidas.html): la misma
-   franja en las dos páginas, cada una con sus colores. Va con el scroll, así que no tapa nada. */
-.selector-diseno { background: var(--fondo); border-bottom: 1px solid var(--borde); }
-.selector-diseno .envoltura { display: flex; align-items: center; justify-content: center; min-height: 38px; }
-.opciones-diseno { display: inline-flex; border: 1.5px solid var(--borde); border-radius: 999px; background: var(--superficie); }
-.opciones-diseno a {
-  display: inline-flex; align-items: center; min-height: 28px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
-  color: var(--tinta-2); text-decoration: none; font: 600 14px/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
-}
-.opciones-diseno a[aria-current="page"] { background: var(--pista); color: #fff; }
-
-/* Cabecera: una pista vista desde arriba (solo el marco: la red y las líneas de ataque cruzaban el texto) */
-.cabecera { background: var(--libre); color: #fff; padding: 22px 0 26px; }
-.pista {
-  position: relative; background: var(--pista); border: 2px solid rgba(255,255,255,.55);
-  padding: 26px 28px 24px; overflow: hidden;
-}
-.antetitulo { font: 600 .95rem/1 var(--cond); letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin: 0 0 10px; }
-h1 { font: 800 clamp(2.1rem, 6.4vw, 4.4rem)/.92 var(--display); letter-spacing: .01em; text-transform: uppercase; margin: 0; max-width: 16ch; }
-.resumen { margin: 14px 0 0; font: 500 1.05rem/1.4 var(--cond); letter-spacing: .02em; }
-.resumen strong { font-weight: 700; }
-.acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-.boton {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border-radius: 999px;
-  font: 600 1rem/1 var(--cond); letter-spacing: .04em; text-transform: uppercase; text-decoration: none;
-  border: 2px solid rgba(255,255,255,.75); color: #fff; background: transparent; cursor: pointer;
-}
-.boton:hover { background: rgba(255,255,255,.1); }
-.boton.principal { background: var(--balon); border-color: var(--balon); color: var(--balon-tinta); }
-.boton.principal:hover { background: #FFD84D; }
-.ayuda-cal { margin-top: 14px; font-size: .92rem; max-width: 72ch; }
-.ayuda-cal summary { cursor: pointer; font: 600 .95rem/1.2 var(--cond); letter-spacing: .04em; text-transform: uppercase; opacity: .9; }
-.ayuda-cal ul { margin: 8px 0 0; padding-left: 20px; }
-.ayuda-cal li { margin: 5px 0; }
-.ayuda-cal code { font-size: .85em; word-break: break-all; background: rgba(255,255,255,.12); padding: 1px 4px; border-radius: 3px; }
-
-/* Filtros */
-.filtros { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); padding: 10px 0 12px; }
-.fila-filtros { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
-.pestanas { display: flex; gap: 4px; margin-bottom: 4px; border-bottom: 1.5px solid var(--borde); }
-.pestanas button {
-  margin-bottom: -1.5px; padding: 8px 14px 9px; border: 0; border-bottom: 3px solid transparent; background: transparent;
-  color: var(--tinta-2); cursor: pointer; font: 700 1.05rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
-}
-.pestanas button[aria-pressed="true"] { color: var(--tinta); border-bottom-color: var(--foco); }
-.pestanas button:focus-visible { outline-offset: -3px; }
-.equipos-chips { display: flex; gap: 8px; overflow-x: auto; padding: 6px 6px 10px; margin: 0 -6px; scrollbar-width: thin; }
-.chip {
-  --c: var(--c-otra); flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 12px;
-  border-radius: 999px; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
-  font: 600 .95rem/1 var(--cond); letter-spacing: .02em; cursor: pointer; white-space: nowrap;
-}
-.chip::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
-.chip[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, var(--superficie)); }
-.chip.todos::before { display: none; }
-.chip.todos[aria-pressed="true"] { background: var(--pista); border-color: var(--pista); color: #fff; }
-.chip .cat-chip { font-weight: 500; color: var(--tinta-2); }
-.segmentado { display: inline-flex; border: 1.5px solid var(--borde); border-radius: 999px; overflow: hidden; background: var(--superficie); }
-.segmentado button {
-  border: 0; background: transparent; color: var(--tinta-2); padding: 0 14px; min-height: 34px; cursor: pointer;
-  font: 600 .92rem/1 var(--cond); letter-spacing: .05em; text-transform: uppercase;
-}
-.segmentado button[aria-pressed="true"] { background: var(--pista); color: #fff; }
-.segmentado button:focus-visible { outline-offset: -3px; }
 .oculto { display: none !important; }
+.solo-impresion { display: none; }
+.iconos { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* En el móvil, a todo el ancho con 16 px a los lados; en el escritorio, centrado a 720 px. */
+.ancho { max-width: 752px; margin: 0 auto; padding: 0 16px; }
 
-/* Lista */
-main { padding: 8px 0 40px; }
-.dia { margin-top: 26px; }
-.dia-cabecera { display: flex; align-items: baseline; gap: 12px; margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--tinta); font: inherit; }
-.dia-num { font: 800 2.6rem/.8 var(--display); }
-.dia-nombre { font: 700 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; }
-.dia-mes { font: 500 1.25rem/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; color: var(--tinta-2); }
-.dia-cuenta { margin-left: auto; font: 500 .95rem/1 var(--cond); color: var(--tinta-2); letter-spacing: .03em; }
-.dia.pasado .dia-cabecera { border-bottom-color: var(--borde); }
-.dia.pasado .dia-num, .dia.pasado .dia-nombre { color: var(--tinta-2); }
-.dia.pasado .partido { background: transparent; }
+/* Barra superior (se va con el scroll) */
+.barra { background: var(--sup); border-bottom: 1px solid var(--borde); }
+.barra .ancho { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+.escudo { flex: none; width: 40px; height: 40px; border-radius: 6px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+.escudo img { width: 36px; height: 36px; object-fit: contain; }
+.marca { min-width: 0; }
+.marca h1 { margin: 0; font: 700 21px/1 var(--cond); letter-spacing: .02em; overflow-wrap: anywhere; }
+.marca p { margin: 3px 0 0; font: 500 14px/1 var(--txt); color: var(--tinta2); }
+.btn-cal {
+  margin-left: auto; flex: none; min-height: 44px; padding: 0 14px; border: 1.5px solid var(--tinta); border-radius: 10px;
+  background: none; color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .03em; cursor: pointer;
+}
+.btn-cal[aria-expanded="true"] { background: var(--elegido); border-color: var(--elegido); color: var(--elegido-t); }
 
-.partido {
-  --c: var(--c-otra); display: grid; grid-template-columns: 92px 1fr auto; gap: 4px 16px; align-items: start;
-  padding: 14px 14px 14px 12px; border-bottom: 1px solid var(--borde); border-left: 5px solid var(--c); background: var(--superficie);
+/* Panel «+ Calendario»: suscribirse, .ics, Excel, imprimir y la ayuda */
+.panel-cal { background: var(--sup); border-bottom: 1px solid var(--borde); }
+.panel-cal .ancho { padding-top: 14px; padding-bottom: 16px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.boton {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 10px;
+  border: 1.5px solid var(--control); background: var(--sup); color: var(--tinta); text-decoration: none; cursor: pointer;
+  font: 600 16px/1 var(--cond); letter-spacing: .03em;
 }
-.hora { font: 700 1.55rem/1 var(--cond); font-variant-numeric: tabular-nums; letter-spacing: .01em; padding-top: 2px; }
-.hora small { display: block; margin-top: 4px; font: 600 .78rem/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--c-cadete); }
-.hora.pendiente { font-size: .95rem; line-height: 1.1; text-transform: uppercase; letter-spacing: .05em; color: var(--c-cadete); padding-top: 4px; }
-.hora .etq { display: block; margin-bottom: 4px; font: 700 .72rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); }
-.hora .etq.bus { color: var(--pista); }
-@media (prefers-color-scheme: dark) { .hora .etq.bus { color: var(--balon); } }
-.hora small.partido-h { color: var(--tinta-2); font-weight: 600; letter-spacing: .03em; text-transform: none; font-size: .85rem; }
-.viaje { margin-top: 5px; font: 600 .95rem/1.3 var(--cond); letter-spacing: .02em; }
-.boton-bus {
-  display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; min-height: 34px; padding: 0 14px; border-radius: 999px;
-  background: var(--pista); color: #fff; text-decoration: none; font: 700 .88rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+.boton.principal { background: var(--elegido); border-color: var(--elegido); color: var(--elegido-t); }
+.ayuda-cal { margin-top: 12px; font-size: 15px; color: var(--tinta2); }
+.ayuda-cal summary { cursor: pointer; padding: 6px 0; color: var(--tinta); font: 600 16px/1.2 var(--cond); letter-spacing: .03em; }
+.ayuda-cal ul { margin: 6px 0 0; padding-left: 20px; }
+.ayuda-cal li { margin: 5px 0; }
+.ayuda-cal b { color: var(--tinta); }
+.ayuda-cal code { font-size: .88em; word-break: break-all; background: var(--fondo); padding: 1px 4px; border-radius: 3px; }
+
+/* Pestañas */
+.pestanas { background: var(--sup); border-bottom: 1px solid var(--borde); }
+.pestanas .ancho { display: flex; gap: 24px; }
+.pestanas button {
+  margin-bottom: -1px; padding: 14px 0 11px; border: 0; border-bottom: 3px solid transparent; background: none; cursor: pointer;
+  color: var(--tinta2); font: 600 17px/1 var(--cond); letter-spacing: .03em;
 }
-.boton-bus:hover { background: var(--libre); }
-.acciones-partido { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
-.acciones-partido .boton-bus { margin-top: 0; }
-.boton-wa {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border-radius: 999px;
-  border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta); text-decoration: none; cursor: pointer;
-  font: 700 .88rem/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+.pestanas button[aria-pressed="true"] { color: var(--tinta); border-bottom-color: var(--agua-r); }
+.pestanas button:focus-visible { outline-offset: -3px; }
+
+/* Chips de equipos y «Filtros» (fila fija arriba) */
+.fijos { position: sticky; top: 0; z-index: 5; background: var(--fondo); border-bottom: 1px solid var(--borde); }
+.fila-chips { display: flex; align-items: center; gap: 8px; padding: 10px 0; }
+/* position: relative para que la categoría de cada chip para lectores de pantalla (.sr-only, absolute) se
+   quede dentro de la fila y la recorte: si no, se coloca respecto a .fijos y, con muchos equipos, alarga
+   la página de lado. */
+.chips { position: relative; flex: 1 1 auto; min-width: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 5px; margin: -5px; }
+/* Si no caben todos los chips, se funden en el borde derecho: se ve que la fila sigue y se puede deslizar.
+   El hueco de la derecha deja que el último chip salga entero del fundido al llegar al final. */
+.chips { padding-right: 28px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--control);
+  background: var(--sup); color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .02em; cursor: pointer; white-space: nowrap;
 }
-.boton-wa:hover { border-color: var(--tinta-2); }
-.boton-wa.wa { border-color: #25D366; }
-.categoria { font: 700 .92rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--c); }
-.equipos { margin-top: 5px; font: 600 1.14rem/1.25 var(--cond); letter-spacing: .01em; }
-.equipos .vs { font-weight: 500; color: var(--tinta-2); margin: 0 6px; text-transform: lowercase; }
-.equipos .rival { font-weight: 500; color: var(--tinta-2); }
-.detalle { margin-top: 5px; font-size: .9rem; color: var(--tinta-2); }
-.detalle a { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 2px; }
-.condicion {
-  align-self: center; font: 700 .82rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
-  padding: 6px 10px; border-radius: 999px; border: 1.5px solid var(--visitante); color: var(--visitante); white-space: nowrap;
+.chip[aria-pressed="true"] { background: var(--elegido); border-color: var(--elegido); color: var(--elegido-t); }
+.chip[data-cat] { display: inline-flex; align-items: center; gap: 7px; }
+.punto { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.chip .cat-chip { font-weight: 500; color: var(--tinta2); }
+.chip[aria-pressed="true"] .cat-chip { color: var(--elegido-t); }
+.btn-filtros {
+  flex: none; margin-left: auto; min-height: 44px; padding: 0 4px; border: 0; background: none; cursor: pointer;
+  color: var(--tinta); font: 600 16px/1 var(--cond); letter-spacing: .02em; white-space: nowrap;
 }
-.condicion.local, .condicion.derbi { background: var(--pista); border-color: var(--pista); color: #fff; }
-.proximo-marca {
-  display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; padding: 3px 8px 3px 5px; border-radius: 999px;
-  background: var(--balon); color: var(--balon-tinta); font: 700 .75rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; vertical-align: 2px;
+.btn-filtros[aria-expanded="true"] { text-decoration: underline; text-decoration-color: var(--agua-r); text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.panel-filtros { display: flex; flex-wrap: wrap; gap: 10px 20px; padding: 0 0 12px; }
+.grupo-t { display: block; margin-bottom: 6px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta2); }
+.seg { display: inline-flex; border: 1.5px solid var(--control); border-radius: 8px; overflow: hidden; background: var(--sup); }
+.seg button {
+  min-height: 36px; padding: 0 12px; border: 0; background: none; cursor: pointer; color: var(--tinta);
+  font: 600 14px/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
 }
-.proximo-marca::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0 22%, transparent 23%), #E0A800; }
-.resultado { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 5px; font: 600 1rem/1.3 var(--cond); letter-spacing: .02em; }
-.resultado b { font-weight: 700; font-variant-numeric: tabular-nums; }
-.resultado.gana b { color: var(--gana); }
-.resultado.pierde b { color: var(--pierde); }
-.resultado .sets { color: var(--tinta-2); font-weight: 500; font-variant-numeric: tabular-nums; }
+.seg button + button { border-left: 1.5px solid var(--borde); }
+.seg button[aria-pressed="true"] { background: var(--elegido); color: var(--elegido-t); }
+.seg button:focus-visible { outline-offset: -3px; }
+
+/* Cabecera de la sección: «Salidas desde Os Remedios» + Lista/Mes */
+main { display: block; padding-bottom: 32px; }
+.tab-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0 4px; }
+.tab-h h2 { margin: 0; font: 600 14px/1.2 var(--cond); letter-spacing: .12em; text-transform: uppercase; color: var(--tinta2); }
+
+/* Días */
+.dia { margin-top: 18px; }
+.dia-cab {
+  margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font: 600 16px/1 var(--cond); letter-spacing: .08em; text-transform: uppercase;
+}
+.dia-cab .nota { font: 500 15px/1 var(--txt); letter-spacing: 0; text-transform: none; color: var(--tinta2); white-space: nowrap; }
+.dia-cab .nota.amb { color: var(--ambar); }
+.dia.pasado .dia-cab { color: var(--tinta2); }
+
+/* Una fila por partido: la hora a la izquierda, el partido a la derecha, los botones debajo */
+.fila {
+  display: grid; grid-template-columns: 86px minmax(0, 1fr) auto; gap: 0 12px; align-items: start;
+  padding: 13px 12px; background: var(--sup); border-bottom: 1px solid var(--borde);
+  box-shadow: inset 4px 0 0 var(--c);    /* barra del color de la categoría */
+}
+.fila.prox { background: color-mix(in srgb, var(--agua-r) 10%, var(--sup)); }
+.fila.jugada { background: transparent; }
+.hora .etq { display: block; font: 700 12px/1 var(--cond); letter-spacing: .12em; text-transform: uppercase; color: var(--marino-t); }
+.hora .etq.gris { color: var(--tinta2); }
+.hora .h { display: block; margin-top: 4px; font: 700 30px/1 var(--cond); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.hora .h.gris { color: var(--tinta2); }
+.hora .ph { display: block; margin-top: 5px; font: 500 14px/1.2 var(--txt); color: var(--tinta2); }
+.hora .amb { color: var(--ambar); }
+.hora .pend { display: block; margin-top: 4px; font: 600 16px/1.1 var(--cond); letter-spacing: .06em; text-transform: uppercase; color: var(--ambar); }
+.hora .pend:first-child { margin-top: 0; }
+.info { min-width: 0; }
+/* Los dos equipos, uno debajo del otro como en un marcador: el nuestro en negrita con el punto de su color;
+   el rival en gris, con un hueco del mismo ancho; si ya se jugó, los sets de cada uno a la derecha. */
+.eqs { display: grid; gap: 3px; }
+.eq { display: flex; align-items: baseline; gap: 7px; min-width: 0; font: 500 17px/1.2 var(--cond); letter-spacing: .02em; color: var(--tinta2); }
+.eq.nuestro { font-weight: 700; color: var(--tinta); }
+.eq .punto { align-self: center; }
+.eq .punto.hueco { background: none; }
+.eq .nom { min-width: 0; overflow-wrap: anywhere; }
+.eq .tanteo { margin-left: auto; padding-left: 8px; font: 700 18px/1 var(--cond); font-variant-numeric: tabular-nums; }
+/* «vs» entre los dos equipos, en la columna de los nombres (el hueco ocupa lo que el punto). */
+.vs { display: flex; align-items: center; gap: 7px; font: 600 12px/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta2); }
+.vs .punto.hueco { background: none; }
+/* Debajo, adónde se va (con su icono) y la píldora local / visitante. */
+.dest { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
+.dest .hacia { flex: none; color: var(--tinta2); }
+.lugar { min-width: 0; margin-right: 4px; font: 600 15px/1.2 var(--cond); letter-spacing: .05em; text-transform: uppercase; color: var(--tinta2); overflow-wrap: anywhere; }
+.proxm { display: block; margin: 0 0 5px; font: 600 13px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--agua); }
+.cond {
+  padding: 5px 8px; border-radius: 999px; border: 1.5px solid var(--tinta2); color: var(--tinta2); white-space: nowrap;
+  font: 700 12px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
+}
+.cond.local, .cond.derbi { background: var(--tinta); border-color: var(--tinta); color: var(--sup); }
+/* «Ganado 3-0» nunca se parte por el guion: si los sets no caben al lado, bajan a la línea siguiente. */
+.res { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font: 700 17px/1.2 var(--cond); font-variant-numeric: tabular-nums; }
+.res.gana { color: var(--agua); }
+.res.pierde, .res.derbi { color: var(--tinta2); }
+.res small { font: 500 14px/1.2 var(--txt); color: var(--tinta2); }
+/* La flecha ocupa 8 px en la fila (como el «›» de la maqueta) pero se puede tocar en 32 x 44 px: el resto
+   del botón cae sobre el hueco entre columnas y el margen de la fila. */
+.chev {
+  width: 32px; height: 44px; margin: -13px -12px -13px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: 8px; background: none; color: var(--tinta2); cursor: pointer;
+}
+.chev svg { transition: transform .15s; }
+.chev[aria-expanded="true"] svg { transform: rotate(90deg); }
+/* Botones pequeños, siempre a la vista, en una línea bajo la fila */
+.acc { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.boton-wa, .boton-bus {
+  display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 10px; white-space: nowrap; cursor: pointer;
+  border-radius: 999px; border: 1.5px solid var(--control); background: var(--sup); color: var(--tinta); text-decoration: none;
+  font: 600 14px/1 var(--cond); letter-spacing: .02em;
+}
+.boton-wa.wa { background: var(--tinta); border-color: var(--tinta); color: var(--sup); }
+/* Detalle desplegable */
+.det { grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde); font: 400 15px/1.4 var(--txt); color: var(--tinta2); }
+.det p { margin: 0 0 4px; }
+.det .dl { display: flex; align-items: flex-start; gap: 8px; }
+.det .dl svg { flex: none; margin-top: 2px; color: var(--tinta2); }
+.det a { color: var(--tinta); font-weight: 500; text-underline-offset: 2px; }
 
 /* Clasificación */
-.clas { --c: var(--c-otra); margin-top: 26px; }
-.clas-titulo { margin: 0; padding-bottom: 6px; border-bottom: 2px solid var(--c); font: 700 1.5rem/1 var(--cond); letter-spacing: .03em; text-transform: uppercase; }
-.clas-titulo span { margin-left: 6px; font-size: 1rem; font-weight: 500; letter-spacing: .06em; color: var(--tinta-2); }
-.clas-grupo { margin: 6px 0 8px; font-size: .9rem; color: var(--tinta-2); }
+.clas { margin-top: 18px; }
+.clas-titulo { margin: 0; display: flex; align-items: baseline; gap: 8px; font: 700 20px/1.1 var(--cond); letter-spacing: .03em; }
+.clas-titulo span { font: 500 15px/1 var(--txt); letter-spacing: 0; color: var(--tinta2); }
+.clas-titulo .punto { align-self: center; }
+.clas-grupo { margin: 4px 0 8px; font-size: 14px; color: var(--tinta2); }
 .tabla-envoltura { overflow-x: auto; }
-.tabla-clas { width: 100%; border-collapse: collapse; background: var(--superficie); font: 500 1rem/1.2 var(--cond); font-variant-numeric: tabular-nums; }
-.tabla-clas th { padding: 8px 6px; border-bottom: 1px solid var(--borde); font: 700 .78rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); text-align: center; }
-.tabla-clas td { padding: 8px 6px; border-bottom: 1px solid var(--borde); text-align: center; }
+.tabla-clas { width: 100%; border-collapse: collapse; background: var(--sup); font: 500 16px/1.2 var(--cond); font-variant-numeric: tabular-nums; }
+.tabla-clas th {
+  padding: 8px 6px; border-bottom: 1px solid var(--borde); text-align: center; color: var(--tinta2);
+  font: 700 12px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
+}
+.tabla-clas td { padding: 9px 6px; border-bottom: 1px solid var(--borde); text-align: center; }
 .tabla-clas th.eq, .tabla-clas td.eq { width: 100%; text-align: left; }
 .tabla-clas td.eq { font-weight: 600; }
 .tabla-clas td.pts { font-weight: 700; }
-.tabla-clas tr.nuestro td { background: color-mix(in srgb, var(--c) 14%, var(--superficie)); font-weight: 700; }
-.tabla-clas tr.nuestro td:first-child { box-shadow: inset 4px 0 0 var(--c); }
-.clas-pie { margin: 6px 0 0; font-size: .85rem; color: var(--tinta-2); }
+.tabla-clas tr.nuestro td { background: color-mix(in srgb, var(--agua-r) 16%, var(--sup)); font-weight: 700; }
+.tabla-clas tr.nuestro td:first-child { box-shadow: inset 4px 0 0 var(--agua-r); }
+.clas-pie { margin: 6px 0 0; font-size: 14px; color: var(--tinta2); }
 
 /* Mes */
-.mes-barra { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 10px; }
-.mes-titulo { font: 800 2rem/1 var(--display); text-transform: uppercase; margin: 0; }
+.mes-barra { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 10px; }
+.mes-titulo { margin: 0; font: 700 20px/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; }
 .mes-nav { display: flex; gap: 8px; }
 .mes-nav button {
-  width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--borde); background: var(--superficie); color: var(--tinta);
-  font: 700 1.2rem/1 var(--cond); cursor: pointer;
+  width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid var(--control); background: var(--sup); color: var(--tinta);
+  font: 700 20px/1 var(--cond); cursor: pointer;
 }
 .mes-nav button:disabled { opacity: .35; cursor: default; }
 .rejilla { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--borde); border-left: 1px solid var(--borde); }
-.rejilla .sem { font: 700 .8rem/1 var(--cond); letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-2); padding: 8px 6px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); }
-.celda { min-height: 104px; padding: 6px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); background: var(--superficie); }
+.rejilla .sem {
+  padding: 8px 4px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); color: var(--tinta2);
+  font: 700 12px/1 var(--cond); letter-spacing: .1em; text-transform: uppercase;
+}
+.celda { min-height: 76px; padding: 4px; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); background: var(--sup); min-width: 0; }
 .celda.fuera-mes { background: transparent; }
 .celda.con-partidos { cursor: pointer; }
-.celda.con-partidos:hover { background: color-mix(in srgb, var(--pista) 7%, var(--superficie)); }
-.celda .num { font: 700 1.05rem/1 var(--cond); }
-.celda.hoy .num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--balon); color: var(--balon-tinta); }
-.mini { --c: var(--c-otra); display: block; margin-top: 4px; padding: 2px 5px; border-left: 3px solid var(--c); font: 600 .8rem/1.2 var(--cond); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini b { font-variant-numeric: tabular-nums; }
-.mas { display: block; margin-top: 4px; font: 600 .78rem/1 var(--cond); color: var(--tinta-2); }
-.puntos { display: none; gap: 3px; flex-wrap: wrap; margin-top: 6px; }
-.puntos i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.celda.con-partidos:hover { background: color-mix(in srgb, var(--agua-r) 12%, var(--sup)); }
+.celda .num { display: inline-grid; place-items: center; min-width: 24px; height: 24px; font: 700 15px/1 var(--cond); }
+.celda.fuera-mes .num { color: var(--tinta2); }
+.celda.hoy .num { border-radius: 50%; box-shadow: 0 0 0 2px var(--agua-r); }
+.mini { display: flex; flex-wrap: wrap; column-gap: 4px; margin-top: 3px; padding-left: 4px; border-left: 3px solid var(--c, transparent); font: 700 13px/1.15 var(--cond); overflow-wrap: anywhere; }
+.mini .mh { font-weight: 500; color: var(--tinta2); font-variant-numeric: tabular-nums; }
+.mas { display: block; margin-top: 3px; font: 600 12px/1 var(--cond); color: var(--tinta2); }
 
-.vacio { margin: 40px 0; padding: 28px; border: 2px dashed var(--borde); text-align: center; color: var(--tinta-2); }
-.vacio button { margin-top: 12px; }
-.boton.claro { border-color: var(--pista); color: var(--pista); }
-@media (prefers-color-scheme: dark) { .boton.claro { border-color: var(--tinta-2); color: var(--tinta); } }
+/* Vacíos */
+.vacio { margin: 24px 0; padding: 24px 16px; border: 1.5px dashed var(--control); border-radius: 12px; text-align: center; color: var(--tinta2); }
+.vacio p { margin: 0; }
+.vacio .boton { margin-top: 12px; }
 
-footer { border-top: 1px solid var(--borde); padding: 22px 0 40px; font-size: .9rem; color: var(--tinta-2); }
-footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tinta); margin: 0 0 10px; }
+/* Pie */
+footer { border-top: 1px solid var(--borde); padding: 22px 0 40px; font-size: 14px; color: var(--tinta2); }
+footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12em; text-transform: uppercase; color: var(--tinta2); }
 .lista-ics { columns: 2 300px; padding: 0; margin: 0 0 20px; list-style: none; }
 .lista-ics li { break-inside: avoid; padding: 4px 0 6px; }
 .lista-ics b { color: var(--tinta); font-weight: 600; }
 .lista-ics .sin { font-style: italic; }
 
-[data-cat="benjamin"] { --c: var(--c-benjamin); } [data-cat="alevin"] { --c: var(--c-alevin); }
-[data-cat="infantil"] { --c: var(--c-infantil); } [data-cat="cadete"] { --c: var(--c-cadete); }
-[data-cat="juvenil"]  { --c: var(--c-juvenil); }  [data-cat="junior"] { --c: var(--c-junior); }
-[data-cat="senior"]   { --c: var(--c-senior); }   [data-cat="otra"]   { --c: var(--c-otra); }
-
-@media (max-width: 640px) {
-  .filtros { position: static; }
-  .pista { padding: 20px 18px; }
-  .partido { grid-template-columns: 64px 1fr; }
-  .hora { font-size: 1.3rem; }
-  .condicion { grid-column: 2; justify-self: start; margin-top: 6px; }
-  .celda { min-height: 58px; padding: 4px; }
-  .mini, .mas { display: none; }
-  .puntos { display: flex; }
-  .dia-num { font-size: 2.2rem; }
-}
 @media print {
-  .selector-diseno, .filtros, .acciones, .ayuda-cal, .mes-nav, footer .lista-ics, footer h2, .boton-bus, .acciones-partido { display: none !important; }
-  .solo-impresion { display: block; margin: 6px 0 0; font-weight: 600; }
-  body { background: #fff; color: #000; font-size: 12px; }
-  .cabecera { background: none; color: #000; padding: 0; }
-  .pista { background: none; border: 0; padding: 0 0 8px; }
-  .partido { break-inside: avoid; padding: 6px 8px; }
-  .dia { break-inside: avoid-page; margin-top: 14px; }
-  .condicion.local, .condicion.derbi { background: none; color: #000; border-color: #000; }
+  :root {
+    --fondo: #fff; --sup: #fff; --borde: #bbb; --control: #666; --tinta: #000; --tinta2: #333; --marino-t: #000;
+    --agua: #000; --agua-r: #666; --ambar: #000; --elegido: #000; --elegido-t: #fff;
+  }
+  .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
+  .det[hidden] { display: block !important; }
+  .solo-impresion { display: block; margin-top: 4px; font-weight: 600; color: #000; }
+  body { font-size: 12px; }
+  .barra .ancho { min-height: 0; padding-top: 4px; padding-bottom: 4px; }
+  .fila { break-inside: avoid; padding: 6px 8px; }
+  .fila.prox { background: none; }
+  .dia { margin-top: 12px; }
+  .dia-cab { break-after: avoid; }
+  .cond.local, .cond.derbi { background: none; color: #000; border-color: #000; }
 }
 </style>
 </head>
 <body>
-<nav class="selector-diseno" aria-label="Diseño de la página">
-  <div class="envoltura">
-    <div class="opciones-diseno"><a id="diseno-antiguo" href="index.html" aria-current="page">Diseño antiguo</a><a id="diseno-nuevo" href="salidas.html">Diseño nuevo</a></div>
-  </div>
-</nav>
-<header class="cabecera">
-  <div class="envoltura">
-    <div class="pista">
-      <p class="antetitulo" id="antetitulo">Voleibol</p>
+<svg class="iconos" aria-hidden="true" focusable="false">
+  <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></symbol>
+  <symbol id="i-copia" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></symbol>
+  <symbol id="i-lugar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="2"/><path d="M4 11h16M8 18v2M16 18v2M7.5 14.5h.01M16.5 14.5h.01"/></symbol>
+  <symbol id="i-calor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a6 6 0 0 0 6-6c0-2.5-1.5-4.5-3-6-.5 2-1.5 3-3 3.5.5-3-1-6.5-4-8.5 0 4-4 6.5-4 11a6 6 0 0 0 6 6Z"/><path d="M12 21a2.5 2.5 0 0 1-2.5-2.5c0-1.5 1.5-2.5 2.5-4 1 1.5 2.5 2.5 2.5 4A2.5 2.5 0 0 1 12 21Z"/></symbol>
+  <symbol id="i-casa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-copa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></symbol>
+</svg>
+
+<header class="barra">
+  <div class="ancho">
+    <span class="escudo oculto" id="escudo"></span>
+    <div class="marca">
       <h1 id="club"></h1>
-      <p class="resumen" id="resumen"></p>
+      <p id="temporada"></p>
       <p class="solo-impresion" id="filtro-imp"></p>
-      <div class="acciones">
-        <a class="boton principal oculto" id="enlace-suscribir" href="#">Suscribirse al calendario</a>
-        <a class="boton principal" id="enlace-ics" href="#">Añadir al calendario</a>
-        <a class="boton" id="enlace-xlsx" href="#">Abrir en Excel</a>
-        <button class="boton" type="button" id="imprimir">Imprimir</button>
-      </div>
-      <details class="ayuda-cal" id="ayuda">
-        <summary>Cómo añadirlo al móvil o a Google Calendar</summary>
-        <ul class="oculto" id="ayuda-pub">
-          <li><b>iPhone, iPad o Mac:</b> toca «Suscribirse al calendario» y acepta. Los cambios llegan solos.</li>
-          <li><b>Android o Google Calendar:</b> desde un <b>ordenador</b>, con la cuenta de Google del móvil, abre <a id="enlace-google" href="#" target="_blank" rel="noopener">este enlace de Google Calendar</a> y pulsa «Añadir». Aparecerá también en el móvil. Google vuelve a leer el calendario cuando quiere (puede tardar 12 horas o más): para cambios de última hora, mira esta página.</li>
-          <li><b>Outlook:</b> Agregar calendario › Desde Internet, y pega esta dirección: <code id="url-https"></code></li>
-          <li>Suscríbete una sola vez: no hace falta repetirlo. Si en vez de suscribirte descargas el .ics y lo importas, es una copia fija que no se actualiza.</li>
-          <li>Para un solo equipo, usa sus enlaces al final de la página.</li>
-        </ul>
-        <ul id="ayuda-local">
-          <li><b>Google Calendar:</b> en el ordenador, Configuración › Importar y exportar › Importar, y elige el archivo <span class="nombre-ics"></span>. Mejor en un calendario nuevo solo para el voley.</li>
-          <li><b>iPhone:</b> envíate el archivo .ics por correo o WhatsApp y ábrelo; toca «Añadir todo».</li>
-          <li><b>Outlook:</b> haz doble clic en el archivo .ics.</li>
-          <li>Importar crea una copia fija: si la federación cambia algo, borra ese calendario e impórtalo otra vez.</li>
-        </ul>
-      </details>
     </div>
+    <button type="button" class="btn-cal" id="btn-cal" aria-expanded="false" aria-controls="panel-cal">+ Calendario</button>
   </div>
 </header>
 
-<nav class="filtros" aria-label="Filtros">
-  <div class="envoltura">
-    <div class="pestanas" id="pestanas" role="group" aria-label="Sección">
-      <button type="button" data-seccion="calendario">Calendario</button><button type="button" data-seccion="clas">Clasificación</button>
+<div class="panel-cal" id="panel-cal" hidden>
+  <div class="ancho">
+    <div class="acciones">
+      <a class="boton principal oculto" id="enlace-suscribir" href="#">Suscribirse al calendario</a>
+      <a class="boton principal" id="enlace-ics" href="#">Añadir al calendario</a>
+      <a class="boton" id="enlace-xlsx" href="#">Abrir en Excel</a>
+      <button class="boton" type="button" id="imprimir">Imprimir</button>
     </div>
-    <div class="equipos-chips" id="chips" role="group" aria-label="Equipos"></div>
-    <div class="fila-filtros">
-      <div class="segmentado" role="group" aria-label="Vista" id="seg-vista">
-        <button type="button" data-vista="lista">Lista</button><button type="button" data-vista="mes">Mes</button>
+    <details class="ayuda-cal" id="ayuda">
+      <summary>Cómo añadirlo al móvil o a Google Calendar</summary>
+      <ul class="oculto" id="ayuda-pub">
+        <li><b>iPhone, iPad o Mac:</b> toca «Suscribirse al calendario» y acepta. Los cambios llegan solos.</li>
+        <li><b>Android o Google Calendar:</b> desde un <b>ordenador</b>, con la cuenta de Google del móvil, abre <a id="enlace-google" href="#" target="_blank" rel="noopener">este enlace de Google Calendar</a> y pulsa «Añadir». Aparecerá también en el móvil. Google vuelve a leer el calendario cuando quiere (puede tardar 12 horas o más): para cambios de última hora, mira esta página.</li>
+        <li><b>Outlook:</b> Agregar calendario › Desde Internet, y pega esta dirección: <code id="url-https"></code></li>
+        <li>Suscríbete una sola vez: no hace falta repetirlo. Si en vez de suscribirte descargas el .ics y lo importas, es una copia fija que no se actualiza.</li>
+        <li>Para un solo equipo, usa sus enlaces al final de la página.</li>
+      </ul>
+      <ul id="ayuda-local">
+        <li><b>Google Calendar:</b> en el ordenador, Configuración › Importar y exportar › Importar, y elige el archivo <span class="nombre-ics"></span>. Mejor en un calendario nuevo solo para el voley.</li>
+        <li><b>iPhone:</b> envíate el archivo .ics por correo o WhatsApp y ábrelo; toca «Añadir todo».</li>
+        <li><b>Outlook:</b> haz doble clic en el archivo .ics.</li>
+        <li>Importar crea una copia fija: si la federación cambia algo, borra ese calendario e impórtalo otra vez.</li>
+      </ul>
+    </details>
+  </div>
+</div>
+
+<div class="pestanas" id="pestanas">
+  <div class="ancho" role="group" aria-label="Sección">
+    <button type="button" data-seccion="calendario">Calendario</button><button type="button" data-seccion="clas">Clasificación</button>
+  </div>
+</div>
+
+<nav class="fijos" id="fijos" aria-label="Filtros">
+  <div class="ancho">
+    <div class="fila-chips">
+      <div class="chips" id="chips" role="group" aria-label="Equipos"></div>
+      <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="panel-filtros">Filtros</button>
+    </div>
+    <div class="panel-filtros" id="panel-filtros" hidden>
+      <div class="grupo" id="grupo-periodo">
+        <span class="grupo-t" id="t-periodo">Periodo</span>
+        <div class="seg" role="group" aria-labelledby="t-periodo">
+          <button type="button" data-per="proximos">Próximos</button><button type="button" data-per="todo">Toda la temporada</button>
+        </div>
       </div>
-      <div class="segmentado" role="group" aria-label="Periodo" id="seg-periodo">
-        <button type="button" data-per="proximos">Próximos</button><button type="button" data-per="todo">Toda la temporada</button>
-      </div>
-      <div class="segmentado" role="group" aria-label="Local o visitante" id="seg-cond">
-        <button type="button" data-cond="todos">Todos</button><button type="button" data-cond="local">Local</button><button type="button" data-cond="visitante">Visitante</button>
+      <div class="grupo" id="grupo-lado">
+        <span class="grupo-t" id="t-lado">Local o visitante</span>
+        <div class="seg" role="group" aria-labelledby="t-lado">
+          <button type="button" data-cond="todos">Todos</button><button type="button" data-cond="local">Local</button><button type="button" data-cond="visitante">Visitante</button>
+        </div>
       </div>
     </div>
   </div>
 </nav>
 
-<p class="sr-only" id="estado" role="status" aria-live="polite"></p>
-<main class="envoltura" id="contenido"></main>
+<main class="ancho">
+  <div class="tab-h" id="cab-seccion">
+    <h2 id="titulo-seccion">Partidos</h2>
+    <div class="seg" role="group" aria-label="Vista" id="seg-vista">
+      <button type="button" data-vista="lista">Lista</button><button type="button" data-vista="mes">Mes</button>
+    </div>
+  </div>
+  <p class="sr-only" id="estado" role="status" aria-live="polite"></p>
+  <div id="contenido"></div>
+</main>
 
 <footer>
-  <div class="envoltura">
+  <div class="ancho">
     <div id="bloque-equipos">
       <h2>Calendario de cada equipo</h2>
       <ul class="lista-ics" id="lista-ics"></ul>
@@ -325,28 +397,37 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
 <script id="datos" type="application/json">__DATOS__</script>
 <script>
+// La página del calendario, «Salidas desde Os Remedios». Los datos (D) los pone html.js: los de datosPagina
+// más "escudo", el data URI de escudo.png o ''. Una fila por partido con la hora que importa a la izquierda
+// (la de salida en bus, si la hay); filtros, pedir bus, WhatsApp, suscripción, vista de mes y clasificación.
 (function () {
   'use strict';
   var D = JSON.parse(document.getElementById('datos').textContent);
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   var SEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var MESES_CORTOS = ['ene.', 'feb.', 'mar.', 'abr.', 'mayo', 'jun.', 'jul.', 'ago.', 'sept.', 'oct.', 'nov.', 'dic.'];
 
   function $(id) { return document.getElementById(id); }
   function dos(n) { return (n < 10 ? '0' : '') + n; }
   function iso(d) { return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); }
   function fechaDe(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+  function mayuscula(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  function propia(obj, k) { return !!obj && Object.prototype.hasOwnProperty.call(obj, k); }
   var ahora = new Date();
   var hoy = iso(ahora);
+  var manana = iso(new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1));
   var horaAhora = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
   function conHora(p) { return p.e === 'c' || p.e === 'p'; }
   function yaJugado(p) { return p.f < hoy || (p.f === hoy && conHora(p) && p.h < horaAhora); }
+  // Un partido con resultado ya se jugó, aunque no tenga hora (yaJugado no lo sabe).
+  function jugado(p) { return !!p.r || yaJugado(p); }
 
   // Equipos. Nombres cortos: se quita el principio común ("DOMPAVOLEI IF1" -> "IF1").
   var nombres = D.equipos.map(function (e) { return e.n; });
@@ -360,6 +441,35 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   }
   function corto(n) { return prefijo && n.indexOf(prefijo) === 0 ? n.slice(prefijo.length) : n; }
 
+  // Nombre de cada equipo del club en las filas: el nombre corto del club (config.json › nombre_corto) y la
+  // categoría, «DOMPA INFANTIL». La F o la M solo si el club tiene esa categoría en los dos sexos
+  // («DOMPA SENIOR F» / «DOMPA SENIOR M»), y un número solo si hay varios equipos de la misma
+  // («DOMPA CADETE 1», «DOMPA CADETE 2»; el número es el del código, IF1 -> 1). Un equipo cuyo nombre no
+  // acaba en un código (p. ej. «DOMPA LAGOAS») se queda como está. Sin nombre corto (main.js no lo pone con
+  // varios clubs a la vez), todos como los publica la federación: el club no se puede sacar del nombre del
+  // equipo («… RIVEIRA CADETE AZUL» saldría «… CADETE CADETE»).
+  var NOMBRES = (function () {
+    var club = String(D.corto || '').toUpperCase();
+    if (!club) return {};
+    var info = D.equipos.map(function (e) {
+      var codigo = /^.+\s([A-Z]{1,4})(\d*)$/.exec(String(e.n));
+      var cat = /^(.*?)\s+([FM])$/i.exec(String(e.cat || '').trim());
+      return {
+        n: e.n, vale: Boolean(codigo && e.cat), num: codigo ? codigo[2] : '',
+        base: (cat ? cat[1] : String(e.cat || '')).toUpperCase(), sexo: cat ? cat[2].toUpperCase() : ''
+      };
+    }).filter(function (x) { return x.vale; });
+    var nombres = {};
+    info.forEach(function (x) {
+      var dosSexos = info.some(function (y) { return y.base === x.base && y.sexo !== x.sexo; });
+      var grupo = info.filter(function (y) { return y.base === x.base && (!dosSexos || y.sexo === x.sexo); });
+      var num = grupo.length > 1 ? ' ' + (x.num || String(grupo.indexOf(x) + 1)) : '';
+      nombres[x.n] = club + ' ' + x.base + (dosSexos && x.sexo ? ' ' + x.sexo : '') + num;
+    });
+    return nombres;
+  })();
+  function nombreEquipo(n) { return propia(NOMBRES, n) ? NOMBRES[n] : n; }
+
   // Calendario publicado en internet (GitHub Pages): suscripción que se actualiza sola.
   var enWeb = /^https?:$/.test(location.protocol);
   var pub = enWeb
@@ -370,14 +480,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   function urlWebcal(rel) { return urlHttps(rel).replace(/^https?:/, 'webcal:'); }
   function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
 
-  // Selector de diseño (la franja de arriba del todo): «Diseño antiguo» es esta página, que publicada es
-  // index.html y en el ordenador se llama como el .ics; «Diseño nuevo» es la página nueva, que publicada es
-  // salidas.html y en el ordenador está al lado, con el mismo nombre más «-salidas».
-  var baseArchivos = D.ics.replace(/\.ics$/i, '');
-  $('diseno-antiguo').href = enWeb ? 'index.html' : encodeURI(baseArchivos + '.html');
-  $('diseno-nuevo').href = enWeb ? 'salidas.html' : encodeURI(baseArchivos + '-salidas.html');
-
-  // Filtros (se recuerdan en este navegador).
+  // Filtros (se recuerdan en este navegador). La clave es la del diseño anterior, que guardaba lo mismo con el
+  // mismo formato: así nadie pierde los equipos que tenía elegidos.
   var CLAVE = 'calendario-voley:' + D.club;
   // seccion: la pestaña (calendario o clasificación); vista: lista o mes, dentro del calendario.
   var st = { eq: [], cond: 'todos', per: 'proximos', vista: 'lista', seccion: 'calendario', mes: null };
@@ -416,10 +520,26 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     });
   }
 
-  // Cabecera
+  // Barra: escudo, club y temporada.
   document.title = 'Partidos · ' + D.club + ' · ' + D.temporada;
-  $('antetitulo').textContent = 'Voleibol · Temporada ' + D.temporada;
   $('club').textContent = D.club;
+  $('temporada').textContent = 'Temporada ' + D.temporada;
+  var escudo = $('escudo');
+  if (D.escudo) {
+    escudo.innerHTML = '<img src="' + esc(D.escudo) + '" alt="" width="36" height="36">';
+    escudo.classList.remove('oculto');
+  } else {
+    escudo.classList.add('oculto');
+  }
+  $('titulo-seccion').textContent = D.sal ? 'Salidas desde ' + D.sal.origen : 'Partidos';
+
+  // «+ Calendario»: abre y cierra el panel con la suscripción, el .ics, el Excel, imprimir y la ayuda.
+  var btnCal = $('btn-cal'), panelCal = $('panel-cal');
+  function abrirCalendario(si) { btnCal.setAttribute('aria-expanded', String(si)); panelCal.hidden = !si; }
+  btnCal.addEventListener('click', function () { abrirCalendario(btnCal.getAttribute('aria-expanded') !== 'true'); });
+  panelCal.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { abrirCalendario(false); btnCal.focus(); }
+  });
   var enlIcs = $('enlace-ics'), sus = $('enlace-suscribir'), ayuda = $('ayuda');
   enlIcs.href = encodeURI(D.ics);
   $('enlace-xlsx').href = encodeURI(D.xlsx);
@@ -442,29 +562,26 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     $('ayuda-pub').classList.remove('oculto');
     $('ayuda-local').classList.add('oculto');
   }
-  (function () {
-    var total = D.partidos.length;
-    var r = $('resumen');
-    if (!total) { r.textContent = 'Todavía no hay partidos publicados para esta temporada.'; return; }
-    var prox = D.partidos.filter(function (p) { return !yaJugado(p); });
-    var txt = '<strong>' + plural(total, 'partido', 'partidos') + '</strong> · <strong>' + plural(conPartidos.length, 'equipo', 'equipos') + '</strong>';
-    if (prox.length) {
-      var p = prox[0], d = fechaDe(p.f);
-      var cuando = p.e === 'x' ? ' (fecha por confirmar)' : !conHora(p) ? '' :
-        (D.sal && p.s ? ' · salida ' + p.s + ' (partido ' + p.h + ')' : D.sal && p.casa ? ' · partido ' + p.h + ' (en casa)' : ', ' + p.h);
-      txt += ' · Próximo: <strong>' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + esc(cuando) + '</strong>';
-    } else {
-      txt += ' · No quedan partidos por jugar';
-    }
-    r.innerHTML = txt;
-  })();
+
+  // La fila de chips y «Filtros» se queda fija arriba. Al llegar con el teclado (Tab o Mayús+Tab) a algo que
+  // está más arriba, el navegador lo sube hasta el borde de la ventana, debajo de esa fila: se reserva su alto
+  // (más 8 px) para que no lo tape (WCAG 2.2, 2.4.11). El alto cambia al abrir «Filtros», al cambiar de
+  // vista o de pestaña, al cargar las fuentes y al girar el móvil. Devuelve el alto de la fila.
+  var fijos = $('fijos');
+  function reservaFijos() {
+    var alto = fijos.offsetHeight || 0;
+    document.documentElement.style.scrollPaddingTop = (alto + 8) + 'px';
+    return alto;
+  }
+  if (window.ResizeObserver) new window.ResizeObserver(function () { reservaFijos(); }).observe(fijos);
+  else window.addEventListener('resize', reservaFijos);
 
   // Chips de equipos: se crean una vez y luego solo cambia su estado (así no se pierde el foco).
   var chips = $('chips');
   if (conPartidos.length < 2) chips.classList.add('oculto');
-  chips.innerHTML = '<button type="button" class="chip todos" data-eq="">Todos los equipos</button>' + conPartidos.map(function (e) {
-    return '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" title="' + esc(e.n) + '"><span>' +
-      esc(corto(e.n)) + '</span> <span class="cat-chip">' + esc(e.cat) + '</span></button>';
+  chips.innerHTML = '<button type="button" class="chip" data-eq="">Todos</button>' + conPartidos.map(function (e) {
+    return '<button type="button" class="chip" data-cat="' + esc(e.ck) + '" data-eq="' + esc(e.n) + '" title="' + esc(e.n + ' · ' + e.cat) + '">' +
+      '<span class="punto" aria-hidden="true"></span>' + esc(corto(e.n)) + ' <span class="cat-chip">' + esc(e.cat) + '</span></button>';
   }).join('');
   function marcarChips() {
     Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (b) {
@@ -479,61 +596,117 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     else { var i = st.eq.indexOf(n); if (i >= 0) st.eq.splice(i, 1); else st.eq.push(n); }
     guardar(); marcarChips(); pintar();
   });
-  document.querySelector('.filtros').addEventListener('click', function (ev) {
-    var b = ev.target.closest('button'); if (!b || b.classList.contains('chip')) return;
-    if (b.dataset.seccion) st.seccion = b.dataset.seccion;
-    if (b.dataset.vista) st.vista = b.dataset.vista;
-    if (b.dataset.per) st.per = perElegido = b.dataset.per;
-    if (b.dataset.cond) st.cond = b.dataset.cond;
+
+  // «Filtros»: despliega el periodo y local/visitante; si hay alguno distinto del normal, lo cuenta.
+  var btnFiltros = $('btn-filtros'), panelFiltros = $('panel-filtros');
+  function abrirFiltros(si) { btnFiltros.setAttribute('aria-expanded', String(si)); panelFiltros.hidden = !si; reservaFijos(); }
+  btnFiltros.addEventListener('click', function () { abrirFiltros(btnFiltros.getAttribute('aria-expanded') !== 'true'); });
+  function marcarFiltros() {
+    var n = 0;
+    if (st.seccion !== 'clas') {
+      if (st.vista === 'lista' && st.per !== 'proximos') n++;   // en el Mes no hay periodo
+      if (st.cond !== 'todos') n++;
+    }
+    btnFiltros.textContent = 'Filtros' + (n ? ' · ' + n : '');
+  }
+
+  // Pestañas, Lista/Mes, periodo y local/visitante: botones con data-seccion, data-vista, data-per o data-cond.
+  function alPulsar(ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var d = b.dataset;
+    if (!d.seccion && !d.vista && !d.per && !d.cond) return;
+    if (d.seccion) st.seccion = d.seccion;
+    if (d.vista) st.vista = d.vista;
+    if (d.per) st.per = perElegido = d.per;
+    if (d.cond) st.cond = d.cond;
     guardar(); pintar();
-  });
+  }
+  ['pestanas', 'seg-vista', 'panel-filtros'].forEach(function (id) { $(id).addEventListener('click', alPulsar); });
 
   function marcarSegmentos() {
-    Array.prototype.forEach.call(document.querySelectorAll('.segmentado button, .pestanas button'), function (b) {
-      var on = (b.dataset.seccion && b.dataset.seccion === st.seccion) || (b.dataset.vista && b.dataset.vista === st.vista) ||
-        (b.dataset.per && b.dataset.per === st.per) || (b.dataset.cond && b.dataset.cond === st.cond);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-seccion], [data-vista], [data-per], [data-cond]'), function (b) {
+      var d = b.dataset;
+      var on = (d.seccion && d.seccion === st.seccion) || (d.vista && d.vista === st.vista) ||
+        (d.per && d.per === st.per) || (d.cond && d.cond === st.cond);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     var clas = st.seccion === 'clas';
-    $('seg-vista').classList.toggle('oculto', clas);
-    $('seg-periodo').classList.toggle('oculto', clas || st.vista !== 'lista');
-    $('seg-cond').classList.toggle('oculto', clas);
+    $('cab-seccion').classList.toggle('oculto', clas);
+    $('grupo-periodo').classList.toggle('oculto', clas || st.vista !== 'lista');
+    btnFiltros.classList.toggle('oculto', clas);
+    if (clas) abrirFiltros(false);
+    marcarFiltros();
+    reservaFijos();
   }
 
   var main = $('contenido');
 
   function vacio(msg, boton) {
-    return '<div class="vacio"><p>' + esc(msg) + '</p>' + (boton ? '<button type="button" class="boton claro" id="quitar">' + esc(boton) + '</button>' : '') + '</div>';
+    return '<div class="vacio"><p>' + esc(msg) + '</p>' + (boton ? '<button type="button" class="boton" id="quitar">' + esc(boton) + '</button>' : '') + '</div>';
   }
 
   function duracion(min) {
     var h = Math.floor(min / 60), m = min % 60;
     return h ? h + ' h' + (m ? ' ' + m + ' min' : '') : m + ' min';
   }
-  // Hora a la que empieza el día del equipo: salida en bus, calentamiento en casa o la del partido.
-  function horaInicio(p) {
-    if (!conHora(p)) return '';
-    if (D.sal && !p.seg) return p.s || p.ca || p.h;
-    return p.h;
+  // "MONFORTE DE LEMOS" -> "Monforte de Lemos" (para las frases del detalle).
+  var MENORES = ['de', 'del', 'da', 'do', 'das', 'dos', 'la', 'las', 'los', 'el', 'y', 'e'];
+  function nombrePropio(s) {
+    return String(s).toLowerCase().split(' ').map(function (w, i) {
+      return i > 0 && MENORES.indexOf(w) >= 0 ? w : mayuscula(w);
+    }).join(' ');
   }
-  function textoHora(p) {
-    if (p.e === 'x') return '<div class="hora pendiente">Fecha y hora por confirmar</div>';
-    if (p.e === 'h') return '<div class="hora pendiente">Hora por confirmar</div>';
-    var prov = p.e === 'p' ? '<small>Provisional</small>' : '';
-    if (!D.sal) return '<div class="hora">' + esc(p.h) + prov + '</div>';
-    if (p.seg) return '<div class="hora"><span class="etq">2º partido</span>' + esc(p.h) + prov + '</div>';
-    var etq = p.s ? 'Salida' : 'Calentam.';
-    return '<div class="hora"><span class="etq' + (p.s ? ' bus' : '') + '">' + etq + '</span>' + esc(p.s || p.ca) +
-      '<small class="partido-h">Partido ' + esc(p.h) + '</small>' + prov + '</div>';
+  // El pabellón sin la pista ("ANEXO OS REMEDIOS - PISTA 1" -> "ANEXO OS REMEDIOS"): el nombre entero va en el detalle.
+  function pabCorto(pab) { return String(pab).replace(/[\s,\-–]*\bPISTA\b.*$/i, '').trim() || pab; }
+  // Adónde se va: el municipio (o el pabellón si no se sabe); en casa, el pabellón (el municipio es el de siempre).
+  function destino(p) {
+    if (!p.pab && !p.mun) return 'Pabellón por confirmar';
+    if (p.casa && p.pab) return pabCorto(p.pab);
+    return p.mun || pabCorto(p.pab);
   }
-  function textoViaje(p) {
-    if (!D.sal || !conHora(p)) return '';
-    var t;
-    if (p.seg) t = 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '');
-    else if (p.casa) t = 'En casa · calentamiento ' + p.ca;
-    else if (p.s) t = '🚌 ' + duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + p.mun : '') + ' · calentamiento ' + p.ca;
-    else t = 'Viaje sin calcular · calentamiento ' + p.ca;
-    return '<div class="viaje">' + esc(t) + '</div>';
+
+  function icono(id, tam) { return '<svg width="' + (tam || 15) + '" height="' + (tam || 15) + '" aria-hidden="true"><use href="#' + id + '"/></svg>'; }
+
+  // Columna de la hora: rótulo pequeño + hora grande (texto normal, cifras tabulares) + una línea debajo.
+  // Los casos son los de la tabla del diseño.
+  function columnaHora(p, jug) {
+    function etq(t, gris) { return '<span class="etq' + (gris ? ' gris' : '') + '">' + t + '</span>'; }
+    function grande(t, gris) { return '<span class="h' + (gris ? ' gris' : '') + '">' + esc(t) + '</span>'; }
+    function debajo(t, amb) { return '<span class="ph' + (amb ? ' amb' : '') + '">' + esc(t) + '</span>'; }
+    var r;
+    if (!conHora(p)) {
+      if (jug) r = etq(p.casa ? 'En casa' : 'Partido', true) + debajo('sin hora');
+      else r = (p.casa ? etq('En casa', true) : '') + '<span class="pend">' + (p.e === 'x' ? 'Fecha y hora por confirmar' : 'Hora por confirmar') + '</span>';
+    } else if (jug) {
+      r = p.s ? etq('Salió', true) + grande(p.s, true) + debajo('partido ' + p.h) : etq('Partido', true) + grande(p.h, true);
+    } else if (!D.sal) {
+      r = etq('Partido', true) + grande(p.h);
+    } else if (p.seg) {
+      r = etq('2.º partido', true) + grande(p.h) + (p.sp ? debajo('bus de ' + p.sp) : p.casa ? debajo('en casa') : '');
+    } else if (p.s) {
+      r = etq('Salida') + grande(p.s) + debajo('partido ' + p.h);
+    } else if (p.casa) {
+      r = etq('En casa', true) + grande(p.ca || p.h) + debajo('partido ' + p.h);
+    } else {
+      r = etq('Partido', true) + grande(p.h) + debajo('salida sin calcular', true);
+    }
+    if (p.e === 'p') r += debajo('provisional', true);
+    return '<div class="hora">' + r + '</div>';
+  }
+
+  // Líneas del viaje para el detalle, cada una con su icono: [icono, texto]. El calentamiento va en su
+  // propia línea (con la llama, como en el mensaje de WhatsApp), separado del viaje en bus.
+  function lineasViaje(p) {
+    if (!D.sal || !conHora(p)) return [];
+    if (p.seg) {
+      return [p.sp || !p.casa
+        ? ['i-bus', 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '')]
+        : ['i-casa', 'En casa, después del partido anterior']];
+    }
+    var calent = ['i-calor', 'Calentamiento ' + p.ca];
+    if (p.casa) return [['i-casa', 'En casa'], calent];
+    if (p.s) return [['i-bus', duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + nombrePropio(p.mun) : '')], calent];
+    return [['i-bus', 'Viaje sin calcular'], calent];
   }
 
   // Botón "Pedir bus": abre el correo con la petición ya redactada para la empresa de autobuses.
@@ -552,15 +725,15 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var equipo = nuestros(p).join(' y ');
     var fin = aMin(ult.h) + (D.bus.dur || 120);
     var llegada = Math.ceil((fin + (p.vj || 0)) / 15) * 15;
-    var info = (D.pabs && D.pabs[p.pab]) || {};
-    var destino = p.pab + (info.dir ? ' (' + info.dir + ')' : (p.mun ? ' (' + p.mun + ')' : ''));
+    var info = propia(D.pabs, p.pab) ? D.pabs[p.pab] : {};
+    var destinoBus = p.pab + (info.dir ? ' (' + info.dir + ')' : (p.mun ? ' (' + p.mun + ')' : ''));
     var partidos = grupo.map(function (x) { return x.h + ' contra ' + (x.lo && x.vo ? 'otro equipo del club' : x.lo ? x.v : x.l); });
     var l = [
       'Hola:', '',
       'Queremos pedir un autobús para el equipo ' + equipo + ' (' + p.cat + '):', '',
       '- Día: ' + fecha,
       '- Salida: a las ' + p.s + ' desde ' + D.bus.origen + (D.bus.dirOrigen ? ' (' + D.bus.dirOrigen + ')' : ''),
-      '- Destino: ' + destino,
+      '- Destino: ' + destinoBus,
       '- ' + (grupo.length > 1 ? 'Partidos: ' : 'Partido: ') + partidos.join('; '),
       '- Regreso: al terminar' + (grupo.length > 1 ? ' el último partido' : ' el partido') + ', hacia las ' + hm(fin) +
         '; llegada aproximada a ' + D.bus.origen + ' a las ' + hm(llegada),
@@ -579,26 +752,28 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     if (D.bus.cc) q.push('cc=' + D.bus.cc.split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(','));
     q.push('subject=' + encodeURIComponent(asunto));
     q.push('body=' + encodeURIComponent(l.join('\n').replace(/\n/g, '\r\n')));
-    return '<a class="boton-bus" href="' + esc('mailto:' + para + '?' + q.join('&')) + '">✉ Pedir bus</a>';
+    return '<a class="boton-bus" href="' + esc('mailto:' + para + '?' + q.join('&')) + '">' + icono('i-mail') + 'Pedir bus</a>';
   }
 
-  // Botones para el grupo de WhatsApp de las familias: copiar el mensaje o abrir WhatsApp con él.
-  // Un partido con resultado ya se jugó, aunque no tenga hora (yaJugado no lo sabe). El enlace va directo a
-  // api.whatsapp.com: el atajo wa.me cambia los emojis por «�» al redirigir.
-  function botonesWhatsApp(p) {
-    if (!p.wa || p.r || yaJugado(p)) return '';
-    return '<button type="button" class="boton-wa copiar" data-i="' + D.partidos.indexOf(p) + '">📋 Copiar</button>' +
-      '<a class="boton-wa wa" href="' + esc('https://api.whatsapp.com/send?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">WhatsApp</a>';
+  // Botones para el grupo de WhatsApp de las familias: abrir WhatsApp con el mensaje o copiarlo. Solo en el
+  // primer partido del día del equipo (el que tiene mensaje), sin resultado y sin jugar. El enlace va
+  // directo a api.whatsapp.com: el atajo wa.me cambia los emojis por «�» al redirigir.
+  function botonesWhatsApp(p, i) {
+    if (!p.wa || jugado(p)) return '';
+    return '<a class="boton-wa wa" href="' + esc('https://api.whatsapp.com/send?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">' +
+      icono('i-msg') + 'WhatsApp</a>' +
+      '<button type="button" class="boton-wa copiar" data-i="' + i + '">' + icono('i-copia') + '<span>Copiar</span></button>';
   }
   // Copia al portapapeles; si el navegador no deja (página sin https o antigua), con un <textarea>.
   function copiar(texto, boton) {
-    var antes = boton.getAttribute('data-texto') || boton.textContent;
+    var rotulo = boton.querySelector('span') || boton;   // el texto del botón, sin tocar el icono
+    var antes = boton.getAttribute('data-texto') || rotulo.textContent;
     boton.setAttribute('data-texto', antes);
     function hecho(ok) {
-      boton.textContent = ok ? '✓ Copiado' : 'No se pudo copiar';
+      rotulo.textContent = ok ? '✓ Copiado' : 'No se pudo copiar';
       $('estado').textContent = ok ? 'Mensaje copiado' : 'No se pudo copiar el mensaje';
       clearTimeout(boton.espera);
-      boton.espera = setTimeout(function () { boton.textContent = antes; }, 2000);
+      boton.espera = setTimeout(function () { rotulo.textContent = antes; }, 2000);
     }
     // select() lleva el foco al <textarea> y, al quitarlo, se iría a <body>: se devuelve adonde estaba
     // (el botón), para que quien usa el teclado o un lector de pantalla no vuelva al principio.
@@ -623,30 +798,65 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
 
   // Marcador del lado del club (en los partidos de visitante se da la vuelta; en un derbi, local-visitante).
   function delClub(p, par) { return p.vo && !p.lo ? [par[1], par[0]] : par; }
+  // Debajo de los equipos (que ya llevan cada uno sus sets ganados): ganado o perdido (desde nuestro lado)
+  // y los puntos de cada set en el orden del marcador, el local primero.
   function textoResultado(p) {
     var m = delClub(p, p.r.m);
-    var sets = p.r.s.map(function (s) { return delClub(p, s).join('-'); }).join(' · ');
-    var cls = p.cond === 'derbi' ? 'derbi' : m[0] > m[1] ? 'gana' : 'pierde';
-    var txt = p.cond === 'derbi' ? 'Resultado' : m[0] > m[1] ? 'Ganado' : 'Perdido';
-    return '<div class="resultado ' + cls + '"><b>' + txt + ' ' + m[0] + '-' + m[1] + '</b>' +
-      (sets ? '<span class="sets">' + esc(sets) + '</span>' : '') + '</div>';
+    var sets = p.r.s.map(function (s) { return s.join('-'); }).join(' · ');
+    var derbi = p.cond === 'derbi';
+    var cls = derbi ? 'derbi' : m[0] > m[1] ? 'gana' : 'pierde';
+    var txt = derbi ? 'Resultado' : m[0] > m[1] ? 'Ganado' : 'Perdido';
+    return '<div class="res ' + cls + '">' + txt + (sets ? '<small>' + esc(sets) + '</small>' : '') + '</div>';
   }
 
-  function tarjeta(p, proximo) {
-    var l = p.lo ? '<span>' + esc(p.l) + '</span>' : '<span class="rival">' + esc(p.l) + '</span>';
-    var v = p.vo ? '<span>' + esc(p.v) + '</span>' : '<span class="rival">' + esc(p.v) + '</span>';
+  // Una línea de equipo, como en un marcador: el nuestro en negrita con el punto del color de su
+  // categoría; el rival, con un hueco del mismo ancho para que los nombres queden en columna. Si ya se
+  // jugó, a la derecha los sets que ganó. segundo: es la línea del visitante («contra» para los lectores).
+  function lineaEquipo(nombre, esNuestro, tanteo, segundo) {
+    return '<div class="eq ' + (esNuestro ? 'nuestro' : 'rival') + '">' +
+      '<span class="punto' + (esNuestro ? '' : ' hueco') + '" aria-hidden="true"></span>' +
+      (segundo ? '<span class="sr-only">contra </span>' : '') +
+      '<span class="nom">' + esc(esNuestro ? nombreEquipo(nombre) : nombre) + '</span>' +
+      (tanteo !== '' ? '<b class="tanteo">' + tanteo + '</b>' : '') + '</div>';
+  }
+
+  // Una línea del detalle: su icono y el contenido (ya en HTML).
+  function lineaDetalle(id, html) { return '<p class="dl">' + icono(id, 16) + '<span>' + html + '</span></p>'; }
+
+  // Detalle desplegable (la flecha de la fila): pabellón con el mapa y su dirección, competición, viaje y
+  // calentamiento, cada uno en su línea con su icono.
+  function detalle(p, i) {
+    var info = propia(D.pabs, p.pab) ? D.pabs[p.pab] : {};
+    var l = [lineaDetalle('i-lugar', p.pab
+      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) +
+        '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>' + (info.dir ? '<br>' + esc(info.dir) : '')
+      : 'Pabellón por confirmar')];
+    l.push(lineaDetalle('i-copa', esc(p.comp)));
+    lineasViaje(p).forEach(function (v) { l.push(lineaDetalle(v[0], esc(v[1]))); });
+    return '<div class="det" id="det-' + i + '" hidden>' + l.join('') + '</div>';
+  }
+
+  // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.
+  function filaPartido(p, marca) {
+    var i = D.partidos.indexOf(p), jug = jugado(p);
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
-    var pab = p.pab
-      ? '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent(p.pab + ', ' + (p.mun || 'Galicia')) + '" target="_blank" rel="noopener">' + esc(p.pab) + '</a>'
-      : 'Pabellón por confirmar';
-    // "Pedir bus" y los botones de WhatsApp, en una fila que se ajusta al ancho.
-    var bus = enlaceBus(p), wa = botonesWhatsApp(p);
-    var acciones = bus || wa ? '<div class="acciones-partido">' + bus + wa + '</div>' : '';
-    return '<article class="partido" data-cat="' + esc(p.ck) + '">' + textoHora(p) +
-      '<div><div class="categoria">' + esc(p.cat) + (proximo ? '<span class="proximo-marca">Próximo</span>' : '') + '</div>' +
-      '<div class="equipos">' + l + '<span class="vs">vs</span>' + v + '</div>' + (p.r ? textoResultado(p) : textoViaje(p)) +
-      '<div class="detalle">' + esc(p.comp) + ' · ' + pab + '</div>' + acciones + '</div>' +
-      '<span class="condicion ' + esc(p.cond) + '">' + cond + '</span></article>';
+    var acc = botonesWhatsApp(p, i) + enlaceBus(p);
+    var local = p.lo ? nombreEquipo(p.l) : p.l, visit = p.vo ? nombreEquipo(p.v) : p.v;
+    return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-cat="' + esc(p.ck) + '" data-i="' + i + '">' +
+      columnaHora(p, jug) +
+      '<div class="info">' + (marca ? '<span class="proxm">' + marca + '</span>' : '') +
+      // Los dos equipos, uno debajo del otro y en el orden del partido: primero el local. De visitante,
+      // el nuestro va en segundo lugar.
+      '<div class="eqs">' + lineaEquipo(p.l, p.lo, p.r ? p.r.m[0] : '', false) +
+      '<div class="vs" aria-hidden="true"><span class="punto hueco"></span>vs</div>' + lineaEquipo(p.v, p.vo, p.r ? p.r.m[1] : '', true) + '</div>' +
+      // Adónde se va, con un icono de ubicación, y la píldora local / visitante.
+      '<div class="dest"><svg class="hacia" width="16" height="16" aria-hidden="true"><use href="#i-lugar"/></svg>' +
+      '<span class="sr-only">En </span><span class="lugar">' + esc(destino(p)) + '</span>' +
+      '<span class="cond ' + esc(p.cond) + '">' + cond + '</span></div>' +
+      (p.r ? textoResultado(p) : '') + '</div>' +
+      '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + local + ' contra ' + visit) + '">' +
+      icono('i-flecha', 16) + '</button>' +
+      (acc ? '<div class="acc">' + acc + '</div>' : '') + detalle(p, i) + '</article>';
   }
 
   function tablaClas(c) {
@@ -655,7 +865,8 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       return '<tr' + (f.o ? ' class="nuestro"' : '') + '><td>' + f.p + '</td><td class="eq">' + esc(f.n) + '</td><td class="pts">' + f.pt +
         '</td><td>' + f.pj + '</td><td>' + f.pg + '</td><td>' + f.pp + '</td><td>' + f.sf + '-' + f.sc + '</td></tr>';
     }).join('');
-    return '<section class="clas" data-cat="' + esc(e ? e.ck : 'otra') + '"><h2 class="clas-titulo">' + esc(corto(c.eq)) +
+    return '<section class="clas"><h2 class="clas-titulo"' + (e ? ' data-cat="' + esc(e.ck) + '"' : '') + '>' +
+      (e ? '<span class="punto" aria-hidden="true"></span>' : '') + esc(corto(c.eq)) +
       (e ? '<span>' + esc(e.cat) + '</span>' : '') + '</h2><p class="clas-grupo">' + esc(c.comp) + ' · ' + esc(c.g) + '</p>' +
       '<div class="tabla-envoltura"><table class="tabla-clas"><thead><tr><th scope="col">#</th><th scope="col" class="eq">Equipo</th>' +
       '<th scope="col" title="Puntos">Pts</th><th scope="col" title="Partidos jugados">PJ</th><th scope="col" title="Ganados">G</th>' +
@@ -673,6 +884,20 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     return lista.length;
   }
 
+  // Cabecera de un día con su nota: «hoy», «mañana», «fecha por confirmar» (en ámbar) o «jugados».
+  function cabeceraDia(f, delDia) {
+    var d = fechaDe(f);
+    var nombre = mayuscula(DIAS[d.getDay()]) + ' ' + d.getDate() + ' ' + MESES_CORTOS[d.getMonth()] +
+      (d.getFullYear() !== ahora.getFullYear() ? ' ' + d.getFullYear() : '');
+    var nota = '', amb = false;
+    if (f < hoy) nota = 'jugados';
+    else if (f === hoy) nota = 'hoy';
+    else if (f === manana) nota = 'mañana';
+    else if (delDia.every(function (p) { return p.e === 'x'; })) { nota = 'fecha por confirmar'; amb = true; }
+    return '<h3 class="dia-cab" tabindex="-1"><span>' + esc(nombre) + '</span>' +
+      (nota ? '<span class="nota' + (amb ? ' amb' : '') + '">' + nota + '</span>' : '') + '</h3>';
+  }
+
   function pintarLista() {
     var lista = filtrar(true);
     // Con equipos elegidos, su clasificación va encima de sus partidos.
@@ -688,21 +913,21 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
         : vacio('No hay partidos con estos filtros.', 'Ver todos los partidos'));
       return 0;
     }
-    var proximo = null;
-    for (var i = 0; i < lista.length; i++) { if (!yaJugado(lista[i])) { proximo = lista[i]; break; } }
+    // «Próxima salida»: la primera salida en bus por jugar de las que se ven. Sin horas de salida
+    // configuradas, «Próximo partido» en el primero por jugar (como el «Próximo» del diseño anterior).
+    var proximo = null, marca = D.sal ? 'Próxima salida' : 'Próximo partido';
+    for (var i = 0; i < lista.length; i++) {
+      if (!jugado(lista[i]) && (!D.sal || lista[i].s)) { proximo = lista[i]; break; }
+    }
     var html = '', actual = null;
     lista.forEach(function (p) {
       if (p.f !== actual) {
         if (actual) html += '</section>';
         actual = p.f;
-        var d = fechaDe(p.f), n = lista.filter(function (x) { return x.f === p.f; }).length;
-        var nombre = p.f === hoy ? 'Hoy' : DIAS[d.getDay()];
-        html += '<section class="dia' + (p.f < hoy ? ' pasado' : '') + '" id="d-' + p.f + '"><h2 class="dia-cabecera" tabindex="-1">' +
-          '<span class="dia-num">' + d.getDate() + '</span><span class="dia-nombre">' + nombre + '</span>' +
-          '<span class="dia-mes">' + MESES[d.getMonth()] + (d.getFullYear() !== ahora.getFullYear() ? ' ' + d.getFullYear() : '') + '</span>' +
-          '<span class="dia-cuenta">' + plural(n, 'partido', 'partidos') + '</span></h2>';
+        html += '<section class="dia' + (p.f < hoy ? ' pasado' : '') + '" id="d-' + p.f + '">' +
+          cabeceraDia(p.f, lista.filter(function (x) { return x.f === p.f; }));
       }
-      html += tarjeta(p, p === proximo);
+      html += filaPartido(p, p === proximo ? marca : '');
     });
     main.innerHTML = cabeza + html + '</section>';
     return lista.length;
@@ -726,7 +951,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     var porDia = {};
     lista.forEach(function (p) { (porDia[p.f] = porDia[p.f] || []).push(p); });
     var enMes = lista.filter(function (p) { return p.f.slice(0, 7) === st.mes; }).length;
-    var html = '<div class="mes-barra"><h2 class="mes-titulo">' + MESES[m] + ' ' + y + '</h2><div class="mes-nav">' +
+    var html = '<div class="mes-barra"><h3 class="mes-titulo">' + MESES[m] + ' ' + y + '</h3><div class="mes-nav">' +
       '<button type="button" id="mes-ant" aria-label="Mes anterior"' + (st.mes <= min ? ' disabled' : '') + '>‹</button>' +
       '<button type="button" id="mes-sig" aria-label="Mes siguiente"' + (st.mes >= max ? ' disabled' : '') + '>›</button></div></div>';
     html += '<div class="rejilla">' + SEM.map(function (s) { return '<div class="sem">' + s + '</div>'; }).join('');
@@ -734,15 +959,19 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
       var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
       var f = iso(d), ps = porDia[f] || [];
       var cls = 'celda' + (d.getMonth() !== m ? ' fuera-mes' : '') + (f === hoy ? ' hoy' : '') + (ps.length ? ' con-partidos' : '');
-      html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' + MESES[d.getMonth()] + ': ' + plural(ps.length, 'partido', 'partidos') + '"' : '') + '>' +
-        '<span class="num">' + d.getDate() + '</span>';
-      ps.slice(0, 4).forEach(function (p) {
-        html += '<span class="mini" data-cat="' + esc(p.ck) + '" title="' + esc(p.cat + ' · ' + p.l + ' vs ' + p.v + (conHora(p) ? ' · partido ' + p.h : '')) + '"><b>' +
-          (conHora(p) ? (p.s ? '🚌' : '') + esc(horaInicio(p)) : '¿?') + '</b> ' +
-          esc(nuestros(p).map(corto).join(' / ')) + '</span>';
+      html += '<div class="' + cls + '"' + (ps.length ? ' data-ir="' + f + '" role="button" tabindex="0" aria-label="' + d.getDate() + ' de ' +
+        MESES[d.getMonth()] + ': ' + plural(ps.length, 'partido', 'partidos') + '"' : '') + '>' + '<span class="num">' + d.getDate() + '</span>';
+      // Un código por equipo (los dos partidos de un día son del mismo viaje), con su hora de salida si la hay.
+      var eqs = [];
+      ps.forEach(function (p) {
+        var k = claveEquipo(p), e = eqs.filter(function (x) { return x.k === k; })[0];
+        if (!e) { e = { k: k, cod: nuestros(p).map(corto).join(' · '), ck: p.ck, s: '' }; eqs.push(e); }
+        if (p.s && !e.s) e.s = p.s;
       });
-      if (ps.length > 4) html += '<span class="mas">+' + (ps.length - 4) + ' más</span>';
-      if (ps.length) html += '<span class="puntos">' + ps.map(function (p) { return '<i data-cat="' + esc(p.ck) + '"></i>'; }).join('') + '</span>';
+      eqs.slice(0, 2).forEach(function (e) {
+        html += '<span class="mini" data-cat="' + esc(e.ck) + '"><b>' + esc(e.cod) + '</b>' + (e.s ? ' <span class="mh">' + esc(e.s) + '</span>' : '') + '</span>';
+      });
+      if (eqs.length > 2) html += '<span class="mas">+' + (eqs.length - 2) + '</span>';
       html += '</div>';
     }
     main.innerHTML = html + '</div>';
@@ -769,6 +998,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     $('filtro-imp').textContent = partes.join(' · ') + ' · actualizado el ' + D.generado;
   }
 
+  // Desde el Mes: a la lista, en ese día, con el foco en su cabecera.
   function irADia(f) {
     st.seccion = 'calendario';
     st.vista = 'lista';
@@ -776,15 +1006,24 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     guardar(); pintar();
     var el = $('d-' + f);
     if (!el) return;
-    var barra = document.querySelector('.filtros');
-    var tapa = getComputedStyle(barra).position === 'sticky' ? barra.offsetHeight : 0;
+    var tapa = reservaFijos();   // la fila de chips, fija arriba
     window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset - tapa - 8);
-    var h = el.querySelector('.dia-cabecera');
+    var h = el.querySelector('.dia-cab');
     if (h) h.focus({ preventScroll: true });
+  }
+  // La flecha de una fila abre o cierra su detalle.
+  function alternarDetalle(b) {
+    var panel = $(b.getAttribute('aria-controls'));
+    if (!panel) return;
+    var abrir = b.getAttribute('aria-expanded') !== 'true';
+    b.setAttribute('aria-expanded', String(abrir));
+    panel.hidden = !abrir;
   }
   main.addEventListener('click', function (ev) {
     var cp = ev.target.closest('.copiar');
     if (cp) { copiar(D.partidos[+cp.getAttribute('data-i')].wa, cp); return; }
+    var ch = ev.target.closest('.chev');
+    if (ch) { alternarDetalle(ch); return; }
     if (ev.target.id === 'quitar') {
       st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
       guardar(); marcarChips(); pintar(); return;
@@ -803,7 +1042,7 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
     if (foco) { var el = $(foco); if (el && !el.disabled) el.focus(); }
   }
 
-  // Pie: calendario de cada equipo
+  // Pie: calendario de cada equipo y de dónde salen los datos.
   var li = D.equipos.filter(function (e) { return e.ics; }).map(function (e) {
     var cab = '<b>' + esc(e.n) + '</b> · ' + esc(e.cat) + (e.np ? '' : ' <span class="sin">(aún sin partidos publicados)</span>');
     if (pub) {

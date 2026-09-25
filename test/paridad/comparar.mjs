@@ -11,7 +11,8 @@
 //   - la lista de archivos generados;
 //   - cada .ics (el del club y los de equipos/), sin DTSTAMP, LAST-MODIFIED ni SEQUENCE y con la fecha
 //     de "actualizados el" igualada: primero tal cual, con las líneas plegadas, y luego desplegadas;
-//   - la página: la plantilla byte a byte y los datos embebidos como JSON (sin "generado");
+//   - la página: sus datos embebidos como JSON, sin "generado" ni lo que el .ps1 no tiene (corto, clas,
+//     escudo; r y wa en cada partido). La plantilla no: desde septiembre de 2026 es otro diseño;
 //   - el Excel: cada parte XML, con la fecha del pie igualada (el ZIP en sí no: comprime distinto);
 //   - historial.txt byte a byte, pabellones.json como datos y lo que se escribe por consola;
 //   - que las marcas de tiempo (DTSTAMP, SEQUENCE, "actualizados el", "generado") son las de la hora
@@ -436,8 +437,6 @@ function compararEjecuciones(ps, js) {
   if (comunes.includes(html) && (!paginaPs || !paginaJs)) {
     anotar(html, `sin los datos embebidos en ${paginaPs ? 'js' : 'ps1'}`);
   } else if (paginaPs && paginaJs) {
-    anotar(`${html} (plantilla)`, paginaPs.plantilla === paginaJs.plantilla ? null
-      : diferenciaLineas(paginaPs.plantilla, paginaJs.plantilla));
     const a = analizarJson(paginaPs.json, 'ps1');
     const b = analizarJson(paginaJs.json, 'js');
     if (a.error || b.error) {
@@ -446,8 +445,12 @@ function compararEjecuciones(ps, js) {
       datosPs = a.valor;
       datosJs = b.valor;
       const sinGenerado = ({ generado, ...resto }) => resto;
-      const d = diferenciaJson(sinGenerado(datosPs), sinGenerado(datosJs), 'datos');
-      const mismoOrden = JSON.stringify(sinGenerado(datosPs)) === JSON.stringify(sinGenerado(datosJs));
+      // Lo que solo tiene la versión en JavaScript no se compara (datosJs sigue entero para comprobarMarcas).
+      const comunConPs = ({ generado, corto, clas, escudo, ...resto }) => ({
+        ...resto, partidos: resto.partidos?.map(({ r, wa, ...p }) => p),
+      });
+      const d = diferenciaJson(sinGenerado(datosPs), comunConPs(datosJs), 'datos');
+      const mismoOrden = JSON.stringify(sinGenerado(datosPs)) === JSON.stringify(comunConPs(datosJs));
       anotar(`${html} (datos)`, d, `${datosPs.partidos?.length} partidos, ${datosPs.equipos?.length} equipos`
         + (d || mismoOrden ? '' : '; mismo contenido con las claves en otro orden'));
     }

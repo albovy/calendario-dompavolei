@@ -1,23 +1,17 @@
-// Página HTML con los partidos (lista, vista mensual, clasificaciones, filtros, imprimir): la plantilla
-// (plantilla.html) con los datos dentro, en JSON. Nació como traducción de New-Html de
-// calendario-voley.ps1; desde septiembre de 2026 enseña también resultados y clasificaciones y el
-// mensaje para el grupo de WhatsApp, que el .ps1 no tiene.
-//
-// La página nueva «Salidas desde Os Remedios» (salidas.html, el rediseño que se está probando) es otra
-// plantilla (plantilla-salidas.html) con los mismos datos más el escudo del club.
+// Página HTML con los partidos («Salidas desde Os Remedios»: lista, vista mensual, clasificaciones,
+// filtros, imprimir): la plantilla (plantilla.html) con los datos dentro, en JSON, y el escudo del club.
+// Los datos nacieron como traducción de New-Html de calendario-voley.ps1; desde septiembre de 2026 llevan
+// también resultados, clasificaciones y el mensaje para el grupo de WhatsApp, que el .ps1 no tiene, y la
+// plantilla es otra (el diseño nuevo; la del .ps1 y su traducción se retiraron).
 
 import { readFileSync } from 'node:fs';
 import { conHora } from './partidos.js';
 import { aEntero, aviso, claveSinCaja, fmt, hora, ordenarUnicos, txt } from './util.js';
 import { mensajesWhatsApp } from './whatsapp.js';
 
-// Las plantillas, con __TITULO__ y __DATOS__ (plantilla.html salió del here-string $Script:PlantillaHtml
-// del .ps1). Sin CR: aunque Git las saque con CRLF en Windows, la página sale igual que en GitHub Actions.
-function leerPlantilla(nombre) {
-  return readFileSync(new URL(`./${nombre}`, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
-}
-const PLANTILLA = leerPlantilla('plantilla.html');
-const PLANTILLA_SALIDAS = leerPlantilla('plantilla-salidas.html');
+// La plantilla, con __TITULO__ y __DATOS__. Sin CR: aunque Git la saque con CRLF en Windows, la página
+// sale igual que en GitHub Actions.
+const PLANTILLA = readFileSync(new URL('./plantilla.html', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 
 const ESTADOS = new Map([['confirmada', 'c'], ['provisional', 'p'], ['sinhora', 'h'], ['pendiente', 'x']]);
 
@@ -66,7 +60,7 @@ function datosPabellones(partidos, pabellones) {
   return Object.fromEntries(entradas);
 }
 
-// Los datos de la página (el JSON de <script id="datos">), los mismos para las dos plantillas.
+// Los datos de la página (el JSON de <script id="datos">), sin el escudo (lo añade crearHtml).
 // generado: { pared, utc } (o directamente el Date de pared). salidas: el de configSalidas o null.
 // pabellones: la caché de resolverPabellones o null. pedirBus: el de configPedirBus o null.
 // clasificaciones: las de clasificaciones() de resultados.js.
@@ -140,11 +134,6 @@ function rellenarPlantilla(plantilla, datos, { nombreClub, temporada }) {
   return plantilla.split('__TITULO__').join(titulo).split('__DATOS__').join(json);
 }
 
-// La página de siempre (calendario.html, la portada). Opciones: las de datosPagina.
-export function crearHtml(opciones) {
-  return rellenarPlantilla(PLANTILLA, datosPagina(opciones), opciones);
-}
-
 // El escudo del club (escudo.png) como data URI, para que la página no dependa de otro archivo; '' si
 // no hay ruta o no existe (la página enseña entonces solo el nombre del club).
 function escudoDataUri(ruta) {
@@ -152,14 +141,14 @@ function escudoDataUri(ruta) {
   try {
     return `data:image/png;base64,${readFileSync(ruta).toString('base64')}`;
   } catch (e) {
-    if (e.code !== 'ENOENT') aviso(`No se pudo leer el escudo (${e.message}); la página nueva sale sin él.`);
+    if (e.code !== 'ENOENT') aviso(`No se pudo leer el escudo (${e.message}); la página sale sin él.`);
     return '';
   }
 }
 
-// La página nueva «Salidas desde Os Remedios» (salidas.html): los datos de la de siempre más "escudo".
-// rutaEscudo: escudo.png (main.js usa el de la carpeta de config.json).
-export function crearHtmlSalidas({ rutaEscudo = '', ...opciones }) {
+// La página (calendario.html, la portada en la web). Opciones: las de datosPagina más rutaEscudo, el
+// escudo.png del club (main.js usa el de la carpeta de config.json); "escudo" va el último en los datos.
+export function crearHtml({ rutaEscudo = '', ...opciones }) {
   const datos = { ...datosPagina(opciones), escudo: escudoDataUri(rutaEscudo) };
-  return rellenarPlantilla(PLANTILLA_SALIDAS, datos, opciones);
+  return rellenarPlantilla(PLANTILLA, datos, opciones);
 }

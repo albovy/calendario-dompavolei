@@ -65,12 +65,21 @@ jobs:
             exit 1
           fi
 
-      # La página de siempre es la de inicio; la del diseño nuevo (en pruebas), salidas.html: es adonde
-      # lleva «Diseño nuevo» en la web.
+      # La página es la de inicio (calendario.html también vale). salidas.html, donde se probó el diseño
+      # nuevo en septiembre de 2026, solo lleva a ella, para que no se rompan los enlaces guardados.
       - name: Página de inicio
         run: |
           cp web/calendario.html web/index.html
-          cp web/calendario-salidas.html web/salidas.html
+          cat > web/salidas.html <<'FIN'
+          <!DOCTYPE html>
+          <html lang="es"><head><meta charset="utf-8">
+          <meta name="robots" content="noindex">
+          <meta http-equiv="refresh" content="0; url=./">
+          <link rel="canonical" href="./">
+          <title>Calendario de partidos</title>
+          <script>location.replace('./');</script>
+          </head><body><p><a href="./">El calendario está en la página de inicio.</a></p></body></html>
+          FIN
 
       - uses: actions/upload-pages-artifact@v5
         with:
