@@ -36,6 +36,15 @@ test('página: «Diseño antiguo» lleva a index.html en la web y, en el ordenad
   assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-antiguo').href, 'calendario-dompavolei-2026-27.html');
 });
 
+test('página: «Diseño nuevo» es salidas.html en la web y, en el ordenador, la de su misma base (<nombre>-salidas.html)', () => {
+  const d = datos([partido()], { ics: 'calendario-dompavolei-2025-26.ics' });
+  assert.equal(abrirPagina(d).porId('diseno-nuevo').href, 'salidas.html');
+  assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-nuevo').href, 'calendario-dompavolei-2025-26-salidas.html');
+  // Con --nombre-base salidas, la página de siempre es salidas.html y la nueva no la pisa.
+  const s = datos([partido()], { ics: 'salidas.ics' });
+  assert.equal(abrirPagina(s, { protocolo: 'file:' }).porId('diseno-nuevo').href, 'salidas-salidas.html');
+});
+
 test('página: la franja del selector mide 36-40 px, se va con el scroll (no tapa nada) y no sale al imprimir', () => {
   const reglas = reglasSelector(PLANTILLA);
   const pantalla = reglas.filter((r) => !r.impresion);

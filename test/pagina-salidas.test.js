@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   abrirPagina as abrir, codigoDe, conCopiar, correosBus, datos, elemento, foco, partido, plantilla, pulsarCopiar,
-  reglasSelector, selectorDiseno,
+  reglasCss, reglasSelector, selectorDiseno,
 } from './apoyo/pagina-simulada.js';
 
 const PLANTILLA = plantilla('plantilla-salidas.html');
@@ -92,6 +92,17 @@ test('salidas: «Diseño antiguo» lleva a index.html en la web y, en el ordenad
   const d = datos([partido()], { ics: 'calendario-dompavolei-2026-27.ics' });
   assert.equal(abrirPagina(d).porId('diseno-antiguo').href, 'index.html');
   assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-antiguo').href, 'calendario-dompavolei-2026-27.html');
+});
+
+test('salidas: «Diseño nuevo» es salidas.html en la web y, en el ordenador, la de su misma base (<nombre>-salidas.html)', () => {
+  // En el ordenador, cada página nueva va con el nombre de la suya: dos temporadas o dos clubs en la misma
+  // carpeta, o --nombre-base salidas, no se pisan.
+  const d = datos([partido()], { ics: 'calendario-dompavolei-2025-26.ics' });
+  assert.equal(abrirPagina(d).porId('diseno-nuevo').href, 'salidas.html');
+  assert.equal(abrirPagina(d, { protocolo: 'file:' }).porId('diseno-nuevo').href, 'calendario-dompavolei-2025-26-salidas.html');
+  const s = datos([partido()], { ics: 'salidas.ics' });
+  assert.equal(abrirPagina(s, { protocolo: 'file:' }).porId('diseno-antiguo').href, 'salidas.html');
+  assert.equal(abrirPagina(s, { protocolo: 'file:' }).porId('diseno-nuevo').href, 'salidas-salidas.html');
 });
 
 test('salidas: la franja del selector mide 36-40 px, se va con el scroll (no tapa nada) y no sale al imprimir', () => {
@@ -414,6 +425,42 @@ test('salidas: chips con el código corto de cada equipo con partidos, y «Todos
   const chips = abrirPagina(d).porId('chips').innerHTML;
   assert.deepEqual([...chips.matchAll(/data-eq="([^"]*)"/g)].map((m) => m[1]), ['', 'DOMPAVOLEI IF1', 'DOMPAVOLEI CF1']);
   assert.deepEqual(texto(chips).split(' ').filter((x) => /^(Todos|IF1|CF1)$/.test(x)), ['Todos', 'IF1', 'CF1']);
+});
+
+test('salidas: los chips que no caben se desplazan dentro de su fila, sin mover la página de lado a 375 px', () => {
+  // Cada chip lleva la categoría para los lectores de pantalla en un .sr-only (position: absolute). Si la
+  // fila de chips no está posicionada, esos textos se colocan respecto a la fila fija (.fijos, sticky), se
+  // salen del recorte de .chips y, con 6 o más equipos, la página entera se desplazaba en horizontal.
+  const chips = abrirPagina(datos([partido()])).porId('chips').innerHTML;
+  assert.match(chips, /<span class="sr-only">/);
+  assert.match(reglasCss(PLANTILLA).find((r) => r.selector === '.sr-only').cuerpo, /position: absolute/);
+  const fila = reglasCss(PLANTILLA).filter((r) => !r.impresion && r.selector === '.chips');
+  assert.ok(fila.some((r) => /overflow-x: auto/.test(r.cuerpo)), 'la fila de chips no se desplaza');
+  assert.ok(fila.some((r) => /position: relative/.test(r.cuerpo)), 'la fila de chips no contiene sus .sr-only');
+});
+
+test('salidas: la fila fija (chips y «Filtros») no tapa lo que tiene el foco: scroll-padding-top con su alto', () => {
+  // Con Tab o Mayús+Tab, el navegador lleva lo enfocado al borde de arriba, justo debajo de la fila fija
+  // (WCAG 2.2, 2.4.11). Se reserva su alto (más 8 px) en el desplazamiento de la página, y se recalcula
+  // cuando cambia.
+  const pagina = abrirPagina(datos([partido()]), { alturas: { fijos: 65 } });
+  const raiz = pagina.doc.documentElement;
+  const fijos = pagina.porId('fijos');
+  assert.equal(raiz.style.scrollPaddingTop, '73px');
+  // Al abrir «Filtros», la fila crece.
+  fijos.offsetHeight = 140;
+  pagina.porId('btn-filtros').oyentes.click();
+  assert.equal(raiz.style.scrollPaddingTop, '148px');
+  // Al pasar a Clasificación (sin «Filtros») y al volver.
+  fijos.offsetHeight = 66;
+  const boton = elemento(pagina.doc, 'button');
+  boton.dataset.seccion = 'clas';
+  pagina.porId('pestanas').oyentes.click({ target: boton });
+  assert.equal(raiz.style.scrollPaddingTop, '74px');
+  // Al cambiar el ancho de la ventana (girar el móvil): en un navegador sin ResizeObserver, con "resize".
+  fijos.offsetHeight = 110;
+  pagina.ventana.oyentes.resize();
+  assert.equal(raiz.style.scrollPaddingTop, '118px');
 });
 
 test('salidas: los filtros se guardan con una clave propia (no la de la página de siempre) y «Filtros» cuenta los cambiados', () => {

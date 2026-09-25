@@ -57,8 +57,12 @@ jobs:
             exit 1
           fi
 
+      # La página de siempre es la de inicio; la del diseño nuevo (en pruebas), salidas.html: es adonde
+      # lleva «Diseño nuevo» en la web.
       - name: Página de inicio
-        run: cp web/calendario.html web/index.html
+        run: |
+          cp web/calendario.html web/index.html
+          cp web/calendario-salidas.html web/salidas.html
 
       - uses: actions/upload-pages-artifact@v5
         with:

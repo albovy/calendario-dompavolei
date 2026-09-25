@@ -6,7 +6,8 @@
 //
 //   - <nombre>.ics   Calendario para Google Calendar, Outlook, iPhone o Android.
 //   - <nombre>.html  Página con los partidos (lista y vista mensual), imprimible.
-//   - salidas.html   La misma página con el diseño nuevo («Salidas desde Os Remedios»), en pruebas.
+//   - <nombre>-salidas.html  La misma página con el diseño nuevo («Salidas desde Os Remedios»), en
+//                    pruebas. En la web se publica como salidas.html (lo hace el workflow).
 //   - <nombre>.xlsx  Hoja de Excel con los partidos.
 //   - equipos/*.ics  Un calendario por cada equipo del club (para entrenadores y familias).
 //
@@ -31,7 +32,7 @@
 //   --sin-equipos       No genera los calendarios por equipo.
 //   --listar-clubs      Muestra los clubs disponibles con su ID y termina.
 //   --config            config.json a usar (o su carpeta); pabellones.json y resultados.json se guardan
-//                       junto a él, y el escudo del club (escudo.png, para salidas.html) se busca ahí.
+//                       junto a él, y el escudo del club (escudo.png, para la página nueva) se busca ahí.
 //                       Por defecto, los de la carpeta actual.
 //
 // Si algo falla, escribe "  ERROR: ..." y termina con código 1. Un fallo del propio programa (TypeError...)
@@ -55,10 +56,6 @@ import {
   minusculas, ordenarUnicos, paso, prefijoComun, slug, soloDia, txt,
 } from './util.js';
 import { crearXlsx } from './xlsx.js';
-
-// La página con el diseño nuevo: siempre con este nombre (el selector «Diseño antiguo | Diseño nuevo» de las
-// dos páginas enlaza con él).
-const ARCHIVO_SALIDAS = 'salidas.html';
 
 const USO = 'node src/main.js [--club X] [--temporada 2026-27] [--desde aaaa-mm-dd] [--hasta aaaa-mm-dd] '
   + '[--salida carpeta] [--nombre-base nombre] [--duracion-minutos N] [--historial ruta] [--sin-equipos] '
@@ -477,6 +474,11 @@ export async function principal(args, ahora = new Date()) {
   const archivoIcs = `${base}.ics`;
   const archivoXlsx = `${base}.xlsx`;
   const archivoHtml = `${base}.html`;
+  // La página con el diseño nuevo, con el nombre de la de siempre: así no la pisa (--nombre-base salidas) ni
+  // se mezcla con la de otra temporada u otro club en la misma carpeta. El selector «Diseño antiguo | Diseño
+  // nuevo» de las dos páginas enlaza con ella por el nombre del .ics; en la web, con salidas.html, que es
+  // la copia que publica el workflow (.github/workflows/calendario.yml).
+  const archivoSalidas = `${base}-salidas.html`;
   writeFileSync(join(carpetaSalida, archivoIcs),
     crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
@@ -486,7 +488,7 @@ export async function principal(args, ahora = new Date()) {
   };
   writeFileSync(join(carpetaSalida, archivoHtml), crearHtml(opcionesHtml), 'utf8');
   // La página con el diseño nuevo, al lado de la de siempre, para compararlas.
-  writeFileSync(join(carpetaSalida, ARCHIVO_SALIDAS), crearHtmlSalidas({ ...opcionesHtml, rutaEscudo: rutas.escudo }), 'utf8');
+  writeFileSync(join(carpetaSalida, archivoSalidas), crearHtmlSalidas({ ...opcionesHtml, rutaEscudo: rutas.escudo }), 'utf8');
   if (opciones.historial) {
     const rutaHistorial = resolve(opciones.historial);
     mkdirSync(dirname(rutaHistorial), { recursive: true });
@@ -527,7 +529,7 @@ export async function principal(args, ahora = new Date()) {
   console.log('');
   console.log(`  Archivos generados en: ${carpetaSalida}`);
   console.log(`    ${archivoHtml}  <- abrir en el navegador (lista, mes, imprimir)`);
-  console.log(`    ${ARCHIVO_SALIDAS}  <- la misma página con el diseño nuevo (en pruebas)`);
+  console.log(`    ${archivoSalidas}  <- la misma página con el diseño nuevo (en pruebas)`);
   console.log(`    ${archivoIcs}   <- calendario para importar (copia fija)`);
   console.log(`    ${archivoXlsx}  <- Excel`);
   if (conEquipos) console.log(`    equipos${sep}  <- un calendario .ics por equipo (${equipos.length})`);

@@ -371,8 +371,11 @@ footer h2 { font: 700 1rem/1 var(--cond); letter-spacing: .08em; text-transform:
   function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
 
   // Selector de diseño (la franja de arriba del todo): «Diseño antiguo» es esta página, que publicada es
-  // index.html y en el ordenador se llama como el .ics; «Diseño nuevo» es salidas.html, que está al lado.
-  $('diseno-antiguo').href = enWeb ? 'index.html' : encodeURI(D.ics.replace(/\.ics$/i, '') + '.html');
+  // index.html y en el ordenador se llama como el .ics; «Diseño nuevo» es la página nueva, que publicada es
+  // salidas.html y en el ordenador está al lado, con el mismo nombre más «-salidas».
+  var baseArchivos = D.ics.replace(/\.ics$/i, '');
+  $('diseno-antiguo').href = enWeb ? 'index.html' : encodeURI(baseArchivos + '.html');
+  $('diseno-nuevo').href = enWeb ? 'salidas.html' : encodeURI(baseArchivos + '-salidas.html');
 
   // Filtros (se recuerdan en este navegador).
   var CLAVE = 'calendario-voley:' + D.club;

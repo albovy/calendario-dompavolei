@@ -56,8 +56,9 @@ export function elemento(doc, etiqueta = 'div') {
 
 // Abre la página (su código) con estos datos. portapapeles: el navigator.clipboard (o nada); seguro:
 // isSecureContext; almacen: un Map que hace de localStorage (sin él, localStorage está vacío y no guarda);
-// protocolo: el de location ('https:', publicada; 'file:', abierta en el ordenador).
-export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almacen = null, protocolo = 'https:' } = {}) {
+// protocolo: el de location ('https:', publicada; 'file:', abierta en el ordenador); alturas: el
+// offsetHeight de algunos elementos por su id (p. ej. { fijos: 65 }), que el DOM simulado no calcula.
+export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almacen = null, protocolo = 'https:', alturas = {} } = {}) {
   const porId = new Map();
   const pagina = { copiado: null };
   const doc = {
@@ -75,9 +76,11 @@ export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almac
       return true;
     },
   };
+  doc.documentElement = elemento(doc, 'html');
   doc.body = elemento(doc, 'body');
   doc.activeElement = doc.body;
   doc.getElementById('datos').textContent = JSON.stringify(datos);
+  for (const [id, alto] of Object.entries(alturas)) doc.getElementById(id).offsetHeight = alto;
   class Fecha extends Date {
     constructor(...args) { if (args.length) super(...args); else super(AHORA); }
   }
@@ -91,12 +94,16 @@ export function abrirPagina(codigo, datos, { portapapeles, seguro = false, almac
     // El aviso «✓ Copiado» se quitaría a los 2 s: en las pruebas no hace falta.
     setTimeout() { return 0; }, clearTimeout() {},
     print() {}, scrollTo() {}, getComputedStyle() { return {}; },
+    // Los oyentes de la ventana (p. ej. "resize"), para lanzarlos desde las pruebas.
+    oyentes: {},
+    addEventListener(tipo, fn) { contexto.oyentes[tipo] = fn; },
   };
   contexto.window = contexto;
   vm.createContext(contexto);
   vm.runInContext(codigo, contexto);
   return Object.assign(pagina, {
-    doc, porId: (id) => doc.getElementById(id), contenido: doc.getElementById('contenido'), estado: doc.getElementById('estado'),
+    doc, ventana: contexto, porId: (id) => doc.getElementById(id), contenido: doc.getElementById('contenido'),
+    estado: doc.getElementById('estado'),
   });
 }
 
@@ -157,14 +164,18 @@ export function selectorDiseno(texto) {
   return { inicio, nav, enlaces };
 }
 
-// Las reglas CSS de la franja (las que nombran .selector-diseno u .opciones-diseno), sin comentarios:
-// { selector, cuerpo, impresion } (impresion: si está dentro de @media print).
-export function reglasSelector(texto) {
+// Las reglas CSS de una plantilla (su <style>), sin comentarios: { selector, cuerpo, impresion } (impresion:
+// si está dentro de @media print).
+export function reglasCss(texto) {
   const estilo = texto.slice(texto.indexOf('<style>'), texto.indexOf('</style>')).replace(/\/\*[\s\S]*?\*\//g, '');
   const impresion = estilo.indexOf('@media print {');
   return [...estilo.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .map((m) => ({ selector: m[1].trim(), cuerpo: m[2].trim(), impresion: impresion >= 0 && m.index > impresion }))
-    .filter((r) => /selector-diseno|opciones-diseno/.test(r.selector));
+    .map((m) => ({ selector: m[1].trim(), cuerpo: m[2].trim(), impresion: impresion >= 0 && m.index > impresion }));
+}
+
+// Las reglas CSS de la franja (las que nombran .selector-diseno u .opciones-diseno).
+export function reglasSelector(texto) {
+  return reglasCss(texto).filter((r) => /selector-diseno|opciones-diseno/.test(r.selector));
 }
 
 // Cuerpo de los correos de «Pedir bus» de la página.

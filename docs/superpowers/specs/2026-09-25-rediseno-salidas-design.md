@@ -13,7 +13,8 @@ oscuro a la derecha; HTML de referencia en `2026-09-25-rediseno-salidas-maqueta.
 - **Selector de diseño arriba del todo en las dos páginas** (lo pidió el usuario para decidir cuál le
   convence): una franja fina encima de la cabecera con dos opciones, «Diseño antiguo | Diseño nuevo», con la
   de la página actual marcada (`aria-current="page"`). «Diseño antiguo» lleva a `index.html` (publicada) o
-  al .html de siempre (en local); «Diseño nuevo» lleva a `salidas.html`. Mismo aspecto en las dos páginas
+  al .html de siempre (en local); «Diseño nuevo» lleva a `salidas.html` (publicada) o, en local, a
+  `<nombre>-salidas.html`, al lado del .html de siempre. Mismo aspecto en las dos páginas
   (con los colores de cada una), 36-40 px de alto, que no tape nada y que no salga al imprimir.
 
 ## Condiciones del usuario (obligatorias)
@@ -133,7 +134,9 @@ todos los detalles salen abiertos y los botones no salen.
   Afecta igual a la web de siempre, al .ics y al mensaje de WhatsApp (que ya no se genera para fechas sin
   confirmar).
 - `html.js`: `D.escudo` (data URI de `escudo.png` o `''`) y una función que genera la página nueva con la
-  plantilla nueva; `main.js` escribe `salidas.html` junto a `calendario.html`; el workflow la publica.
+  plantilla nueva; `main.js` escribe `<nombre>-salidas.html` junto a `<nombre>.html` (con el mismo nombre,
+  para que no la pise con `--nombre-base salidas` ni se mezcle con la de otra temporada u otro club en la
+  misma carpeta); el workflow la publica como `salidas.html` (copia de `calendario-salidas.html`).
 
 ## Comportamiento que se conserva (de la página actual)
 
@@ -149,4 +152,4 @@ si no hay clasificaciones; accesible con teclado y lector de pantalla; 375 px si
   partido (el 2.º partido en su fila), botones solo donde tocan, píldora local/visitante, rótulos de la
   columna de la hora en cada caso de la tabla, «PRÓXIMA SALIDA» en el sitio correcto, resultados.
 - `salidas.test.js`: en casa por el pabellón aunque no haya hora.
-- `main.test.js`: se generan `calendario.html` y `salidas.html`.
+- `main.test.js`: se generan `<nombre>.html` y `<nombre>-salidas.html`, y el workflow publica `salidas.html`.
