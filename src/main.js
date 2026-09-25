@@ -29,7 +29,8 @@
 //                       para detectar cambios (lo usa la publicación automática en GitHub).
 //   --sin-equipos       No genera los calendarios por equipo.
 //   --listar-clubs      Muestra los clubs disponibles con su ID y termina.
-//   --config            config.json a usar (o su carpeta); pabellones.json se guarda junto a él.
+//   --config            config.json a usar (o su carpeta); pabellones.json y resultados.json se guardan
+//                       junto a él.
 //                       Por defecto, los de la carpeta actual.
 //
 // Si algo falla, escribe "  ERROR: ..." y termina con código 1. Un fallo del propio programa (TypeError...)
@@ -46,6 +47,7 @@ import { crearHtml } from './html.js';
 import { crearIcs } from './ics.js';
 import { buscarClubs, catalogoClubs, fechaCruda, partidosApi } from './isquad.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
+import { actualizarResultados, anadirResultados, clasificaciones } from './resultados.js';
 import { anadirSalidas, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
 import {
   ahoraMadrid, anioTemporada, aviso, comoLista, esObjeto, fechaCorta, fechaPared, fechaValida, fmt, leerJson,
@@ -105,7 +107,8 @@ export function leerOpciones(args) {
   };
 }
 
-// config.json, pabellones.json y temporada-anterior.json van juntos: en la carpeta actual o en la de --config.
+// config.json, pabellones.json, temporada-anterior.json y resultados.json van juntos: en la carpeta actual
+// o en la de --config.
 export function rutasConfig(ruta) {
   let config = resolve('config.json');
   if (ruta) {
@@ -115,6 +118,7 @@ export function rutasConfig(ruta) {
     config,
     pabellones: join(dirname(config), 'pabellones.json'),
     temporadaAnterior: join(dirname(config), 'temporada-anterior.json'),
+    resultados: join(dirname(config), 'resultados.json'),
   };
 }
 
@@ -421,6 +425,16 @@ export async function principal(args, ahora = new Date()) {
     }
   }
 
+  // Resultados y clasificaciones: solo de la temporada en curso (no con --temporada, --desde o --hasta,
+  // ni en agosto mientras se enseña la anterior).
+  let tablas = [];
+  if (!rango.explicito && rango.anio === anioTemporada(generado.pared) && partidos.length) {
+    paso('Buscando resultados y clasificaciones...');
+    const cache = await actualizarResultados({ partidos, ids, ruta: rutas.resultados, anio: rango.anio, ahora: generado.pared });
+    anadirResultados(partidos, cache);
+    tablas = clasificaciones(equipos, cache, ids, generado.pared);
+  }
+
   // Carpeta y nombres de archivo
   const carpetaSalida = resolve(opciones.salida || 'calendario');
   mkdirSync(carpetaSalida, { recursive: true });
@@ -462,7 +476,7 @@ export async function principal(args, ahora = new Date()) {
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
   const html = crearHtml({
     partidos, equipos, nombreClub, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
-    urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion,
+    urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
   });
   writeFileSync(join(carpetaSalida, archivoHtml), html, 'utf8');
   if (opciones.historial) {
@@ -486,6 +500,8 @@ export async function principal(args, ahora = new Date()) {
     }
   } else {
     paso(`${partidos.length} partidos (${proximos.length} por jugar) de ${conPartidos} equipos.`);
+    const conResultado = partidos.filter((p) => p.resultado).length;
+    if (conResultado || tablas.length) paso(`${conResultado} resultado(s) y ${tablas.length} clasificación(es).`);
     const pendientes = proximos.filter((p) => p.estado !== 'confirmada').length;
     if (pendientes) paso(`${pendientes} partido(s) con la fecha o la hora aún sin confirmar.`);
     if (proximos.length) {

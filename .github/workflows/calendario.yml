@@ -67,15 +67,16 @@ jobs:
       - id: despliegue
         uses: actions/deploy-pages@v5
 
-      # Guarda la lista de partidos (y los tiempos de viaje y la copia de la temporada anterior) solo cuando cambian. Deja un
-      # historial de cambios y mantiene el repositorio activo (GitHub pausa las tareas programadas
-      # tras 60 días sin commits).
+      # Guarda la lista de partidos (y los tiempos de viaje, la copia de la temporada anterior y los
+      # resultados) solo cuando cambian. Deja un historial de cambios y mantiene el repositorio activo
+      # (GitHub pausa las tareas programadas tras 60 días sin commits).
       - name: Guardar historial de cambios
         continue-on-error: true
         run: |
           git add historial/partidos.txt
           [ -f pabellones.json ] && git add pabellones.json
           [ -f temporada-anterior.json ] && git add temporada-anterior.json
+          [ -f resultados.json ] && git add resultados.json
           if ! git diff --cached --quiet; then
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

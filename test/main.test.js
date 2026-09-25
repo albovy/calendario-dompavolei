@@ -353,3 +353,36 @@ test('rango parcial: nombre propio, sin calendarios por equipo; horas de salida 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+function paginaDatos(nombre) { return readFileSync(new URL(`./datos/${nombre}`, import.meta.url), 'utf8'); }
+
+test('resultados: el .ics y la página llevan el marcador y la clasificación; se guarda resultados.json', async () => {
+  const dir = carpetaConConfig();
+  try {
+    const salida = join(dir, 'salida');
+    const filas = [
+      fila('2026-09-19 10:00:00', 'EMEVÉ COLEXIO SAN LORENZO IF', 'DOMPAVOLEI IF1', '206572578', DOMPA),
+      fila('2026-09-26 11:30:00', 'DOMPAVOLEI IF1', 'CV OLEIROS IFA', DOMPA, '206572590'),
+    ];
+    const arbol = JSON.stringify([{ id: '387', competiciones: [{ id: '1511', nombre: 'TORNEO APERTURA INFANTIL F', torneos: [{ id: '4064' }, { id: '3818' }] }] }]);
+    const responder = (url, datos) => {
+      if (datos.accion === 'obtener_partidos') return JSON.stringify({ data: filas });
+      const u = new URL(url);
+      const id = u.searchParams.get('id');
+      if (u.pathname.endsWith('/competicion.php')) return '<script>token = "8c513fc98f8c16511d3876664456eef6";</script>';
+      if (u.pathname.endsWith('/tree')) return arbol;
+      if (u.pathname.endsWith('/competicion_completa.php')) return paginaDatos(`grupo-${id}.html`);
+      if (u.pathname.endsWith('/clasificacion.php')) return paginaDatos(`clasificacion-${id}.html`);
+      throw new Error(`no previsto: ${url}`);
+    };
+    const [, consola] = await enSilencio(() => conFetch(responder,
+      () => principal(['--config', dir, '--salida', salida, '--nombre-base', 'cal'], new Date('2026-09-25T10:00:00Z'))));
+    const ics = readFileSync(join(salida, 'cal.ics'), 'utf8').replace(/\r\n /g, '');
+    assert.match(ics, /\r\nSUMMARY:✅ DOMPAVOLEI IF1 3-0 EMEVÉ COLEXIO SAN LORENZO IF\r\n/);
+    assert.match(readFileSync(join(salida, 'cal.html'), 'utf8'), /"clas":\[\{"eq":"DOMPAVOLEI IF1","comp":"TORNEO APERTURA INFANTIL F","g":"SEGUNDA FASE - GRUPO 1"/);
+    assert.equal(JSON.parse(readFileSync(join(dir, 'resultados.json'), 'utf8')).temporada, 2026);
+    assert.ok(consola.includes('  1 resultado(s) y 1 clasificación(es).'), consola.join('\n'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

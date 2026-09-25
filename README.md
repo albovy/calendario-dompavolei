@@ -18,6 +18,11 @@ lo ejecuta y publica el resultado en GitHub Pages. La carpeta `historial` guarda
 
 Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje por carretera, siempre al alza) o, en casa, a la hora de calentamiento. Los tiempos de viaje se guardan en `pabellones.json` y se pueden fijar a mano en `config.json`. Cada hora solo se descarga la temporada en curso; los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez en `temporada-anterior.json`.
 
+En los partidos ya jugados salen el **resultado** y los sets, y la vista **Clasificación** enseña la tabla
+del grupo de cada equipo. Salen de la web de resultados de la federación (la misma que enseña volei.gal):
+solo se consultan los grupos del club y solo cuando hace falta (un partido que acaba de jugarse, un repaso
+diario), y se guardan en `resultados.json`. Nunca se descargan actas ni plantillas.
+
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 
 Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://nodejs.org/) instalado):
@@ -27,4 +32,4 @@ Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://node
   opciones, como `--temporada 2025-26` o `--club`, están explicadas al principio de `src/main.js`.
 
 `calendario-voley.ps1` es la versión anterior, en PowerShell: ya no se usa y se guarda solo como
-referencia. `node test/paridad/comparar.mjs` compara lo que generan las dos versiones (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo). Desde que el título y el detalle de los eventos del `.ics` se acortaron (septiembre de 2026), esa comparación marca diferencias en los `.ics`; el resto debe salir igual.
+referencia. `node test/paridad/comparar.mjs` compara lo que generan las dos versiones (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo). Desde que el título y el detalle de los eventos del `.ics` se acortaron (septiembre de 2026), esa comparación marca diferencias en los `.ics`, y desde que hay resultados y clasificaciones, también en la página; el Excel debe salir igual.
