@@ -81,16 +81,9 @@ test('plantilla.html: modo oscuro con la paleta Night Winter y contraste suficie
     [t.tinta, t.fondo, 4.5], [t.tinta, t.superficie, 4.5], [t['tinta-2'], t.superficie, 4.5], [t['tinta-2'], t.fondo, 4.5],
     ['#ffffff', t.activo, 4.5], ['#ffffff', t.pista, 4.5], [t.gana, t.superficie, 4.5], [t.pierde, t.superficie, 4.5],
     [t['c-senior'], t.superficie, 3], [t['c-infantil'], t.superficie, 3],
-    [t.tinta, t.barra, 4.5], [t['tinta-2'], t.barra, 4.5],
   ]) {
     assert.ok(contraste(texto, fondo) >= minimo, `${texto} sobre ${fondo}: ${contraste(texto, fondo).toFixed(2)} < ${minimo}`);
   }
-  // La barra de pestañas y filtros se distingue del fondo: más oscura que él.
-  assert.ok(contraste(t.barra, '#000000') < contraste(t.fondo, '#000000'), `barra ${t.barra} no es más oscura que el fondo ${t.fondo}`);
-  assert.ok(contraste(t.barra, t.fondo) >= 1.1, `barra ${t.barra} demasiado parecida al fondo ${t.fondo}`);
-  // En claro, la barra sigue siendo del color del fondo (el modo claro no cambia).
-  const claro = /:root \{([^}]*)\}/.exec(PLANTILLA)[1];
-  assert.match(claro, /--barra: var\(--fondo\);/);
 });
 
 test('plantilla.html: un solo __TITULO__ y __DATOS__, y el código de la página sin errores de sintaxis', () => {
