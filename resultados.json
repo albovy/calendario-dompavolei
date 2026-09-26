@@ -30,7 +30,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-09-25 11:16"
+   "revisado": "2026-09-26 08:17"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -51,7 +51,7 @@
     "4063",
     "4064"
    ],
-   "revisado": "2026-09-25 11:16"
+   "revisado": "2026-09-26 08:17"
   },
   "TORNEO APERTURA XUVENIL F": {
    "id": "1507",
@@ -73,7 +73,7 @@
     "4093",
     "4094"
    ],
-   "revisado": "2026-09-25 11:16"
+   "revisado": "2026-09-26 08:17"
   }
  },
  "grupos": {
@@ -84,7 +84,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-09-25 11:16",
+   "consultado": "2026-09-26 08:17",
    "terminado": false,
    "firma": "0854810f250c0326",
    "firma_clasificacion": "0854810f250c0326",
@@ -169,7 +169,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-09-25 11:16",
+   "consultado": "2026-09-26 08:17",
    "terminado": false,
    "firma": "e4200373ab060ff2",
    "firma_clasificacion": "e4200373ab060ff2",
@@ -464,7 +464,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-09-25 11:16",
+   "consultado": "2026-09-26 08:17",
    "terminado": false,
    "firma": "20f968637de8ad2d",
    "firma_clasificacion": "20f968637de8ad2d",
