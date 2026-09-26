@@ -51,7 +51,7 @@
     "4063",
     "4064"
    ],
-   "revisado": "2026-09-26 08:17"
+   "revisado": "2026-09-26 19:32"
   },
   "TORNEO APERTURA XUVENIL F": {
    "id": "1507",
@@ -73,7 +73,7 @@
     "4093",
     "4094"
    ],
-   "revisado": "2026-09-26 08:17"
+   "revisado": "2026-09-26 19:32"
   }
  },
  "grupos": {
@@ -84,28 +84,64 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-09-26 08:17",
+   "consultado": "2026-09-26 19:32",
    "terminado": false,
-   "firma": "0854810f250c0326",
-   "firma_clasificacion": "0854810f250c0326",
+   "firma": "093ab5fdb4bfc86a",
+   "firma_clasificacion": "093ab5fdb4bfc86a",
    "partidos": [
     {
      "local": "CV CIUDAD DE A CORUÑA JF B",
      "visitante": "DOMPAVOLEI XF1",
      "dia": "2026-09-26",
      "hora": "11:30",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      1
+     ],
+     "sets": [
+      [
+       26,
+       24
+      ],
+      [
+       25,
+       18
+      ],
+      [
+       22,
+       25
+      ],
+      [
+       25,
+       18
+      ]
+     ]
     },
     {
      "local": "RIBEIRA SACRA A",
      "visitante": "DOMPAVOLEI XF1",
      "dia": "2026-09-26",
      "hora": "13:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       21
+      ],
+      [
+       25,
+       5
+      ],
+      [
+       25,
+       13
+      ]
+     ]
     },
     {
      "local": "DOMPAVOLEI XF1",
@@ -129,36 +165,36 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "DOMPAVOLEI XF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
+     "equipo": "RIBEIRA SACRA A",
+     "club": "206572586",
+     "pt": 6,
+     "pj": 2,
+     "pg": 2,
      "pp": 0,
-     "sf": 0,
+     "sf": 6,
      "sc": 0
     },
     {
      "pos": 2,
      "equipo": "CV CIUDAD DE A CORUÑA JF B",
      "club": "206572595",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
+     "pt": 3,
+     "pj": 2,
+     "pg": 1,
+     "pp": 1,
+     "sf": 3,
+     "sc": 4
     },
     {
      "pos": 3,
-     "equipo": "RIBEIRA SACRA A",
-     "club": "206572586",
+     "equipo": "DOMPAVOLEI XF1",
+     "club": "206572580",
      "pt": 0,
-     "pj": 0,
+     "pj": 2,
      "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
+     "pp": 2,
+     "sf": 1,
+     "sc": 6
     }
    ]
   },
@@ -169,28 +205,60 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-09-26 08:17",
+   "consultado": "2026-09-26 19:32",
    "terminado": false,
-   "firma": "e4200373ab060ff2",
-   "firma_clasificacion": "e4200373ab060ff2",
+   "firma": "904841013859bc37",
+   "firma_clasificacion": "904841013859bc37",
    "partidos": [
     {
      "local": "SEI SAN NARCISO IF",
      "visitante": "DOMPAVOLEI IF1",
      "dia": "2026-09-26",
      "hora": "10:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       14
+      ],
+      [
+       25,
+       22
+      ],
+      [
+       25,
+       17
+      ]
+     ]
     },
     {
      "local": "DOMPAVOLEI IF1",
      "visitante": "CV OLEIROS IFA",
      "dia": "2026-09-26",
      "hora": "11:30",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       12,
+       25
+      ],
+      [
+       16,
+       25
+      ],
+      [
+       20,
+       25
+      ]
+     ]
     },
     {
      "local": "CV OLEIROS IFA",
@@ -216,34 +284,34 @@
      "pos": 1,
      "equipo": "CV OLEIROS IFA",
      "club": "206572590",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
+     "pt": 6,
+     "pj": 2,
+     "pg": 2,
      "pp": 0,
-     "sf": 0,
+     "sf": 6,
      "sc": 0
     },
     {
      "pos": 2,
-     "equipo": "DOMPAVOLEI IF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
+     "equipo": "SEI SAN NARCISO IF",
+     "club": "206572677",
+     "pt": 3,
+     "pj": 2,
+     "pg": 1,
+     "pp": 1,
+     "sf": 3,
+     "sc": 3
     },
     {
      "pos": 3,
-     "equipo": "SEI SAN NARCISO IF",
-     "club": "206572677",
+     "equipo": "DOMPAVOLEI IF1",
+     "club": "206572580",
      "pt": 0,
-     "pj": 0,
+     "pj": 2,
      "pg": 0,
-     "pp": 0,
+     "pp": 2,
      "sf": 0,
-     "sc": 0
+     "sc": 6
     }
    ]
   },
