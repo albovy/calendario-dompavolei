@@ -555,6 +555,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     ? { base: location.protocol + '//' + location.host + location.pathname.replace(/[^\/]*$/, ''), ics: D.ics }
     : (D.pub && D.pub.base ? D.pub : null);
   var esAndroid = /Android/i.test(navigator.userAgent || '');
+  // Navegador dentro de otra app (Instagram, Facebook...): ahí los intent: de Android pueden fallar.
+  var esWebViewAndroid = /; wv\)/.test(navigator.userAgent || '');
   function urlHttps(rel) { return pub.base + encodeURI(rel); }
   function urlWebcal(rel) { return urlHttps(rel).replace(/^https?:/, 'webcal:'); }
   function urlGoogle(rel) { return 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent(urlWebcal(rel)); }
@@ -851,10 +853,21 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   // Botones para el grupo de WhatsApp de las familias: abrir WhatsApp con el mensaje o copiarlo. Solo en el
   // primer partido del día del equipo (el que tiene mensaje), sin resultado y sin jugar. El enlace va
   // directo a api.whatsapp.com: el atajo wa.me cambia los emojis por «�» al redirigir.
+  // El enlace «WhatsApp»: api.whatsapp.com (no wa.me: su redirección estropea los emojis). En Android, esa
+  // dirección la abre la última app de WhatsApp instalada, casi siempre la Business: ahí va un intent con el
+  // paquete del WhatsApp normal (com.whatsapp), con api.whatsapp.com de respaldo si no lo tiene (codificada dos
+  // veces: Android la decodifica una) y sin pestaña nueva (Samsung Internet y la app instalada la dejarían en
+  // blanco). En el iPhone, api.whatsapp.com ya abre el normal.
+  function enlaceWhatsApp(mensaje) {
+    var t = encodeURIComponent(mensaje);
+    var web = 'https://api.whatsapp.com/send?text=' + t;
+    if (!esAndroid || esWebViewAndroid) return '<a class="boton-wa wa" href="' + esc(web) + '" target="_blank" rel="noopener">';
+    return '<a class="boton-wa wa" href="' + esc('intent://send/?text=' + t + '#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=' +
+      encodeURIComponent(web) + ';end') + '">';
+  }
   function botonesWhatsApp(p, i) {
     if (!p.wa || jugado(p)) return '';
-    return '<a class="boton-wa wa" href="' + esc('https://api.whatsapp.com/send?text=' + encodeURIComponent(p.wa)) + '" target="_blank" rel="noopener">' +
-      icono('i-msg') + 'WhatsApp</a>' +
+    return enlaceWhatsApp(p.wa) + icono('i-msg') + 'WhatsApp</a>' +
       '<button type="button" class="boton-wa copiar" data-i="' + i + '">' + icono('i-copia') + '<span>Copiar</span></button>';
   }
   // Copia al portapapeles; si el navegador no deja (página sin https o antigua), con un <textarea>.

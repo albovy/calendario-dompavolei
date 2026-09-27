@@ -400,15 +400,51 @@ test('página: WhatsApp, Copiar y Pedir bus solo donde tocan, en una línea bajo
   assert.match(html, /<svg[^>]*><use href="#i-msg"\/><\/svg>WhatsApp/);
 });
 
-test('página: el enlace «WhatsApp» va directo a api.whatsapp.com con el mensaje entero', () => {
-  const mensaje = '🏐 *DOMPAVOLEI IF1* (Infantil F)\n📅 *Sábado 26 de septiembre*\n⏰ 🏟️ A & B #1 +2';
-  const html = abrirPagina(datos([partido({ wa: mensaje })])).contenido.innerHTML;
-  const enlaces = [...html.matchAll(/class="boton-wa wa" href="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
-  assert.equal(enlaces.length, 1);
-  const prefijo = 'https://api.whatsapp.com/send?text=';
-  assert.ok(enlaces[0].startsWith(prefijo), enlaces[0]);
-  assert.equal(decodeURIComponent(enlaces[0].slice(prefijo.length)), mensaje);
+const MENSAJE_WA = '🏐 *DOMPAVOLEI IF1* (Infantil F)\n📅 *Sábado 26 de septiembre*\n⏰ 🏟️ A & B #1 +2; 50% ¿sí?';
+// El enlace «WhatsApp» de la página: { href, blank } (si abre en otra pestaña).
+function enlaceWhatsApp(ua) {
+  const html = abrirPagina(datos([partido({ wa: MENSAJE_WA })]), { ua }).contenido.innerHTML;
+  const m = [...html.matchAll(/<a class="boton-wa wa" href="([^"]*)"([^>]*)>/g)];
+  assert.equal(m.length, 1);
   assert.ok(!html.includes('wa.me'));
+  return { href: m[0][1].replace(/&amp;/g, '&'), blank: /target="_blank"/.test(m[0][2]) };
+}
+
+test('página: «WhatsApp» en el iPhone, el ordenador y los navegadores dentro de otras apps: api.whatsapp.com con el mensaje entero', () => {
+  // En el iPhone abre el WhatsApp normal (va el primero para esa dirección); no wa.me: su redirección
+  // estropea los emojis.
+  const WEBVIEW = 'Mozilla/5.0 (Linux; Android 14; SM-S921B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36';
+  for (const ua of [IPHONE, IPAD, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/140.0', WEBVIEW, 'Pruebas']) {
+    const { href, blank } = enlaceWhatsApp(ua);
+    const prefijo = 'https://api.whatsapp.com/send?text=';
+    assert.ok(href.startsWith(prefijo), ua + ' → ' + href);
+    assert.equal(decodeURIComponent(href.slice(prefijo.length)), MENSAJE_WA);
+    assert.equal(blank, true, ua);
+  }
+});
+
+test('página: «WhatsApp» en Android abre el WhatsApp normal (intent con com.whatsapp), no el Business; si no lo hay, api.whatsapp.com', () => {
+  for (const ua of [ANDROID, SAMSUNG]) {
+    const { href, blank } = enlaceWhatsApp(ua);
+    // Como lo lee Android: el fragmento empieza en el último «#»; los datos, tal cual (sin decodificar).
+    const almohadilla = href.lastIndexOf('#');
+    const datosIntent = href.slice(0, almohadilla);
+    const extras = href.slice(almohadilla + 1);
+    assert.ok(datosIntent.startsWith('intent://send/?text='), href);
+    assert.ok(!datosIntent.slice('intent://'.length).includes('#'), 'el «#» del mensaje va codificado');
+    assert.equal(decodeURIComponent(datosIntent.slice('intent://send/?text='.length)), MENSAJE_WA);
+    const partes = extras.split(';');
+    assert.deepEqual([partes[0], partes[1], partes[2], partes.at(-1)], ['Intent', 'scheme=whatsapp', 'package=com.whatsapp', 'end']);
+    // El de respaldo, codificado dos veces: Android lo decodifica una vez (Uri.decode) y queda la dirección de
+    // api.whatsapp.com con el mensaje aún codificado (si no, los saltos de línea se perderían).
+    const respaldo = partes.find((x) => x.startsWith('S.browser_fallback_url=')).slice('S.browser_fallback_url='.length);
+    const web = decodeURIComponent(respaldo);
+    assert.ok(web.startsWith('https://api.whatsapp.com/send?text='), web);
+    assert.ok(!/[\n ]/.test(web), 'la dirección de respaldo, sin espacios ni saltos sin codificar');
+    assert.equal(decodeURIComponent(web.slice('https://api.whatsapp.com/send?text='.length)), MENSAJE_WA);
+    // Sin pestaña nueva: con target=_blank, Samsung Internet y la app instalada dejan una pestaña en blanco.
+    assert.equal(blank, false, ua);
+  }
 });
 
 test('página: «Copiar» sin navigator.clipboard copia con el método antiguo y el foco vuelve al botón', () => {
