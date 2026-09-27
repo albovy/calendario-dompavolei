@@ -73,7 +73,7 @@ export function abrirPagina(codigo, datos, {
   red = () => Promise.reject(new TypeError('Failed to fetch')), enLinea = true, recursos = [], busqueda = '',
 } = {}) {
   const porId = new Map();
-  const pagina = { copiado: null, recargas: 0, registros: [], peticiones: [], intervalos: new Map(), mensajesSw: [] };
+  const pagina = { copiado: null, recargas: 0, registros: [], peticiones: [], intervalos: new Map(), mensajesSw: [], direcciones: [] };
   let siguienteIntervalo = 1;
   const doc = {
     getElementById(id) {
@@ -129,6 +129,8 @@ export function abrirPagina(codigo, datos, {
       reload() { pagina.recargas++; },
     },
     matchMedia: (q) => ({ matches: consultas.includes(q) }),
+    // Los cambios de dirección sin recargar (history.replaceState), en pagina.direcciones.
+    history: { replaceState(_estado, _titulo, url) { pagina.direcciones.push(url); } },
     eventoInstalar,
     localStorage: almacen
       ? { getItem(k) { return almacen.has(k) ? almacen.get(k) : null; }, setItem(k, v) { almacen.set(k, String(v)); } }

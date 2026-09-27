@@ -1025,3 +1025,44 @@ test('demo: «Pedir bus» de un partido de prueba abre el correo sin destinatari
   assert.equal(real.para, encodeURIComponent('bus@example.com'));
   assert.doesNotMatch(decodeURIComponent(real.q), /PRUEBA/);
 });
+
+test('demo: el interruptor «Partidos de prueba» (en Filtros) los enseña y los quita, sin guardarlo', () => {
+  const partidos = [
+    partido({ f: '2026-09-26' }),
+    partido({ f: '2026-09-28', h: '12:00', l: 'EQUIPO DE PRUEBA', comp: 'PARTIDO DE PRUEBA', dm: 1 }),
+  ];
+  const almacen = new Map();
+  const p = abrirPagina(datos(partidos), { almacen });
+  const interruptor = p.porId('interruptor-demo');
+  const estado = () => ({
+    filas: filas(p.contenido.innerHTML).map((f) => f.i), marcado: interruptor.getAttribute('aria-checked'),
+    aviso: p.porId('aviso-demo').hidden === false, filtros: p.porId('btn-filtros').textContent,
+  });
+  assert.equal(p.porId('grupo-demo').classList.contains('oculto'), false);
+  assert.deepEqual(estado(), { filas: [0], marcado: 'false', aviso: false, filtros: 'Filtros' });
+  interruptor.oyentes.click({});
+  assert.deepEqual(estado(), { filas: [0, 1], marcado: 'true', aviso: true, filtros: 'Filtros · 1' });
+  interruptor.oyentes.click({});
+  assert.deepEqual(estado(), { filas: [0], marcado: 'false', aviso: false, filtros: 'Filtros' });
+  // La dirección cambia (así, al recargar o compartir, sigue igual), pero no se guarda en el navegador: al
+  // volver a abrir la de siempre, apagado.
+  assert.deepEqual(p.direcciones, ['/calendario/?demo', '/calendario/']);
+  assert.ok(![...almacen.values()].some((v) => /demo/.test(v)));
+  // Con «?demo» en la dirección empieza encendido; al apagarlo se quita solo «demo».
+  for (const [busqueda, queda] of [['?demo', '/calendario/'], ['?x=1&demo', '/calendario/?x=1'], ['#demo', '/calendario/']]) {
+    const q = abrirPagina(datos(partidos), { busqueda });
+    assert.equal(q.porId('interruptor-demo').getAttribute('aria-checked'), 'true', busqueda);
+    q.porId('interruptor-demo').oyentes.click({});
+    assert.deepEqual(q.direcciones, [queda], busqueda);
+    assert.deepEqual(filas(q.contenido.innerHTML).map((f) => f.i), [0], busqueda);
+  }
+});
+
+test('demo: sin partidos de prueba (config.json sin demo) no hay interruptor, ni con «?demo»', () => {
+  const p = abrirPagina(datos([partido()]), { busqueda: '?demo' });
+  assert.equal(p.porId('grupo-demo').classList.contains('oculto'), true);
+  assert.notEqual(p.porId('aviso-demo').hidden, false);
+  assert.equal(p.porId('btn-filtros').textContent, 'Filtros');
+  // El interruptor: un botón con role="switch" y su nombre visible (lectores de pantalla y teclado).
+  assert.match(PLANTILLA, /<button type="button" class="interruptor" id="interruptor-demo" role="switch" aria-checked="false"><span class="pista" aria-hidden="true"><\/span>Partidos de prueba<\/button>/);
+});

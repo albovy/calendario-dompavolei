@@ -180,6 +180,19 @@ svg { flex: none; }
 .seg button + button { border-left: 1.5px solid var(--borde); }
 .seg button[aria-pressed="true"] { background: var(--elegido); color: var(--elegido-t); }
 .seg button:focus-visible { outline-offset: -3px; }
+/* Interruptor (partidos de prueba): la pista se llena y la bola pasa a la derecha al encenderlo. */
+.interruptor {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 4px 0 0; border: 0; border-radius: 8px;
+  background: none; cursor: pointer; color: var(--tinta); font: 600 14px/1 var(--cond); letter-spacing: .06em; text-transform: uppercase;
+}
+.interruptor .pista { position: relative; flex: none; width: 44px; height: 26px; border-radius: 999px; background: var(--control); transition: background .15s; }
+.interruptor .pista::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--sup); transition: transform .15s;
+}
+.interruptor[aria-checked="true"] .pista { background: var(--agua); }
+.interruptor[aria-checked="true"] .pista::after { transform: translateX(18px); }
+@media (prefers-reduced-motion: reduce) { .interruptor .pista, .interruptor .pista::after { transition: none; } }
 
 /* Cabecera de la sección: «Salidas desde Os Remedios» + Lista/Mes */
 main { display: block; padding-bottom: 32px; }
@@ -446,6 +459,10 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
           <button type="button" data-cond="todos">Todos</button><button type="button" data-cond="local">Local</button><button type="button" data-cond="visitante">Visitante</button>
         </div>
       </div>
+      <div class="grupo oculto" id="grupo-demo">
+        <span class="grupo-t">Demostración</span>
+        <button type="button" class="interruptor" id="interruptor-demo" role="switch" aria-checked="false"><span class="pista" aria-hidden="true"></span>Partidos de prueba</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -479,9 +496,13 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
 (function () {
   'use strict';
   var D = JSON.parse(document.getElementById('datos').textContent);
-  // Partidos de prueba (config.json › demo): solo con «?demo» (o #demo) en la dirección, para enseñar la página.
-  var modoDemo = /(^|[?&#])demo(=[^&#]*)?($|[&#])/i.test((location.search || '') + (location.hash || ''));
-  if (!modoDemo) D.partidos = D.partidos.filter(function (p) { return !p.dm; });
+  // Partidos de prueba (config.json › demo), para enseñar la página: se ven con el interruptor de Filtros o con
+  // «?demo» (o #demo) en la dirección. No se guarda: al volver a abrir la de siempre, no salen.
+  var todosPartidos = D.partidos;
+  var hayDemo = todosPartidos.some(function (p) { return p.dm; });
+  var modoDemo = hayDemo && /(^|[?&#])demo(=[^&#]*)?($|[&#])/i.test((location.search || '') + (location.hash || ''));
+  function aplicarDemo() { D.partidos = modoDemo ? todosPartidos : todosPartidos.filter(function (p) { return !p.dm; }); }
+  aplicarDemo();
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   var SEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -613,11 +634,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     escudo.classList.add('oculto');
   }
   $('titulo-seccion').textContent = D.sal ? 'Salidas desde ' + D.sal.origen : 'Partidos';
-  if (modoDemo && D.partidos.some(function (p) { return p.dm; })) {
-    $('aviso-demo').textContent = 'Modo demostración: los partidos contra «EQUIPO DE PRUEBA» son inventados, para enseñar la página. ' +
-      'Sin «?demo» en la dirección no salen.';
-    $('aviso-demo').hidden = false;
-  }
+  $('aviso-demo').textContent = 'Modo demostración: los partidos contra «EQUIPO DE PRUEBA» son inventados, para enseñar la página. ' +
+    'Se quitan en Filtros › Partidos de prueba.';
+  $('aviso-demo').hidden = !modoDemo;
 
   // «+ Calendario»: abre y cierra el panel con la suscripción, el .ics, el Excel, imprimir y la ayuda.
   var btnCal = $('btn-cal'), panelCal = $('panel-cal');
@@ -692,6 +711,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     if (st.seccion !== 'clas') {
       if (st.vista === 'lista' && st.per !== 'proximos') n++;   // en el Mes no hay periodo
       if (st.cond !== 'todos') n++;
+      if (modoDemo) n++;
     }
     btnFiltros.textContent = 'Filtros' + (n ? ' · ' + n : '');
   }
@@ -708,6 +728,28 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     guardar(); pintar();
   }
   ['pestanas', 'seg-vista', 'panel-filtros'].forEach(function (id) { $(id).addEventListener('click', alPulsar); });
+
+  // El interruptor de los partidos de prueba: los enseña o los quita, con su aviso, y lo pone en la dirección
+  // («?demo»), para que siga igual al recargar o al compartir el enlace.
+  var interruptorDemo = $('interruptor-demo');
+  $('grupo-demo').classList.toggle('oculto', !hayDemo);
+  interruptorDemo.setAttribute('aria-checked', modoDemo ? 'true' : 'false');
+  function ponerDemoEnDireccion() {
+    try {
+      var q = (location.search || '').replace(/^\?/, '').split('&').filter(function (x) { return x && !/^demo(=|$)/i.test(x); });
+      if (modoDemo) q.push('demo');
+      var hash = /^#demo$/i.test(location.hash || '') ? '' : (location.hash || '');
+      window.history.replaceState(null, '', location.pathname + (q.length ? '?' + q.join('&') : '') + hash);
+    } catch (e) { /* sin history: la dirección no cambia, no pasa nada */ }
+  }
+  interruptorDemo.addEventListener('click', function () {
+    modoDemo = !modoDemo;
+    aplicarDemo();
+    interruptorDemo.setAttribute('aria-checked', modoDemo ? 'true' : 'false');
+    $('aviso-demo').hidden = !modoDemo;
+    ponerDemoEnDireccion();
+    pintar();
+  });
 
   function marcarSegmentos() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-seccion], [data-vista], [data-per], [data-cond]'), function (b) {
