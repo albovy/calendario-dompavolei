@@ -12,7 +12,6 @@ import {
   duracionConfig, fechaParametro, leerConfig, leerOpciones, mostrarError, nuevoRango, principal, rangoTemporada,
   resolverClubs, temporadaAnterior,
 } from '../src/main.js';
-import { URL_BASE } from '../src/isquad.js';
 import { configPedirBus, configSalidas } from '../src/salidas.js';
 import { fechaPared, fmt } from '../src/util.js';
 
@@ -566,19 +565,20 @@ test('la web publica la página como index.html (y calendario.html); salidas.htm
   assert.match(redireccion, /<\/html>$/);
 });
 
-test('si la federación no deja conectar a la máquina de GitHub, la publicación se relanza sola en otra (hasta 3 veces)', () => {
+test('el workflow: lo lanzan cron-job.org, el botón y los cambios subidos; sin schedule ni relanzamientos; una ejecución atascada no bloquea las siguientes', () => {
   const workflow = readFileSync(join(REPO, '.github', 'workflows', 'calendario.yml'), 'utf8').replace(/\r\n/g, '\n');
-  // Permiso para lanzar otra ejecución con el token de la propia tarea (sin claves nuevas).
-  assert.match(workflow, /^permissions:\n(?:[ \t]+.*\n)*[ \t]+actions: write/m);
-  // El número de relanzamiento viaja como entrada de workflow_dispatch; las demás ejecuciones valen 0.
-  assert.match(workflow, /workflow_dispatch:[^\n]*\n[ \t]+inputs:\n[ \t]+intento:\n(?:[ \t]+.*\n)*?[ \t]+default: '0'/);
-  // La salida de la generación se guarda para saber por qué falló.
-  assert.match(workflow, /- name: Generar calendario\n[ \t]+id: generar\n[ \t]+run: [^\n]*node src\/main\.js [^\n]*\| tee generar\.log/);
-  // Solo se relanza si el fallo es de conexión con la federación (el mismo texto que da peticion()), y como mucho 3 veces.
-  const paso = workflow.slice(workflow.indexOf('- name: Relanzar en otra máquina'));
-  assert.match(paso, /if: failure\(\) && steps\.generar\.outcome == 'failure'/);
-  assert.ok(paso.includes(`grep -q 'No se pudo descargar ${URL_BASE}' generar.log`), paso);
-  assert.match(paso, /-ge 3/);
-  assert.match(paso, /gh workflow run calendario\.yml [^\n]*-f intento="\$siguiente"/);
-  assert.match(paso, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  const disparos = workflow.slice(workflow.indexOf('\non:\n'), workflow.indexOf('\npermissions:'));
+  // cron-job.org cada hora y el botón «Run workflow» (workflow_dispatch, sin entradas), y los cambios subidos.
+  assert.match(disparos, /^[ \t]+workflow_dispatch:[^\n]*$/m);
+  assert.doesNotMatch(disparos, /inputs:/);
+  assert.match(disparos, /^[ \t]+push:\n[ \t]+branches: \[main\]/m);
+  // Sin la programación de GitHub (llegaba con retraso y cron-job.org ya lo lanza) ni relanzamientos: si una
+  // ejecución falla, ya lo hará la de la hora siguiente.
+  assert.doesNotMatch(workflow, /^[ \t]+schedule:|cron:/m);
+  assert.doesNotMatch(workflow, /gh workflow run|intento|actions: write|generar\.log/);
+  assert.match(workflow, /- name: Generar calendario\n[ \t]+run: node src\/main\.js --salida web --nombre-base calendario --historial historial\/partidos\.txt\n/);
+  // Una ejecución que se queda atascada (el 26/09/2026, 10 horas esperando máquina) no bloquea las
+  // siguientes: la nueva cancela a la que siga en marcha. Y ninguna pasa de 15 minutos.
+  assert.match(workflow, /^concurrency:\n[ \t]+group: pages\n[ \t]+cancel-in-progress: true$/m);
+  assert.match(workflow, /^[ \t]+publicar:\n[ \t]+runs-on: ubuntu-latest\n[ \t]+timeout-minutes: 15\b/m);
 });
