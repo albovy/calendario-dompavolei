@@ -447,7 +447,7 @@ function compararEjecuciones(ps, js) {
       const sinGenerado = ({ generado, ...resto }) => resto;
       // Lo que solo tiene la versión en JavaScript no se compara (datosJs sigue entero para comprobarMarcas).
       const comunConPs = ({ generado, corto, clas, escudo, app, ...resto }) => ({
-        ...resto, partidos: resto.partidos?.map(({ r, wa, ...p }) => p),
+        ...resto, partidos: resto.partidos?.filter((p) => !p.dm).map(({ r, wa, ...p }) => p),
       });
       const d = diferenciaJson(sinGenerado(datosPs), comunConPs(datosJs), 'datos');
       const mismoOrden = JSON.stringify(sinGenerado(datosPs)) === JSON.stringify(comunConPs(datosJs));

@@ -533,6 +533,45 @@ test('app instalable: con iconos junto a config.json, manifiesto, iconos y sw.js
   }
 });
 
+test('demo (config.json): dos partidos de prueba solo en la página; ni en el .ics, ni en el Excel, ni en el historial', async () => {
+  const filas = [fila('2026-10-03 12:00:00', 'RIVAL', 'DOMPAVOLEI CF1', '1', DOMPA), fila('2026-10-04 11:00:00', 'DOMPAVOLEI IF1', 'OTRO', DOMPA, '2')];
+  const generar = async (config) => {
+    const dir = carpetaConConfig(config);
+    const salida = join(dir, 'salida');
+    const historial = join(dir, 'historial.txt');
+    const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
+      () => principal(['--config', dir, '--salida', salida, '--nombre-base', 'cal', '--temporada', '2026-27', '--historial', historial], new Date('2026-09-27T10:00:00Z'))));
+    return { dir, salida, historial, consola };
+  };
+  const g = await generar({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }], demo: true });
+  try {
+    const d = datosDePagina(join(g.salida, 'cal.html'));
+    const demo = d.partidos.filter((p) => p.dm);
+    assert.equal(d.partidos.length, 4);
+    assert.deepEqual(demo.map((p) => [p.f, p.h, p.cond, p.l, p.v, p.comp]), [
+      ['2026-09-28', '12:00', 'visitante', 'EQUIPO DE PRUEBA', 'DOMPAVOLEI CF1', 'PARTIDO DE PRUEBA'],
+      ['2026-09-28', '18:00', 'local', 'DOMPAVOLEI IF1', 'EQUIPO DE PRUEBA', 'PARTIDO DE PRUEBA'],
+    ]);
+    // Nada de prueba en lo que se suscribe, se descarga o se guarda.
+    assert.equal(eventos(join(g.salida, 'cal.ics')), 2);
+    for (const f of readdirSync(join(g.salida, 'equipos'))) assert.doesNotMatch(readFileSync(join(g.salida, 'equipos', f), 'utf8'), /PRUEBA/, f);
+    assert.doesNotMatch(readFileSync(join(g.salida, 'cal.ics'), 'utf8'), /PRUEBA/);
+    assert.doesNotMatch(readFileSync(g.historial, 'utf8'), /PRUEBA/);
+    assert.ok(g.consola.some((l) => /2 partidos de prueba en la página \(solo se ven con «\?demo» en la dirección\)/.test(l)), g.consola.join('\n'));
+  } finally {
+    rmSync(g.dir, { recursive: true, force: true });
+  }
+  // Sin «demo» (o con false), ninguno.
+  for (const demo of [undefined, false]) {
+    const h = await generar({ clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }], ...(demo === undefined ? {} : { demo }) });
+    try {
+      assert.equal(datosDePagina(join(h.salida, 'cal.html')).partidos.filter((p) => p.dm).length, 0);
+    } finally {
+      rmSync(h.dir, { recursive: true, force: true });
+    }
+  }
+});
+
 // Lo que ejecuta bash en el bloque «run: |» de un paso del workflow: sus líneas sin la sangría común, como
 // las deja YAML.
 function pasoRun(workflow, nombre) {

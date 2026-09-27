@@ -352,3 +352,16 @@ test('crearHtml: con app, la cabecera enlaza el manifiesto y los iconos, y la p�
   assert.ok(!/rel="manifest"|apple-touch-icon|apple-mobile-web-app-title|iconos\//.test(sin));
   assert.equal(datosDe(sin).app, false);
 });
+
+// --- Partidos de prueba (config.json › demo) -------------------------------------------------------------
+
+test('crearHtml: los partidos de prueba van marcados (dm) y su mensaje de WhatsApp avisa de que no son reales', () => {
+  const real = partido({ fecha: fechaPared(2026, 10, 3, 17, 30) });
+  const demo = partido({ fecha: fechaPared(2026, 9, 25, 12, 0), local: 'EQUIPO DE PRUEBA', visitante: 'DOMPAVOLEI CF1',
+    esLocal: false, esVisitante: true, condicion: 'visitante', nuestros: ['DOMPAVOLEI CF1'], demo: true });
+  const d = datosDe(crearHtml(opciones({ partidos: [real, demo] })));
+  assert.equal(Object.hasOwn(d.partidos[0], 'dm'), false);   // los reales, igual que siempre
+  assert.equal(d.partidos[1].dm, 1);
+  assert.match(d.partidos[1].wa, /^🧪 \*PRUEBA\*: este partido no es real\.\n\n🏐 \*DOMPAVOLEI CF1\*/);
+  assert.doesNotMatch(d.partidos[0].wa, /PRUEBA/);
+});

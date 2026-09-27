@@ -70,7 +70,7 @@ export function elemento(doc, etiqueta = 'div') {
 export function abrirPagina(codigo, datos, {
   portapapeles, seguro = false, almacen = null, protocolo = 'https:', alturas = {},
   ua = 'Pruebas', consultas = [], standalone, toques = 0, serviceWorker = false, copia = false, eventoInstalar = null,
-  red = () => Promise.reject(new TypeError('Failed to fetch')), enLinea = true, recursos = [],
+  red = () => Promise.reject(new TypeError('Failed to fetch')), enLinea = true, recursos = [], busqueda = '',
 } = {}) {
   const porId = new Map();
   const pagina = { copiado: null, recargas: 0, registros: [], peticiones: [], intervalos: new Map(), mensajesSw: [] };
@@ -124,6 +124,8 @@ export function abrirPagina(codigo, datos, {
     clearInterval(id) { pagina.intervalos.delete(id); },
     location: {
       protocol: protocolo, host: 'example.org', pathname: '/calendario/', href: `${protocolo}//example.org/calendario/`,
+      // busqueda: lo de después de la ruta (p. ej. '?demo' o '#demo').
+      search: busqueda.startsWith('?') ? busqueda : '', hash: busqueda.startsWith('#') ? busqueda : '',
       reload() { pagina.recargas++; },
     },
     matchMedia: (q) => ({ matches: consultas.includes(q) }),

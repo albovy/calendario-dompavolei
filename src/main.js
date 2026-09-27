@@ -44,6 +44,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { partidosDemo } from './demo.js';
 import { crearHistorial } from './historial.js';
 import { crearHtml } from './html.js';
 import { crearIcs } from './ics.js';
@@ -496,6 +497,10 @@ export async function principal(args, ahora = new Date()) {
     tablas = clasificaciones(equipos, cache, ids, generado.pared);
   }
 
+  // Partidos de prueba para enseñar la página (config.json › "demo": true): solo van a la página, que solo
+  // los enseña con «?demo» en la dirección (ver demo.js).
+  const demo = cfg?.demo === true ? partidosDemo({ partidos, equipos, pabellones, salidas, hoy: generado.pared }) : [];
+
   // Carpeta y nombres de archivo
   const carpetaSalida = resolve(opciones.salida || 'calendario');
   mkdirSync(carpetaSalida, { recursive: true });
@@ -536,7 +541,8 @@ export async function principal(args, ahora = new Date()) {
     crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
   const opcionesHtml = {
-    partidos, equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
+    partidos: demo.length ? [...partidos, ...demo].sort((a, b) => a.fecha - b.fecha || a.ordenCategoria - b.ordenCategoria) : partidos,
+    equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
     rutaEscudo: rutas.escudo,
     app: prepararApp({ carpetaIconos: rutas.iconos, carpetaSalida, nombreClub, nombreCorto, urlPublicada }),
@@ -586,6 +592,7 @@ export async function principal(args, ahora = new Date()) {
   console.log(`    ${archivoXlsx}  <- Excel`);
   if (conEquipos) console.log(`    equipos${sep}  <- un calendario .ics por equipo (${equipos.length})`);
   if (opcionesHtml.app) console.log(`    manifest.webmanifest, sw.js, iconos${sep}  <- para instalar la página como app en el móvil`);
+  if (demo.length) paso(`${demo.length} partidos de prueba en la página (solo se ven con «?demo» en la dirección).`);
   if (urlPublicada) {
     console.log('');
     console.log(`  Calendario en internet (se actualiza solo): ${urlPublicada}`);

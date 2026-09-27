@@ -71,6 +71,11 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
   const pub = RE_PUBLICADA.exec(txt(urlPublicada));
   // Mensaje para el grupo de WhatsApp de las familias (en el primer partido del día de cada equipo).
   const mensajes = mensajesWhatsApp(partidos, { salidas, pedirBus, duracion: aEntero(duracion) || 120, pabellones, hoy: pared });
+  // El de un partido de prueba avisa, por si se manda sin querer al grupo de verdad.
+  const mensajeDe = (p) => {
+    const m = mensajes.get(p) ?? '';
+    return p.demo && m ? `🧪 *PRUEBA*: este partido no es real.\n\n${m}` : m;
+  };
   const datos = {
     club: txt(nombreClub),
     corto: txt(nombreCorto),
@@ -106,7 +111,9 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
       sp: p.salidaPrimero ? hora(p.salidaPrimero.salida) : '',
       mun: txt(p.municipio),
       r: p.resultado ? { m: p.resultado.marcador, s: p.resultado.sets } : null,
-      wa: mensajes.get(p) ?? '',
+      wa: mensajeDe(p),
+      // Partido de prueba (demo.js): la página solo lo enseña con «?demo» en la dirección.
+      ...(p.demo ? { dm: 1 } : {}),
     })),
     clas: clasificaciones.map((c) => ({
       eq: c.equipo,

@@ -954,3 +954,38 @@ test('app: al cerrar la hoja abierta desde el panel, el foco vuelve al botón de
   const i = PLANTILLA.indexOf('<section class="instalar"');
   assert.ok(i > PLANTILLA.indexOf('id="panel-cal"') && i < PLANTILLA.indexOf('<div class="pestanas"'));
 });
+
+// --- Partidos de prueba (config.json › demo) -------------------------------------------------------------
+
+test('demo: los partidos de prueba solo se ven con «?demo» (o #demo) en la dirección, con un aviso', () => {
+  const partidos = [
+    partido({ f: '2026-09-26' }),
+    partido({ f: '2026-09-28', h: '12:00', l: 'EQUIPO DE PRUEBA', comp: 'PARTIDO DE PRUEBA', dm: 1 }),
+  ];
+  let p = abrirPagina(datos(partidos));
+  assert.deepEqual(filas(p.contenido.innerHTML).map((f) => f.i), [0]);
+  assert.notEqual(p.porId('aviso-demo').hidden, false);   // (el marcado lo trae con hidden; el DOM simulado no lo lee)
+  assert.ok(PLANTILLA.includes('<p class="aviso-demo" id="aviso-demo" hidden></p>'));
+  for (const busqueda of ['?demo', '?x=1&demo', '#demo']) {
+    p = abrirPagina(datos(partidos), { busqueda });
+    assert.deepEqual(filas(p.contenido.innerHTML).map((f) => f.i), [0, 1], busqueda);
+    assert.equal(p.porId('aviso-demo').hidden, false, busqueda);
+    assert.match(p.porId('aviso-demo').textContent, /Modo demostración: los partidos contra «EQUIPO DE PRUEBA» son inventados/);
+  }
+  // «?demos» o «?demonio» no.
+  p = abrirPagina(datos(partidos), { busqueda: '?demonio' });
+  assert.deepEqual(filas(p.contenido.innerHTML).map((f) => f.i), [0]);
+});
+
+test('demo: «Pedir bus» de un partido de prueba abre el correo sin destinatario y avisando de que es una prueba', () => {
+  const partidos = [partido({ s: '07:15', vj: 105, l: 'EQUIPO DE PRUEBA', comp: 'PARTIDO DE PRUEBA', dm: 1 }), partido({ f: '2026-09-27', s: '08:00', vj: 60 })];
+  const html = abrirPagina(datos(partidos, { sal: SAL, bus: BUS }), { busqueda: '?demo' }).contenido.innerHTML;
+  const enlaces = [...html.matchAll(/class="boton-bus" href="mailto:([^"?]*)\?([^"]*)"/g)].map((m) => ({ para: m[1], q: m[2].replace(/&amp;/g, '&') }));
+  assert.equal(enlaces.length, 2);
+  const [prueba, real] = enlaces;
+  assert.equal(prueba.para, '');
+  assert.match(decodeURIComponent(/subject=([^&]*)/.exec(prueba.q)[1]), /^PRUEBA · Autobús /);
+  assert.match(decodeURIComponent(/body=([^&]*)/.exec(prueba.q)[1]), /^ESTO ES UNA PRUEBA: no es un partido real\./);
+  assert.equal(real.para, encodeURIComponent('bus@example.com'));
+  assert.doesNotMatch(decodeURIComponent(real.q), /PRUEBA/);
+});

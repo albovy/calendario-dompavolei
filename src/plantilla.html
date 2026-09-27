@@ -105,6 +105,11 @@ svg { flex: none; }
   background: color-mix(in srgb, var(--ambar) 16%, var(--sup)); color: var(--tinta); font: 500 15px/1.35 var(--txt);
 }
 .aviso-copia[hidden] { display: none; }
+/* Modo demostración (?demo): se ven los partidos de prueba. */
+.aviso-demo {
+  margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--borde); text-align: center;
+  background: color-mix(in srgb, var(--agua-r) 22%, var(--sup)); color: var(--tinta); font: 500 15px/1.35 var(--txt);
+}
 .reintentar {
   min-height: 36px; padding: 0 14px; border: 1.5px solid var(--tinta); border-radius: 999px; background: none;
   color: var(--tinta); font: 600 15px/1 var(--cond); letter-spacing: .03em; cursor: pointer;
@@ -327,7 +332,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     --fondo: #fff; --sup: #fff; --borde: #bbb; --control: #666; --tinta: #000; --tinta2: #333; --marino-t: #000;
     --agua: #000; --agua-r: #666; --ambar: #000; --elegido: #000; --elegido-t: #fff;
   }
-  .instalar, .aviso-copia, .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
+  .instalar, .aviso-copia, .aviso-demo, .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
   .det[hidden] { display: block !important; }
   .solo-impresion { display: block; margin-top: 4px; font-weight: 600; color: #000; }
   body { font-size: 12px; }
@@ -365,6 +370,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     <button type="button" class="btn-cal" id="btn-cal" aria-expanded="false" aria-controls="panel-cal">+ Calendario</button>
   </div>
 </header>
+
+<p class="aviso-demo" id="aviso-demo" hidden></p>
 
 <div class="aviso-copia" id="aviso-copia" role="status" hidden>
   <span id="aviso-copia-texto"></span>
@@ -472,6 +479,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
 (function () {
   'use strict';
   var D = JSON.parse(document.getElementById('datos').textContent);
+  // Partidos de prueba (config.json › demo): solo con «?demo» (o #demo) en la dirección, para enseñar la página.
+  var modoDemo = /(^|[?&#])demo(=[^&#]*)?($|[&#])/i.test((location.search || '') + (location.hash || ''));
+  if (!modoDemo) D.partidos = D.partidos.filter(function (p) { return !p.dm; });
   var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   var SEM = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -601,6 +611,11 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     escudo.classList.add('oculto');
   }
   $('titulo-seccion').textContent = D.sal ? 'Salidas desde ' + D.sal.origen : 'Partidos';
+  if (modoDemo && D.partidos.some(function (p) { return p.dm; })) {
+    $('aviso-demo').textContent = 'Modo demostración: los partidos contra «EQUIPO DE PRUEBA» son inventados, para enseñar la página. ' +
+      'Sin «?demo» en la dirección no salen.';
+    $('aviso-demo').hidden = false;
+  }
 
   // «+ Calendario»: abre y cierra el panel con la suscripción, el .ics, el Excel, imprimir y la ayuda.
   var btnCal = $('btn-cal'), panelCal = $('panel-cal');
@@ -820,8 +835,14 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     if (D.bus.firma) l.push(D.bus.firma);
     var asunto = 'Autobús ' + equipo + ' · ' + DIAS[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' · salida ' + p.s;
     var para = (D.bus.para || '').split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(',');
+    // Un partido de prueba: el correo sin destinatario (ni copia) y avisando, por si se manda sin querer.
+    if (p.dm) {
+      l.unshift('ESTO ES UNA PRUEBA: no es un partido real.', '');
+      asunto = 'PRUEBA · ' + asunto;
+      para = '';
+    }
     var q = [];
-    if (D.bus.cc) q.push('cc=' + D.bus.cc.split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(','));
+    if (D.bus.cc && !p.dm) q.push('cc=' + D.bus.cc.split(/[,;]\s*/).filter(Boolean).map(encodeURIComponent).join(','));
     q.push('subject=' + encodeURIComponent(asunto));
     q.push('body=' + encodeURIComponent(l.join('\n').replace(/\n/g, '\r\n')));
     return '<a class="boton-bus" href="' + esc('mailto:' + para + '?' + q.join('&')) + '">' + icono('i-mail') + 'Pedir bus</a>';
