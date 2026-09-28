@@ -1,0 +1,40 @@
+# Prueba de una sola vez (botón «Run workflow»): 25 máquinas nuevas a la vez (Linux, Linux ARM y macOS), cada
+# una dice su IP pública y si llega a la federación. Solo abre conexiones (no descarga nada). Tarda 3-5 min y
+# es gratis (repo público). Temporal: se borra cuando se tengan los datos.
+name: Diagnóstico de red (federación)
+on: workflow_dispatch
+permissions: {}
+jobs:
+  sonda:
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+        n: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        exclude:              # macOS: basta con 5 (su grupo de IPs es pequeño y fijo)
+          - { so: macos-latest, n: 6 }
+          - { so: macos-latest, n: 7 }
+          - { so: macos-latest, n: 8 }
+          - { so: macos-latest, n: 9 }
+          - { so: macos-latest, n: 10 }
+    runs-on: ${{ matrix.so }}
+    timeout-minutes: 5
+    steps:
+      - shell: bash
+        run: |
+          set +e
+          tcp() { if timeout 8 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; then echo ok; else echo TIMEOUT; fi; }
+          IP=$(curl -s -m 8 https://api.ipify.org)
+          REG=$(curl -s -m 3 -H Metadata:true 'http://169.254.169.254/metadata/instance/compute/location?api-version=2021-02-01&format=text')
+          DNS=$(getent hosts resultadosvoleibol.isquad.es | awk '{print $1}' | head -1)
+          NOMBRE=$(tcp resultadosvoleibol.isquad.es 443) # por el nombre, por si cambiara la IP
+          FED443=$(tcp 51.178.170.113 443)      # resultadosvoleibol / voleibol.isquad.es
+          FED80=$(tcp 51.178.170.113 80)
+          ISQ=$(tcp 178.33.160.63 443)          # servidor principal de iSquad (mismo filtro en check-host)
+          RUGBY=$(tcp 51.178.254.121 443)       # otro servidor de iSquad en OVH que no filtra (control)
+          OVH=$(tcp 91.134.166.129 443)         # volei.gal, OVH (control)
+          L="DIAG|${{ matrix.so }}|ip=${IP:-?}|region=${REG:-?}|dns=${DNS:-?}|nombre=$NOMBRE|fed443=$FED443|fed80=$FED80|isquad=$ISQ|rugby=$RUGBY|voleigal=$OVH"
+          echo "$L"; echo "$L" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FED443" != ok ] && command -v tracepath >/dev/null; then timeout 40 tracepath -n -m 20 51.178.170.113 | tail -n 8; fi
+          exit 0
+# Leer: gh run view <id> --log | grep -o 'DIAG|.*' | sort -t'|' -k2,2 -k5,5
