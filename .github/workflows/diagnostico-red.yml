@@ -29,7 +29,7 @@ jobs:
           # por ir a una IP), «TIMEOUT» si no.
           conecta() {
             local t; t=$(curl -sk -o /dev/null --connect-timeout 8 -m 12 -w '%{time_connect}' "$1")
-            case "$t" in ''|0|0.0*0) echo TIMEOUT ;; *) echo "ok(${t}s)" ;; esac
+            case "$t" in ''|0|0.000000) echo TIMEOUT ;; *) echo "ok(${t}s)" ;; esac
           }
           IP=$(curl -s -m 8 https://api.ipify.org)
           FED=$(conecta https://resultadosvoleibol.isquad.es/)     # por el nombre, lo que usa el calendario
