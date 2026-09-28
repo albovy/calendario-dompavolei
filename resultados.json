@@ -30,7 +30,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-09-27 14:13"
+   "revisado": "2026-09-28 11:17"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -532,10 +532,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-09-27 14:13",
+   "consultado": "2026-09-28 11:17",
    "terminado": false,
-   "firma": "c5914d9de971248b",
-   "firma_clasificacion": "c5914d9de971248b",
+   "firma": "196f7047cfd07e36",
+   "firma_clasificacion": "196f7047cfd07e36",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
@@ -586,12 +586,12 @@
      "pos": 1,
      "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "club": "206572608",
-     "pt": 3,
-     "pj": 1,
-     "pg": 1,
+     "pt": 6,
+     "pj": 2,
+     "pg": 2,
      "pp": 0,
-     "sf": 3,
-     "sc": 0
+     "sf": 6,
+     "sc": 1
     },
     {
      "pos": 2,
@@ -609,11 +609,11 @@
      "equipo": "PESCADOR XAV SANXENXO",
      "club": "206572588",
      "pt": 0,
-     "pj": 1,
+     "pj": 2,
      "pg": 0,
-     "pp": 1,
-     "sf": 0,
-     "sc": 3
+     "pp": 2,
+     "sf": 1,
+     "sc": 6
     },
     {
      "pos": 4,
