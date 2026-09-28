@@ -615,9 +615,31 @@ test('el workflow: lo lanzan cron-job.org, el botón y los cambios subidos; sin 
   // ejecución falla, ya lo hará la de la hora siguiente.
   assert.doesNotMatch(workflow, /^[ \t]+schedule:|cron:/m);
   assert.doesNotMatch(workflow, /gh workflow run|intento|actions: write|generar\.log/);
-  assert.match(workflow, /- name: Generar calendario\n[ \t]+run: node src\/main\.js --salida web --nombre-base calendario --historial historial\/partidos\.txt\n/);
+  assert.match(workflow, /- name: Generar calendario\n[ \t]+if: steps\.sonda\.outputs\.llega == 'true'\n[ \t]+run: node src\/main\.js --salida web --nombre-base calendario --historial historial\/partidos\.txt\n/);
   // Una ejecución que se queda atascada (el 26/09/2026, 10 horas esperando máquina) no bloquea las
   // siguientes: la nueva cancela a la que siga en marcha. Y ninguna pasa de 15 minutos.
   assert.match(workflow, /^concurrency:\n[ \t]+group: pages\n[ \t]+cancel-in-progress: true$/m);
-  assert.match(workflow, /^[ \t]+publicar:\n[ \t]+runs-on: ubuntu-latest\n[ \t]+timeout-minutes: 15\b/m);
+  // En macOS: el servidor de la federación descarta las conexiones de parte de las máquinas Linux de GitHub
+  // (Azure); las macOS salen por otras direcciones (diagnóstico del 28/09/2026: 5 de 5 llegaron).
+  assert.match(workflow, /^[ \t]+publicar:\n[ \t]+runs-on: macos-latest\n[ \t]+timeout-minutes: 15\b/m);
+});
+
+test('el workflow: primero mira si la máquina llega a la federación; si no, termina sin error y con un aviso', () => {
+  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'calendario.yml'), 'utf8').replace(/\r\n/g, '\n');
+  const pasos = workflow.slice(workflow.indexOf('    steps:\n')).split(/\n(?=      - )/).slice(1);
+  const nombre = (p) => (/- (?:name: |uses: |id: )([^\n]+)/.exec(p) || [])[1];
+  const sonda = pasos.findIndex((p) => /id: sonda/.test(p));
+  assert.ok(sonda >= 0 && sonda <= 1, 'la comprobación va al principio (tras el checkout)');
+  const script = pasoRun(workflow, '¿Llega a la federación?');
+  assert.match(script, /curl [^\n]*--connect-timeout 8[^\n]*https:\/\/resultadosvoleibol\.isquad\.es\//);
+  assert.match(script, /echo "llega=true" >> "\$GITHUB_OUTPUT"/);
+  assert.match(script, /echo "llega=false" >> "\$GITHUB_OUTPUT"/);
+  assert.match(script, /::warning::[^\n]*federación/);
+  assert.doesNotMatch(script, /exit 1/);   // una máquina bloqueada no es un fallo nuestro
+  // Todo lo demás, solo si llega (así una bloqueada no publica nada ni deja la web a medias).
+  for (const p of pasos.slice(sonda + 1)) {
+    assert.match(p, /\n[ \t]+if: steps\.sonda\.outputs\.llega == 'true'\n/, nombre(p));
+  }
+  // La prueba de red (temporal) ya no está.
+  assert.equal(existsSync(join(REPO, '.github', 'workflows', 'diagnostico-red.yml')), false);
 });
