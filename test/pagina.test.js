@@ -1066,3 +1066,11 @@ test('demo: sin partidos de prueba (config.json sin demo) no hay interruptor, ni
   // El interruptor: un botón con role="switch" y su nombre visible (lectores de pantalla y teclado).
   assert.match(PLANTILLA, /<button type="button" class="interruptor" id="interruptor-demo" role="switch" aria-checked="false"><span class="pista" aria-hidden="true"><\/span>Partidos de prueba<\/button>/);
 });
+
+test('página: el pie explica cómo se calcula la salida (a 100 km/h por carretera; a la hora o a la media)', () => {
+  let pie = abrirPagina(datos([partido()], { sal: { origen: 'Os Remedios', cal: 60, vel: 100, red: 30 } })).porId('pie').textContent;
+  assert.match(pie, /Horas de salida desde Os Remedios: partido menos 60 min de calentamiento y el viaje en bus \(distancia por carretera a 100 km\/h, redondeado al alza\), saliendo a la hora en punto o a la media\./);
+  // Sin velocidad ni redondeo a la media (otra configuración): el texto de antes.
+  pie = abrirPagina(datos([partido()], { sal: { origen: 'Os Remedios', cal: 60 } })).porId('pie').textContent;
+  assert.match(pie, /el viaje en bus \(tiempo por carretera de OpenStreetMap\/OSRM, redondeado al alza\)\./);
+});

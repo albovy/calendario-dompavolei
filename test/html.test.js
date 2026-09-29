@@ -129,7 +129,7 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   assert.equal(d.ics, 'calendario-dompavolei-2026-27.ics');
   assert.equal(d.xlsx, 'calendario-dompavolei-2026-27.xlsx');
   assert.deepEqual(d.pub, { base: 'https://example.github.io/calendario/', ics: 'calendario-dompavolei-2026-27.ics' });
-  assert.deepEqual(d.sal, { origen: 'Pabellón de Lalín', cal: 90 });
+  assert.deepEqual(d.sal, { origen: 'Pabellón de Lalín', cal: 90, vel: null, red: 15 });
   assert.deepEqual(d.bus, { ...pedirBus, dur: 105 });
   assert.deepEqual(Object.keys(d.bus), ['para', 'cc', 'plazas', 'firma', 'origen', 'dirOrigen', 'dur']);
   // Solo los pabellones de los partidos con coordenadas, ordenados; sin dirección guardada, ''.

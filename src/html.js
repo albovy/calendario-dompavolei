@@ -84,7 +84,8 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
     ics: txt(ics),
     xlsx: txt(xlsx),
     pub: pub ? { base: pub[1], ics: pub[2] } : null,
-    sal: salidas ? { origen: salidas.origen, cal: salidas.calentamiento } : null,
+    // vel: la velocidad del bus (km/h) si el viaje sale de los km; red: a qué minutos se redondea la salida.
+    sal: salidas ? { origen: salidas.origen, cal: salidas.calentamiento, vel: salidas.velocidadBus ?? null, red: salidas.redondeo } : null,
     bus,
     pabs: datosPabellones(partidos, pabellones),
     equipos: equipos.map((e) => ({

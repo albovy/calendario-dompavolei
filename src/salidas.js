@@ -49,14 +49,24 @@ export function configSalidas(cfg) {
       else aviso(`config.json: el tiempo de viaje de «${nombre}» no es un número de minutos; se ignora.`);
     }
   }
+  // velocidad_bus_kmh: el viaje en bus sale de los km por carretera a esa velocidad (lo que usan los
+  // entrenadores: 100 km, 1 hora). Sin ella, del tiempo en coche de OSRM por factor_bus.
+  let velocidadBus = null;
+  if (s.velocidad_bus_kmh != null) {
+    const v = aNumero(s.velocidad_bus_kmh, null);
+    if (v !== null && v > 0) velocidadBus = v;
+    else aviso('config.json: "velocidad_bus_kmh" no es un número de km/h mayor que 0; se usa el tiempo en coche.');
+  }
   return {
     origen: s.origen ? txt(s.origen) : 'el pabellón del club',
     lat,
     lon,
     calentamiento: aEntero(aNumero(s.calentamiento_minutos, 60)),
     factorBus: aNumero(s.factor_bus, 1.10),
+    velocidadBus,
     margen: aEntero(aNumero(s.margen_minutos, 0)),
-    // El viaje se redondea hacia arriba y la salida hacia abajo (a cuartos de hora): siempre con margen.
+    // El viaje se redondea hacia arriba y la salida hacia abajo (a cuartos de hora, o a lo que diga
+    // config.json: 30 para salir siempre a la hora en punto o a la media): siempre con margen.
     redondeoViaje: Math.max(1, aEntero(aNumero(s.redondeo_viaje_minutos, 15))),
     redondeo: Math.max(1, aEntero(aNumero(s.redondeo_salida_minutos, 15))),
     radioCasaKm: aNumero(s.radio_casa_km, 1),
@@ -300,6 +310,10 @@ function lugarDelPartido(p, pabellones, cfg) {
     p.km = e.km ?? null;
     if (distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon)) <= cfg.radioCasaKm) {
       casa = true;
+    } else if (cfg.velocidadBus && Number(e.km) > 0) {
+      // A la velocidad del bus con los km por carretera (100 km/h: 160 km son 96 min, 1 h 45 al alza).
+      viaje = Math.ceil(Number(e.km) / cfg.velocidadBus * 60 / cfg.redondeoViaje) * cfg.redondeoViaje;
+      fuente = txt(e.fuente);
     } else if (e.minutos_coche != null) {
       viaje = Math.ceil(Number(e.minutos_coche) * cfg.factorBus / cfg.redondeoViaje) * cfg.redondeoViaje;
       fuente = txt(e.fuente);

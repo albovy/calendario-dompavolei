@@ -1381,7 +1381,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     (enWeb ? 'Esta página se actualiza sola cada hora; los horarios pueden cambiar.' : 'Los horarios pueden cambiar: vuelve a generar el calendario antes de cada fin de semana.') +
     ' Solo aparecen los partidos que publica la federación gallega.' +
     (tablas.length ? ' Resultados y clasificaciones de la web de resultados de la federación, comprobados varias veces al día.' : '') +
-    (D.sal ? ' Horas de salida desde ' + D.sal.origen + ': partido menos ' + D.sal.cal + ' min de calentamiento y el viaje en bus (tiempo por carretera de OpenStreetMap/OSRM, redondeado al alza).' : '');
+    (D.sal ? ' Horas de salida desde ' + D.sal.origen + ': partido menos ' + D.sal.cal + ' min de calentamiento y el viaje en bus (' +
+      (D.sal.vel ? 'distancia por carretera a ' + D.sal.vel + ' km/h' : 'tiempo por carretera de OpenStreetMap/OSRM') + ', redondeado al alza)' +
+      (D.sal.red === 30 ? ', saliendo a la hora en punto o a la media.' : '.') : '');
 
   marcarChips();
   pintar();

@@ -167,9 +167,17 @@ test('configSalidas: valores por defecto, números con coma y avisos', async () 
       tiempos_viaje_minutos: { 'Pazo dos Deportes': '25,6', malo: 'mucho', negativo: -5 } },
   }));
   assert.deepEqual({ ...cfg, manual: [...cfg.manual] }, {
-    origen: 'el pabellón del club', lat: 42.5, lon: -7.8, calentamiento: 60, factorBus: 1.25, margen: 0,
+    origen: 'el pabellón del club', lat: 42.5, lon: -7.8, calentamiento: 60, factorBus: 1.25, velocidadBus: null, margen: 0,
     redondeoViaje: 1, redondeo: 15, radioCasaKm: 2, manual: [['PAZO DOS DEPORTES', 26]],
   });
+  // velocidad_bus_kmh: el viaje sale de los km por carretera; con coma también. Si no es un número > 0, no vale.
+  assert.equal(configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: '100' } }).velocidadBus, 100);
+  assert.equal(configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: '87,5' } }).velocidadBus, 87.5);
+  for (const malo of [0, -3, 'rápido']) {
+    const [c, avisos] = await enSilencio(() => configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: malo } }));
+    assert.equal(c.velocidadBus, null, String(malo));
+    assert.deepEqual(avisos, ['  ! config.json: "velocidad_bus_kmh" no es un número de km/h mayor que 0; se usa el tiempo en coche.'], String(malo));
+  }
   assert.deepEqual(avisos, [
     '  ! config.json: el tiempo de viaje de «malo» no es un número de minutos; se ignora.',
     '  ! config.json: el tiempo de viaje de «negativo» no es un número de minutos; se ignora.',
@@ -403,4 +411,31 @@ test('caché de pabellones: archivo que no existe o que no se entiende', async (
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('viaje a 100 km/h con los km por carretera (lo que piden los entrenadores) y salida siempre a la hora o a la media', () => {
+  const cfg = configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: 100, redondeo_salida_minutos: 30 } });
+  const pabs = {
+    ...PABELLONES,
+    'PALMEIRA': { lat: 42.581729, lon: -8.9609354, km: 160.4, minutos_coche: 111, municipio: 'PALMEIRA', fuente: 'osrm' },
+    'SIN KM': { lat: 42.51356, lon: -7.52425, km: null, minutos_coche: 42, municipio: 'MONFORTE DE LEMOS', fuente: 'osrm' },
+  };
+  const ps = [
+    // 160,4 km a 100 km/h = 96,2 min -> 105 (al cuarto, al alza); 11:30 - 60 - 105 = 8:45 -> 8:30 (a la media, a la baja).
+    partido('2026-10-03 11:30', 'PALMEIRA', 'IF1'),
+    // 46,1 km = 27,7 min -> 30; 12:15 - 60 - 30 = 10:45 -> 10:30.
+    partido('2026-10-04 12:15', 'A PINGUELA - PISTA 1', 'CF1'),
+    // 46,1 km -> 30; 11:30 - 60 - 30 = 10:00 (ya en punto: se queda).
+    partido('2026-10-05 11:30', 'A PINGUELA - PISTA 1', 'CF1'),
+    // Sin km: el tiempo en coche de siempre (42 min * 1,10 -> 60); 11:30 - 60 - 60 = 9:30.
+    partido('2026-10-06 11:30', 'SIN KM', 'SF1'),
+  ];
+  anadirSalidas(ps, pabs, cfg);
+  assert.deepEqual(ps.map((p) => [p.viajeMin, hm(p.salida)]), [[105, '08:30'], [30, '10:30'], [30, '10:00'], [60, '09:30']]);
+  // Nunca a y cuarto ni a menos cuarto.
+  for (const p of ps) assert.ok(['00', '30'].includes(hm(p.salida).slice(3)), hm(p.salida));
+  // En casa, como siempre: el calentamiento, sin salida.
+  const casa = partido('2026-10-03 12:00', 'ANEXO OS REMEDIOS - PISTA 1', 'SM1');
+  anadirSalidas([casa], pabs, cfg);
+  assert.deepEqual([casa.enCasa, casa.salida, hm(casa.inicio)], [true, null, '11:00']);
 });
