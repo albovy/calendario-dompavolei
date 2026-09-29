@@ -23,6 +23,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-25"
     },
+    "ANEXO OS REMEDIOS - PISTA 2": {
+        "id_campo": "1078",
+        "municipio": "OURENSE",
+        "direccion": "RÚA PARDO DE CELA, 2, 32002 OURENSE",
+        "lat": 42.3442759,
+        "lon": -7.871394800000001,
+        "km": 0,
+        "minutos_coche": 0,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-09-29"
+    },
     "CARBALLO CALERO - PISTA CENTRAL": {
         "id_campo": "30",
         "municipio": "CARBALLO",
