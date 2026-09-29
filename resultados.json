@@ -30,7 +30,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-09-28 11:17"
+   "revisado": "2026-09-29 08:17"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -532,7 +532,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-09-28 11:17",
+   "consultado": "2026-09-29 08:17",
    "terminado": false,
    "firma": "196f7047cfd07e36",
    "firma_clasificacion": "196f7047cfd07e36",
@@ -566,7 +566,7 @@
      "local": "DOMPAVOLEI CF1",
      "visitante": "XUVENIL TEIS B",
      "dia": "2026-10-04",
-     "hora": "",
+     "hora": "10:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -575,7 +575,7 @@
      "local": "DOMPAVOLEI CF1",
      "visitante": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "dia": "2026-10-04",
-     "hora": "",
+     "hora": "13:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
