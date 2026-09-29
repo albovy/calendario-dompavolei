@@ -35,6 +35,30 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-29"
     },
+    "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 1": {
+        "id_campo": "162",
+        "municipio": "ORENSE",
+        "direccion": "AV. PARDO DE CELA, 2, 32003 ORENSE, OURENSE",
+        "lat": 42.3438638,
+        "lon": -7.870161799999999,
+        "km": 0.7,
+        "minutos_coche": 2,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-09-29"
+    },
+    "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 2": {
+        "id_campo": "162",
+        "municipio": "ORENSE",
+        "direccion": "AV. PARDO DE CELA, 2, 32003 ORENSE, OURENSE",
+        "lat": 42.3438638,
+        "lon": -7.870161799999999,
+        "km": 0.7,
+        "minutos_coche": 2,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-09-29"
+    },
     "CARBALLO CALERO - PISTA CENTRAL": {
         "id_campo": "30",
         "municipio": "CARBALLO",
@@ -94,5 +118,17 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-25"
+    },
+    "VALLE INCLAN - PISTA 1": {
+        "id_campo": "132",
+        "municipio": "OLEIROS",
+        "direccion": "RÚA ANDURIÑAS, 13, 15172 OLEIROS, A CORUÑA",
+        "lat": 43.3349903,
+        "lon": -8.3633013,
+        "km": 166.5,
+        "minutos_coche": 113,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-09-29"
     }
 }
