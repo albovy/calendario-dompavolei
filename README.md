@@ -74,7 +74,8 @@ página dice cuánto queda). En 2 o 3 minutos sale en la página, en el mensaje 
    entrenador**, pega la llave y **Activar**; en **Contraseña para los entrenadores**, **Sugerir** y **Crear**
    (la contraseña tiene que ser la del botón, al azar: una pensada, aunque sea larga, se puede adivinar). La página da un texto: la llave cifrada con esa contraseña. Ese texto
    va en `config.json` › `edicion` › `cifrada` (no es secreto sin la contraseña: va en la página pública). La
-   contraseña se pasa a los entrenadores por privado.
+   contraseña se pasa a los entrenadores por privado. Ya creada, los entrenadores no ven ese apartado; el dueño
+   (si entró con la llave) lo abre con «Cambiar la contraseña de los entrenadores».
 3. **Cada entrenador**, una vez: **+ Calendario › Modo entrenador**, escribe la contraseña y **Activar** (la
    página descifra la llave en su navegador, la comprueba con GitHub y la recuerda). La llave tal cual también
    vale. Si la llave caduca o se cambia, al guardar la página la olvida y pide la contraseña otra vez.

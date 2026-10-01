@@ -1623,3 +1623,26 @@ test('entrenador: con 401 al guardar, el aviso habla de la llave o de la contras
     assert.doesNotMatch(p.porId('llave-msg').textContent, /aceptada/);
   }
 });
+
+test('contraseña: con la llave cifrada ya en config.json, nada de «Sugerir»: a quien entró con ella, nada; al dueño (entró con la llave), solo «Cambiar la contraseña»', async () => {
+  const cifrada = await cifrarEnPrueba(LLAVE, CONTRASENA);
+  const abrirCon = (de) => abrir(CODIGO, datos(partidosEntrenador(), { sal: SAL, edicion: { ...EDICION, cifrada } }),
+    { almacen: new Map([[CLAVE_LLAVE, LLAVE], [`${CLAVE_LLAVE}-de`, de]]) });
+  const visible = (p, id) => !p.porId(id).classList.contains('oculto');
+  // Un entrenador (entró con la contraseña).
+  let p = abrirCon(cifrada);
+  assert.deepEqual([visible(p, 'crear-clave'), visible(p, 'cambiar-clave')], [false, false]);
+  // El dueño (entró con la llave): solo el enlace; al pulsarlo, el apartado.
+  p = abrirCon('directa');
+  assert.deepEqual([visible(p, 'crear-clave'), visible(p, 'cambiar-clave')], [false, true]);
+  p.porId('cambiar-clave').oyentes.click({});
+  assert.deepEqual([visible(p, 'crear-clave'), visible(p, 'cambiar-clave')], [true, false]);
+  // Al entrar con la contraseña tampoco sale.
+  const q = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada } }, red: () => respuesta(200) });
+  q.porId('llave').value = CONTRASENA;
+  q.porId('guardar-llave').oyentes.click({});
+  await hasta(() => /Llave aceptada/.test(q.porId('llave-msg').textContent));
+  assert.deepEqual([visible(q, 'crear-clave'), visible(q, 'cambiar-clave')], [false, false]);
+  // Sin llave cifrada todavía, con la llave puesta sale el apartado (para crearla).
+  assert.deepEqual([visible(abrirEntrenador(), 'crear-clave'), visible(abrirEntrenador(), 'cambiar-clave')], [true, false]);
+});
