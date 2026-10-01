@@ -6,6 +6,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { webcrypto } from 'node:crypto';
 import {
   abrirPagina as abrir, codigoDe, conCopiar, correosBus, datos, elemento, foco, partido, plantilla, pulsarCopiar,
   reglasCss,
@@ -527,7 +528,8 @@ test('página: la flecha de cada fila abre y cierra su detalle (pabellón, mapa,
   assert.match(det[1], linea('i-lugar', '<a href="https://www\\.google\\.com/maps/search/\\?api=1&amp;query='));
   assert.match(det[1], linea('i-copa', 'LIGA INFANTIL F'));
   assert.match(det[1], linea('i-bus', '1 h 45 min en bus hasta Marín</span>'));
-  assert.match(det[1], linea('i-calor', 'Calentamiento 09:00</span>'));
+  // Con lo que dura: fuera empieza al llegar (salida + viaje).
+  assert.match(det[1], linea('i-calor', 'Calentamiento 09:00 \\(1 h\\)</span>'));
   assert.match(fila(html, 1).html, linea('i-bus', 'Se va con el partido anterior \\(salida 07:15\\)</span>'));
   // Pulsar la flecha: se abre; otra vez: se cierra.
   const flecha = elemento(pagina.doc, 'button');
@@ -1073,4 +1075,551 @@ test('página: el pie explica cómo se calcula la salida (a 100 km/h por carrete
   // Sin velocidad ni redondeo a la media (otra configuración): el texto de antes.
   pie = abrirPagina(datos([partido()], { sal: { origen: 'Os Remedios', cal: 60 } })).porId('pie').textContent;
   assert.match(pie, /el viaje en bus \(tiempo por carretera de OpenStreetMap\/OSRM, redondeado al alza\)\./);
+});
+
+// --- Modo entrenador: cambiar la salida (fuera) o el calentamiento (en casa) ------------------------------------
+
+const EDICION = { repo: 'albovy/calendario-dompavolei', workflow: 'salida.yml', rama: 'main' };
+const CLAVE_LLAVE = `${CLAVE}:llave`;
+// Una llave de mentira con la forma de las de verdad (token de GitHub de grano fino).
+const LLAVE = `github_pat_PRUEBA_${'x'.repeat(40)}`;
+const API = 'https://api.github.com/repos/albovy/calendario-dompavolei/actions/workflows/salida.yml';
+const respuesta = (status) => Promise.resolve({ ok: status >= 200 && status < 300, status });
+const ENVIADO = 'En 2 o 3 minutos estará en la web: recarga entonces para mandar el WhatsApp o pedir el bus con la hora nueva.';
+
+// Partidos de la página: fuera (con id, salida y 1 h 45 de bus: llega a las 09:00, 1 h de calentamiento), en
+// casa (calentamiento 11:00), 2.º del día, ya jugado y sin hora.
+function partidosEntrenador() {
+  return [
+    partido({ id: 'a1b2c3d4', s: '07:15', vj: 105, mun: 'MARÍN' }),
+    partido({ id: 'b1b2c3d4', f: '2026-09-27', h: '12:00', l: 'DOMPAVOLEI IF1', v: 'CV OLEIROS', lo: true, vo: false, cond: 'local', casa: true, ca: '11:00', pab: 'OS REMEDIOS' }),
+    partido({ id: 'c1b2c3d4', h: '11:30', seg: true, sp: '07:15', ca: '' }),
+    partido({ id: 'd1b2c3d4', f: '2026-09-20', s: '06:30' }),
+    partido({ id: 'e1b2c3d4', f: '2026-10-10', h: '', e: 'h', s: '' }),
+  ];
+}
+function abrirEntrenador({ llave = LLAVE, partidos = partidosEntrenador(), campos = {}, ...opciones } = {}) {
+  const almacen = new Map([[CLAVE, JSON.stringify({ per: 'todo' })]]);
+  if (llave) almacen.set(CLAVE_LLAVE, llave);
+  const p = abrirPagina(datos(partidos, { sal: SAL, edicion: EDICION, ...campos }), { almacen, ...opciones });
+  p.almacen = almacen;
+  return p;
+}
+// Pulsa un botón de la lista (por su clase) del partido i.
+function pulsarEnLista(p, clase, i) {
+  const b = elemento(p.doc, 'button');
+  b.classList.add(clase);
+  b.setAttribute('data-i', i);
+  p.contenido.oyentes.click({ target: b });
+}
+// Escribe una hora en el campo del editor (como al elegirla: el evento «input»).
+function escribirHora(p, hora) {
+  p.porId('sal-hora').value = hora;
+  p.contenido.oyentes.input({ target: p.porId('sal-hora') });
+}
+const conCambiar = (html) => [...html.matchAll(/class="boton-wa cambiar-sal" id="cs-(\d+)" data-i="\1"/g)].map((m) => +m[1]);
+const cuerpo = (p, n = 0) => JSON.parse(p.peticiones[n].opciones.body);
+
+test('entrenador: sin config.json › edicion o sin horas de salida, ni modo entrenador ni botones (aunque haya llave)', () => {
+  for (const campos of [{ edicion: null }, { sal: null }]) {
+    const p = abrirEntrenador({ campos });
+    assert.equal(p.porId('entrenador').classList.contains('oculto'), true, JSON.stringify(campos));
+    assert.deepEqual(conCambiar(p.contenido.innerHTML), [], JSON.stringify(campos));
+  }
+});
+
+test('entrenador: sin llave, el panel la pide y no hay botones; con llave, «Cambiar salida» (fuera) y «Cambiar calentamiento» (en casa) en los partidos por jugar', () => {
+  let p = abrirEntrenador({ llave: '' });
+  assert.equal(p.porId('entrenador').classList.contains('oculto'), false);
+  assert.match(p.porId('entrenador-texto').textContent, /pega la llave/);
+  assert.equal(p.porId('llave-fila').classList.contains('oculto'), false);
+  assert.equal(p.porId('quitar-llave').classList.contains('oculto'), true);
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), []);
+  p = abrirEntrenador();
+  assert.match(p.porId('entrenador-texto').textContent, /Activado en este navegador/);
+  assert.equal(p.porId('llave-fila').classList.contains('oculto'), true);
+  assert.equal(p.porId('quitar-llave').classList.contains('oculto'), false);
+  // Ni el 2.º del día (va con el 1.º), ni jugado, ni sin hora.
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [0, 1]);
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /Cambiar salida/);
+  assert.match(texto(fila(p.contenido.innerHTML, 1).html), /Cambiar calentamiento/);
+  // La llave nunca se pinta en la página.
+  assert.ok(!p.contenido.innerHTML.includes(LLAVE));
+  assert.doesNotMatch(PLANTILLA, /github_pat_\w{20,}/);
+  // Una llave guardada que no es de grano fino no vale.
+  assert.deepEqual(conCambiar(abrirEntrenador({ llave: `ghp_${'x'.repeat(36)}` }).contenido.innerHTML), []);
+});
+
+test('entrenador: la llave se comprueba con GitHub antes de guardarla (y solo se guarda si vale)', async () => {
+  const casos = [
+    [`  ${LLAVE}  `, 200, /Llave aceptada/, true],
+    [LLAVE, 401, /no vale o ha caducado/, false],
+    [LLAVE, 404, /no da acceso al calendario del club/, false],
+    [LLAVE, 0, /No se ha podido comprobar la llave/, false],
+  ];
+  for (const [valor, status, mensaje, guardada] of casos) {
+    const p = abrirEntrenador({ llave: '', red: () => (status ? respuesta(status) : Promise.reject(new TypeError('Failed to fetch'))) });
+    p.porId('llave').value = valor;
+    p.porId('guardar-llave').oyentes.click({});
+    await esperar();
+    assert.deepEqual(p.peticiones.map((x) => x.url), [API], String(status));
+    assert.equal(p.peticiones[0].opciones.headers.Authorization, `Bearer ${LLAVE}`);
+    assert.equal(p.peticiones[0].opciones.method, undefined);   // GET: solo mira, no lanza nada
+    assert.match(p.porId('llave-msg').textContent, mensaje, String(status));
+    assert.equal(p.almacen.get(CLAVE_LLAVE), guardada ? LLAVE : undefined, String(status));
+    assert.deepEqual(conCambiar(p.contenido.innerHTML), guardada ? [0, 1] : [], String(status));
+    if (guardada) assert.equal(p.porId('llave').value, '');   // no se queda en el campo
+  }
+  // Lo que no tiene forma de llave de grano fino ni se manda (una clásica, «ghp_», abre todos los repositorios).
+  for (const valor of ['mi contraseña', `ghp_${'x'.repeat(36)}`]) {
+    const p = abrirEntrenador({ llave: '' });
+    p.porId('llave').value = valor;
+    p.porId('guardar-llave').oyentes.click({});
+    assert.deepEqual(p.peticiones, [], valor);
+    assert.match(p.porId('llave-msg').textContent, /no parece una llave/, valor);
+  }
+});
+
+test('entrenador: «Quitar la llave» la borra del navegador y quita los botones', () => {
+  const p = abrirEntrenador();
+  p.porId('quitar-llave').oyentes.click({});
+  assert.equal(p.almacen.has(CLAVE_LLAVE), false);
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), []);
+  assert.equal(p.porId('llave-fila').classList.contains('oculto'), false);
+});
+
+test('entrenador: «Cambiar salida» abre el editor con la salida y lo que queda de calentamiento; «Guardar» lanza salida.yml', async () => {
+  const p = abrirEntrenador({ red: () => respuesta(204) });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, />Nueva hora de salida</);
+  assert.match(f.html, /<input type="time" id="sal-hora" class="es-hora" value="07:15"/);
+  assert.match(f.html, /class="boton principal sal-guardar" data-i="0">Guardar</);
+  assert.match(f.html, /class="boton sal-cancelar" data-i="0">Cancelar</);
+  assert.doesNotMatch(f.html, /sal-calculada/);   // la salida no está puesta a mano
+  // 07:15 + 1 h 45 de bus = 09:00: 1 h de calentamiento antes del partido de las 10:00.
+  assert.match(texto(f.html), /Llegada hacia las 09:00: 1 h de calentamiento \(partido a las 10:00\)\./);
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [1]);   // con el editor abierto, su botón no
+  assert.equal(p.doc.activeElement, p.porId('sal-hora'));
+  // Mientras se elige la hora, la pista cambia: la hora del partido no se mueve, el calentamiento sí.
+  escribirHora(p, '07:45');
+  assert.equal(p.porId('es-pista').textContent, 'Llegada hacia las 09:30: 30 min de calentamiento (partido a las 10:00).');
+  escribirHora(p, '08:15');
+  assert.equal(p.porId('es-pista').textContent, 'Con 1 h 45 min de viaje se llegaría justo a la hora del partido (10:00): sin calentamiento.');
+  escribirHora(p, '08:30');
+  assert.equal(p.porId('es-pista').textContent, 'Con 1 h 45 min de viaje se llegaría a las 10:15, después del partido (10:00): sin calentamiento.');
+  escribirHora(p, '10:30');
+  assert.equal(p.porId('es-pista').textContent, 'Tiene que ser antes del partido (10:00).');
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  // Mientras se manda, nada del editor se puede tocar; el foco, en el editor (no en un botón que desaparece).
+  f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, /disabled>Guardando…</);
+  assert.match(f.html, /id="sal-hora" class="es-hora" value="07:45"[^>]* disabled>/);
+  assert.match(f.html, /class="boton sal-cancelar" data-i="0" disabled>/);
+  assert.equal(p.doc.activeElement, p.porId('es-caja'));
+  await esperar();
+  assert.equal(p.peticiones.length, 1);
+  const { url, opciones } = p.peticiones[0];
+  assert.equal(url, `${API}/dispatches`);
+  assert.equal(opciones.method, 'POST');
+  assert.deepEqual(JSON.parse(JSON.stringify(opciones.headers)), {
+    Accept: 'application/vnd.github+json', Authorization: `Bearer ${LLAVE}`, 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json',
+  });
+  // El partido como lo lee src/manuales.js (textoPartido): id, fecha y hora, y los equipos.
+  assert.deepEqual(cuerpo(p), { ref: 'main', inputs: { partido: 'id:a1b2c3d4 · 2026-09-26 10:00 · CV RIVAL vs DOMPAVOLEI IF1', tipo: 'salida', hora: '07:45' } });
+  f = fila(p.contenido.innerHTML, 0);
+  assert.doesNotMatch(f.html, /sal-hora/);   // editor cerrado
+  // «Enviado»: GitHub lo ha recibido; guardarlo y publicar lleva unos minutos más.
+  assert.match(texto(f.html), new RegExp(`✓ Enviado: salida a las 07:45\\. ${ENVIADO.replace(/\./g, '\\.')}`));
+  assert.match(p.estado.textContent, /Enviado: salida a las 07:45/);
+  assert.equal(p.doc.activeElement, p.porId('cs-0'));   // el foco, de vuelta al botón
+});
+
+test('entrenador: en casa se cambia el calentamiento (la hora grande de la fila)', async () => {
+  const p = abrirEntrenador({ red: () => respuesta(204) });
+  pulsarEnLista(p, 'cambiar-sal', 1);
+  const f = fila(p.contenido.innerHTML, 1);
+  assert.match(f.html, />Nueva hora de calentamiento</);
+  assert.match(f.html, /id="sal-hora" class="es-hora" value="11:00"/);
+  assert.match(texto(f.html), /1 h de calentamiento antes del partido \(12:00\)\./);
+  escribirHora(p, '11:15');
+  assert.equal(p.porId('es-pista').textContent, '45 min de calentamiento antes del partido (12:00).');
+  pulsarEnLista(p, 'sal-guardar', 1);
+  await esperar();
+  assert.deepEqual(cuerpo(p).inputs, { partido: 'id:b1b2c3d4 · 2026-09-27 12:00 · DOMPAVOLEI IF1 vs CV OLEIROS', tipo: 'calentamiento', hora: '11:15' });
+  assert.match(texto(fila(p.contenido.innerHTML, 1).html), /✓ Enviado: calentamiento a las 11:15\./);
+});
+
+test('entrenador: si GitHub no lo acepta o no hay red, se dice por qué y el editor sigue abierto con la hora escrita', async () => {
+  const casos = [
+    // (401: la llave ya no vale; tiene su prueba.)
+    [403, /no deja guardar con esta llave/], [404, /no deja guardar con esta llave/],
+    [422, /GitHub no ha aceptado el cambio \(error 422\)/], [500, /Prueba otra vez en un momento \(error 500 de GitHub\)/],
+  ];
+  for (const [status, mensaje] of casos) {
+    const p = abrirEntrenador({ red: () => (status ? respuesta(status) : Promise.reject(new TypeError('Failed to fetch'))) });
+    pulsarEnLista(p, 'cambiar-sal', 0);
+    escribirHora(p, '07:45');
+    pulsarEnLista(p, 'sal-guardar', 0);
+    await esperar();
+    const f = fila(p.contenido.innerHTML, 0);
+    assert.match(texto(f.html), /no se ha guardado/i, String(status));
+    assert.match(texto(f.html), mensaje, String(status));
+    assert.match(f.html, /id="sal-hora" class="es-hora" value="07:45"/, String(status));
+    assert.match(f.html, /sal-guardar" data-i="0">Guardar</, String(status));
+  }
+  // Sin respuesta (sin red o GitHub no contesta): no se sabe si llegó; repetirlo no duplica nada.
+  const r = abrirEntrenador({ red: () => Promise.reject(new TypeError('Failed to fetch')) });
+  pulsarEnLista(r, 'cambiar-sal', 0);
+  escribirHora(r, '07:45');
+  pulsarEnLista(r, 'sal-guardar', 0);
+  await esperar();
+  assert.match(texto(fila(r.contenido.innerHTML, 0).html), /No se sabe si se ha guardado: .*repetirlo no duplica nada/);
+  assert.match(fila(r.contenido.innerHTML, 0).html, /id="sal-hora"/);
+  // Sin conexión ni se intenta; una hora vacía, la misma, o que no es antes del partido, tampoco (18:30 por 06:30
+  // en un selector de 12 horas haría un evento al revés), ni una con la que se llegaría tarde.
+  const p = abrirEntrenador({ enLinea: false });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /Sin conexión: no se ha guardado/);
+  for (const [hora, mensaje] of [['', /Escribe la hora/], ['10:00', /La hora tiene que ser antes del partido \(10:00\)/], ['18:30', /antes del partido/],
+    ['07:15', /Es la misma hora: no hay nada que cambiar/], ['08:15', /se llegaría justo a la hora del partido \(10:00\): pon una salida más temprana/],
+    ['08:30', /se llegaría a las 10:15, después del partido \(10:00\): pon una salida más temprana/]]) {
+    const q = abrirEntrenador();
+    pulsarEnLista(q, 'cambiar-sal', 0);
+    escribirHora(q, hora);
+    pulsarEnLista(q, 'sal-guardar', 0);
+    assert.match(texto(fila(q.contenido.innerHTML, 0).html), mensaje, hora);
+    assert.deepEqual(q.peticiones, [], hora);
+  }
+  assert.deepEqual(p.peticiones, []);
+});
+
+test('entrenador: hora puesta a mano: la marca en la fila y el detalle (con lo que dura el calentamiento), y «Volver a la calculada»', async () => {
+  const partidos = partidosEntrenador();
+  Object.assign(partidos[0], { sm: 1, ca: '09:30' });   // salida 07:15 a mano... (y llegada a las 09:00 en el cálculo de la página)
+  Object.assign(partidos[1], { sm: 1, ca: '10:30' });
+  const p = abrirEntrenador({ partidos, red: () => respuesta(204) });
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.equal(columnaHora(f), 'Salida 07:15 partido 10:00 puesta a mano');
+  assert.match(texto(f.html), /1 h 45 min en bus hasta Marín · salida puesta a mano/);
+  assert.match(texto(f.html), /Calentamiento 09:30 \(30 min\)/);
+  f = fila(p.contenido.innerHTML, 1);
+  assert.equal(columnaHora(f), 'En casa 10:30 partido 12:00 puesta a mano');
+  assert.match(texto(f.html), /Calentamiento 10:30 \(1 h 30 min\) · puesto a mano/);
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  assert.match(fila(p.contenido.innerHTML, 0).html, /class="boton sal-calculada" data-i="0">Volver a la calculada</);
+  pulsarEnLista(p, 'sal-calculada', 0);
+  await esperar();
+  assert.equal(cuerpo(p).inputs.hora, '');
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /✓ Enviado: vuelve la hora calculada/);
+  // Sin modo entrenador, la marca se ve igual (la ve todo el mundo).
+  assert.equal(columnaHora(fila(abrirEntrenador({ partidos, llave: '' }).contenido.innerHTML, 0)), 'Salida 07:15 partido 10:00 puesta a mano');
+});
+
+test('entrenador: con el teclado, Intro guarda y Escape cierra el editor (el foco vuelve al botón)', async () => {
+  const p = abrirEntrenador({ red: () => respuesta(204) });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  p.contenido.oyentes.keydown({ key: 'Escape', target: p.porId('sal-hora'), preventDefault() {} });
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 0).html, /sal-hora/);
+  assert.equal(p.doc.activeElement, p.porId('cs-0'));
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '06:45');
+  p.contenido.oyentes.keydown({ key: 'Enter', target: p.porId('sal-hora'), preventDefault() {} });
+  await esperar();
+  assert.equal(cuerpo(p).inputs.hora, '06:45');
+});
+
+test('entrenador: en un partido de prueba no se manda nada: se ve el cambio en la página (y el calentamiento), avisando de que no se guarda', () => {
+  const partidos = [partido({ f: '2026-09-28', h: '12:00', l: 'EQUIPO DE PRUEBA', comp: 'PARTIDO DE PRUEBA', dm: 1, s: '09:00', ca: '10:15', vj: 75 })];
+  const p = abrirEntrenador({ partidos, busqueda: '?demo' });
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [0]);
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '08:30');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  assert.deepEqual(p.peticiones, []);
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.equal(columnaHora(f), 'Salida 08:30 partido 12:00 puesta a mano');
+  assert.match(texto(f.html), /Calentamiento 09:45 \(2 h 15 min\)/);   // 08:30 + 1 h 15 de bus
+  assert.match(texto(f.html), /Partido de prueba: el cambio no se guarda/);
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  pulsarEnLista(p, 'sal-calculada', 0);
+  f = fila(p.contenido.innerHTML, 0);
+  assert.equal(columnaHora(f), 'Salida 09:00 partido 12:00');
+  assert.match(texto(f.html), /Calentamiento 10:15 \(1 h 45 min\)/);
+});
+
+test('entrenador: el editor y los avisos, a lo ancho de la fila y no al imprimir; campos de 16 px (el iPhone no amplía)', () => {
+  const css = reglasCss(PLANTILLA);
+  const regla = (sel) => css.find((r) => r.selector === sel && !r.impresion)?.cuerpo ?? '';
+  assert.match(regla('.editor-sal'), /grid-column: 1 \/ -1/);
+  assert.match(regla('.aviso-sal'), /grid-column: 1 \/ -1/);
+  assert.match(regla('.llave'), /font: 400 16px/);
+  assert.ok(css.some((r) => r.impresion && /\.editor-sal/.test(r.selector) && /\.aviso-sal/.test(r.selector) && /display: none/.test(r.cuerpo)));
+  // El campo de la llave: oculto al escribir y sin autocompletar ni corrector.
+  assert.match(PLANTILLA, /<input type="password" id="llave" class="llave" autocomplete="off" autocapitalize="off" spellcheck="false"/);
+});
+
+// --- Contraseña de los entrenadores: la llave cifrada (config.json › edicion › cifrada) -------------------------
+
+// El mismo formato que la página: «v1.<vueltas>.<sal>.<iv>.<cifrado>» en base64url; AES-GCM con una clave de
+// PBKDF2-SHA-256. (En las pruebas, pocas vueltas: la página crea las suyas con 600 000.)
+const b64u = (b) => Buffer.from(b).toString('base64url');
+async function claveDe(contrasena, sal, vueltas) {
+  const base = await webcrypto.subtle.importKey('raw', new TextEncoder().encode(contrasena), 'PBKDF2', false, ['deriveKey']);
+  return webcrypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: sal, iterations: vueltas }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function cifrarEnPrueba(texto, contrasena, vueltas = 1000) {
+  const sal = webcrypto.getRandomValues(new Uint8Array(16));
+  const iv = webcrypto.getRandomValues(new Uint8Array(12));
+  const c = await webcrypto.subtle.encrypt({ name: 'AES-GCM', iv }, await claveDe(contrasena, sal, vueltas), new TextEncoder().encode(texto));
+  return ['v1', vueltas, b64u(sal), b64u(iv), b64u(new Uint8Array(c))].join('.');
+}
+async function descifrarEnPrueba(cifrada, contrasena) {
+  const [, vueltas, sal, iv, c] = cifrada.split('.');
+  const k = await claveDe(contrasena, Buffer.from(sal, 'base64url'), +vueltas);
+  return new TextDecoder().decode(await webcrypto.subtle.decrypt({ name: 'AES-GCM', iv: Buffer.from(iv, 'base64url') }, k, Buffer.from(c, 'base64url')));
+}
+// Espera a que pase algo (el cifrado va en otro hilo: no basta con una vuelta).
+async function hasta(cond, ms = 5000) {
+  for (const fin = Date.now() + ms; Date.now() < fin;) {
+    if (cond()) return;
+    await new Promise((listo) => { setTimeout(listo, 5); });
+  }
+  assert.fail('no ha pasado a tiempo');
+}
+const CONTRASENA = 'k7m2-p9qx-4tz8-abcd';
+
+test('contraseña: el entrenador escribe la contraseña; la página descifra la llave, la comprueba con GitHub y la guarda', async () => {
+  const cifrada = await cifrarEnPrueba(LLAVE, CONTRASENA);
+  const p = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada } }, red: () => respuesta(200) });
+  assert.match(p.porId('entrenador-texto').textContent, /escribe la contraseña/);
+  p.porId('llave').value = ` ${CONTRASENA} `;
+  p.porId('guardar-llave').oyentes.click({});
+  await hasta(() => /Llave aceptada/.test(p.porId('llave-msg').textContent));
+  assert.deepEqual(p.peticiones.map((x) => [x.url, x.opciones.headers.Authorization]), [[API, `Bearer ${LLAVE}`]]);
+  assert.equal(p.almacen.get(CLAVE_LLAVE), LLAVE);
+  assert.equal(p.porId('llave').value, '');
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [0, 1]);
+  // La llave (descifrada) nunca se pinta en la página.
+  assert.ok(!p.contenido.innerHTML.includes(LLAVE));
+});
+
+test('contraseña: si no es la buena, no se manda nada ni se guarda; la llave tal cual sigue valiendo', async () => {
+  const cifrada = await cifrarEnPrueba(LLAVE, CONTRASENA);
+  let p = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada } } });
+  p.porId('llave').value = 'k7m2-p9qx-4tz8-abce';
+  p.porId('guardar-llave').oyentes.click({});
+  await hasta(() => /Contraseña incorrecta/.test(p.porId('llave-msg').textContent));
+  assert.deepEqual(p.peticiones, []);
+  assert.equal(p.almacen.has(CLAVE_LLAVE), false);
+  p.porId('llave').value = '';
+  p.porId('guardar-llave').oyentes.click({});
+  assert.match(p.porId('llave-msg').textContent, /Escribe la contraseña/);
+  // Con la llave de GitHub (quien lleva la web) también entra.
+  p = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada } }, red: () => respuesta(200) });
+  p.porId('llave').value = LLAVE;
+  p.porId('guardar-llave').oyentes.click({});
+  await hasta(() => /Llave aceptada/.test(p.porId('llave-msg').textContent));
+});
+
+test('contraseña: con la llave puesta, «Contraseña para los entrenadores» crea la llave cifrada (que se descifra con ella)', async () => {
+  let p = abrirEntrenador({ llave: '' });
+  assert.equal(p.porId('crear-clave').classList.contains('oculto'), true);   // sin llave, nada que cifrar
+  p = abrirEntrenador();
+  assert.equal(p.porId('crear-clave').classList.contains('oculto'), false);
+  // «Sugerir»: 4 grupos de 4 letras y cifras sin las que se confunden (0/o, 1/l/i).
+  p.porId('sugerir-clave').oyentes.click({});
+  assert.match(p.porId('clave-nueva').value, /^[a-hjkmnp-z2-9]{4}(-[a-hjkmnp-z2-9]{4}){3}$/);
+  // Solo la de «Sugerir» (al azar: una pensada, aunque sea larga, se adivina probando, y la llave cifrada es
+  // pública). El campo no se puede escribir.
+  for (const mala of ['dompa2026', 'dompavolei2026dompavolei', 'k7m2-p9qx-4tz8-abc']) {
+    p.porId('clave-nueva').value = mala;
+    p.porId('crear-cifrada').oyentes.click({});
+    assert.match(p.porId('crear-msg').textContent, /Pulsa «Sugerir»/, mala);
+    assert.equal(p.porId('cifrada').value, '', mala);
+  }
+  assert.match(PLANTILLA, /<input type="text" id="clave-nueva" class="llave" readonly /);
+  p.porId('clave-nueva').value = CONTRASENA;
+  p.porId('crear-cifrada').oyentes.click({});
+  await hasta(() => p.porId('cifrada').value !== '', 15000);
+  const cifrada = p.porId('cifrada').value;
+  assert.match(cifrada, /^v1\.600000\.[\w-]{22}\.[\w-]{16}\.[\w-]{40,600}$/);
+  assert.equal(p.porId('cifrada').classList.contains('oculto'), false);
+  assert.match(p.porId('crear-msg').textContent, /no es la contraseña ni la llave/);
+  assert.equal(await descifrarEnPrueba(cifrada, CONTRASENA), LLAVE);
+  await assert.rejects(descifrarEnPrueba(cifrada, 'otra-contraseña-larga'));
+  // La contraseña no se guarda en ningún sitio del navegador.
+  assert.ok(![...p.almacen.values()].some((v) => v.includes(CONTRASENA)));
+});
+
+test('entrenador: tras «Enviado», sin WhatsApp, Copiar ni «Pedir bus» en esa fila hasta recargar (llevarían la hora vieja)', async () => {
+  const partidos = partidosEntrenador();
+  partidos[0].wa = 'Salida 07:15';
+  const p = abrirEntrenador({ partidos, campos: { bus: BUS }, red: () => respuesta(204) });
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, /boton-wa wa/);
+  assert.match(f.html, /class="boton-bus"/);
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  await esperar();
+  f = fila(p.contenido.innerHTML, 0);
+  assert.doesNotMatch(f.html, /boton-wa wa|boton-wa copiar|class="boton-bus"/);
+  assert.match(texto(f.html), /recarga entonces para mandar el WhatsApp o pedir el bus con la hora nueva/);
+});
+
+test('entrenador: si al guardar GitHub dice que la llave ya no vale (401), se olvida y se pide otra vez', async () => {
+  const p = abrirEntrenador({ red: () => respuesta(401) });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  await esperar();
+  assert.equal(p.almacen.has(CLAVE_LLAVE), false);
+  assert.equal(p.porId('llave-fila').classList.contains('oculto'), false);
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), []);
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /La llave ya no vale .*no se ha guardado.*pega una llave nueva/i);
+});
+
+test('entrenador: si cambia la llave cifrada de config.json (contraseña nueva), la llave recordada se olvida', async () => {
+  const vieja = await cifrarEnPrueba(LLAVE, CONTRASENA);
+  const nueva = await cifrarEnPrueba(LLAVE, 'abcd-efgh-jkmn-pqrs');
+  const almacen = () => new Map([[CLAVE_LLAVE, LLAVE], [`${CLAVE_LLAVE}-de`, vieja]]);
+  let p = abrir(CODIGO, datos(partidosEntrenador(), { sal: SAL, edicion: { ...EDICION, cifrada: nueva } }), { almacen: almacen() });
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), []);
+  assert.equal(p.porId('llave-fila').classList.contains('oculto'), false);
+  // La misma: sigue.
+  p = abrir(CODIGO, datos(partidosEntrenador(), { sal: SAL, edicion: { ...EDICION, cifrada: vieja } }), { almacen: almacen() });
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [0, 1]);
+  // Al entrar con la contraseña se apunta de qué llave cifrada salió; con la llave tal cual, no se olvida.
+  const q = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada: nueva } }, red: () => respuesta(200) });
+  q.porId('llave').value = 'abcd-efgh-jkmn-pqrs';
+  q.porId('guardar-llave').oyentes.click({});
+  await hasta(() => /Llave aceptada/.test(q.porId('llave-msg').textContent));
+  assert.equal(q.almacen.get(`${CLAVE_LLAVE}-de`), nueva);
+});
+
+test('entrenador: lo escrito en el campo no se pierde si la lista se vuelve a pintar', async () => {
+  const partidos = partidosEntrenador();
+  partidos[0].sm = 1;
+  const p = abrirEntrenador({ partidos, red: () => respuesta(500) });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-calculada', 0);   // falla (500) y se vuelve a pintar
+  await esperar();
+  assert.match(fila(p.contenido.innerHTML, 0).html, /id="sal-hora" class="es-hora" value="07:45"/);
+});
+
+test('entrenador: con el editor abierto, la página no se recarga sola al volver tras 30 minutos', async () => {
+  const p = abrirEntrenador({ campos: { app: true } });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  const ahora = Date.now();
+  p.ventana.Date.now = () => ahora + 31 * 60000;
+  p.doc.oyentes.visibilitychange({});
+  await esperar();
+  assert.equal(p.recargas, 0);
+});
+
+test('entrenador: una salida a mano sin viaje calculado no lleva calentamiento en el detalle (no se sabe cuándo se llega)', () => {
+  const p = abrirEntrenador({ partidos: [partido({ id: 'a1b2c3d4', s: '07:15', vj: 0, ca: '', sm: 1, mun: 'MARÍN' })] });
+  const t = texto(fila(p.contenido.innerHTML, 0).html);
+  assert.match(t, /En bus hasta Marín · salida puesta a mano/);
+  assert.doesNotMatch(t, /Calentamiento/);
+});
+
+// --- Ronda 3 (verificación final) ------------------------------------------------------------------------------
+
+test('entrenador: tras «Enviado», al volver a abrir el editor sale la hora enviada y se puede volver a la de antes', async () => {
+  const p = abrirEntrenador({ red: () => respuesta(204) });
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  escribirHora(p, '07:45');
+  pulsarEnLista(p, 'sal-guardar', 0);
+  await esperar();
+  pulsarEnLista(p, 'cambiar-sal', 0);
+  const f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, /id="sal-hora" class="es-hora" value="07:45"/);
+  assert.match(f.html, /class="boton sal-calculada" data-i="0">Volver a la calculada</);
+  escribirHora(p, '07:15');   // la de antes (la calculada)
+  pulsarEnLista(p, 'sal-guardar', 0);
+  await esperar();
+  assert.deepEqual(p.peticiones.map((x) => JSON.parse(x.opciones.body).inputs.hora), ['07:45', '07:15']);
+});
+
+test('entrenador: tras «Enviado», nada del mismo equipo ese día ofrece WhatsApp o «Pedir bus» con la hora vieja (ni la línea de compartir bus de otro equipo)', async () => {
+  const partidos = [
+    // Sin hora aún, del mismo equipo y día: lleva el mensaje de WhatsApp del día (es el primero).
+    partido({ id: 'a0b2c3d4', h: '', e: 'h', s: '', wa: 'Mensaje del día' }),
+    partido({ id: 'a1b2c3d4', s: '07:15', vj: 105 }),
+    // Otro equipo, mismo pabellón y día: su correo de «Pedir bus» menciona la salida del primero.
+    partido({ id: 'b1b2c3d4', h: '12:00', s: '09:15', vj: 105, v: 'DOMPAVOLEI CF1', ck: 'cadete', cat: 'Cadete F' }),
+  ];
+  const p = abrirEntrenador({ partidos, campos: { bus: BUS }, red: () => respuesta(204) });
+  assert.match(fila(p.contenido.innerHTML, 0).html, /boton-wa wa/);
+  assert.ok(correosBus(fila(p.contenido.innerHTML, 2).html)[0].some((l) => /salida 07:15/.test(l)));
+  pulsarEnLista(p, 'cambiar-sal', 1);
+  escribirHora(p, '06:45');
+  pulsarEnLista(p, 'sal-guardar', 1);
+  await esperar();
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 0).html, /boton-wa wa|boton-wa copiar/);
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 1).html, /class="boton-bus"/);
+  assert.ok(!correosBus(fila(p.contenido.innerHTML, 2).html)[0].some((l) => /salida 07:15/.test(l)));
+});
+
+test('«Pedir bus»: con una salida a mano sin viaje calculado, sin hora de llegada a la vuelta (no se sabe)', () => {
+  const p = abrirPagina(datos([partido({ h: '12:00', s: '07:00', vj: 0, ca: '', sm: 1 })], { sal: SAL, bus: BUS }));
+  const regreso = correosBus(p.contenido.innerHTML)[0].find((l) => l.startsWith('- Regreso'));
+  assert.equal(regreso, '- Regreso: al terminar el partido, hacia las 14:00');
+});
+
+test('contraseña: si config.json ya no tiene la llave cifrada, la que se sacó de ella se olvida (la pegada, no)', () => {
+  const almacen = (de) => new Map([[CLAVE_LLAVE, LLAVE], [`${CLAVE_LLAVE}-de`, de]]);
+  let p = abrir(CODIGO, datos(partidosEntrenador(), { sal: SAL, edicion: EDICION }), { almacen: almacen(`v1.600000.${'A'.repeat(22)}.${'b'.repeat(16)}.${'c'.repeat(150)}`) });
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), []);
+  p = abrir(CODIGO, datos(partidosEntrenador(), { sal: SAL, edicion: EDICION }), { almacen: almacen('directa') });
+  assert.deepEqual(conCambiar(p.contenido.innerHTML), [0, 1]);
+});
+
+test('contraseña: «Sugerir» de nuevo borra la llave cifrada de antes (no casaría con la contraseña nueva), también si aún se estaba cifrando', async () => {
+  const p = abrirEntrenador();
+  p.porId('sugerir-clave').oyentes.click({});
+  p.porId('crear-cifrada').oyentes.click({});
+  await hasta(() => p.porId('cifrada').value !== '', 15000);
+  p.porId('sugerir-clave').oyentes.click({});
+  assert.equal(p.porId('cifrada').value, '');
+  assert.equal(p.porId('cifrada').classList.contains('oculto'), true);
+  assert.equal(p.porId('crear-msg').textContent, '');
+  // Crear y, mientras cifra, «Sugerir»: lo cifrado con la de antes no se enseña.
+  p.porId('crear-cifrada').oyentes.click({});
+  p.porId('sugerir-clave').oyentes.click({});
+  await new Promise((listo) => { setTimeout(listo, 3000); });
+  assert.equal(p.porId('cifrada').value, '');
+  // «Quitar la llave» también borra la contraseña sugerida.
+  p.porId('quitar-llave').oyentes.click({});
+  assert.equal(p.porId('clave-nueva').value, '');
+});
+
+test('contraseña: da igual mayúsculas, espacios o sin guiones al escribirla', async () => {
+  const cifrada = await cifrarEnPrueba(LLAVE, CONTRASENA);
+  for (const escrita of ['K7M2-P9QX-4TZ8-ABCD', 'k7m2 p9qx 4tz8 abcd', 'k7m2p9qx4tz8abcd']) {
+    const p = abrirEntrenador({ llave: '', campos: { edicion: { ...EDICION, cifrada } }, red: () => respuesta(200) });
+    p.porId('llave').value = escrita;
+    p.porId('guardar-llave').oyentes.click({});
+    await hasta(() => /Llave aceptada|incorrecta/.test(p.porId('llave-msg').textContent));
+    assert.match(p.porId('llave-msg').textContent, /Llave aceptada/, escrita);
+  }
+});
+
+test('entrenador: con 401 al guardar, el aviso habla de la llave o de la contraseña según cómo se entra, y el panel no dice «aceptada»', async () => {
+  for (const [cifrada, mensaje] of [[null, /pega una llave nueva/i], [await cifrarEnPrueba(LLAVE, CONTRASENA), /vuelve a escribir la contraseña/i]]) {
+    const p = abrirEntrenador({ campos: cifrada ? { edicion: { ...EDICION, cifrada } } : {}, red: () => respuesta(401) });
+    p.porId('llave-msg').textContent = '✓ Llave aceptada: ya puedes cambiar horas.';
+    pulsarEnLista(p, 'cambiar-sal', 0);
+    escribirHora(p, '07:45');
+    pulsarEnLista(p, 'sal-guardar', 0);
+    await esperar();
+    assert.match(texto(fila(p.contenido.innerHTML, 0).html), mensaje);
+    assert.doesNotMatch(p.porId('llave-msg').textContent, /aceptada/);
+  }
 });

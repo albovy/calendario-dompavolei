@@ -1,0 +1,93 @@
+# Guarda una hora puesta a mano desde la web (la salida del bus de un partido de fuera o el calentamiento de
+# uno en casa) y vuelve a publicar.
+# Este archivo va en el repositorio como: .github/workflows/salida.yml
+#
+# Lo lanza la página («Cambiar salida» o «Cambiar calentamiento», en «Modo entrenador», con la llave: un token
+# de GitHub de grano fino con el permiso «Actions: lectura y escritura» solo en este repositorio). Guarda el
+# cambio en salidas-manuales.json (src/manuales.js lo valida) y lanza la publicación (calendario.yml).
+#
+# Va aparte de calendario.yml a propósito: allí una ejecución nueva cancela la que siga en marcha, y un cambio
+# que estuviera esperando máquina se perdería. Aquí los cambios de un mismo partido van en fila (vale el
+# último) y los de partidos distintos no se esperan; si dos coinciden al guardar, el segundo se rehace encima
+# del primero. En Linux: no necesita llegar a la federación.
+
+name: Cambiar hora a mano
+
+on:
+  workflow_dispatch:
+    inputs:
+      partido:
+        description: 'Partido: id:xxxxxxxx · aaaa-mm-dd HH:MM · LOCAL vs VISITANTE (lo pone la página)'
+        required: true
+        type: string
+      tipo:
+        description: 'Qué hora: la salida del bus (fuera) o el calentamiento (en casa)'
+        required: true
+        default: salida
+        type: choice
+        options: [salida, calentamiento]
+      hora:
+        description: 'Hora, HH:MM (vacía: vuelve la calculada)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write                 # guardar salidas-manuales.json
+  actions: write                  # lanzar la publicación (calendario.yml)
+
+# Los cambios de un mismo partido, en fila y sin cancelar el que está en marcha: vale el último (si llega otro
+# mientras uno espera, el que esperaba ya no hace falta y GitHub lo cancela). El nombre del grupo no se ejecuta.
+concurrency:
+  group: salida-${{ inputs.partido }}
+  cancel-in-progress: false
+
+jobs:
+  guardar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Las entradas van en variables de entorno, nunca dentro del script: así no se puede colar nada. Cada
+      # intento empieza desde lo último guardado; si otro cambio se guardó a la vez, se rehace encima. RAMA: la
+      # que eligió la página (config.json › edicion › rama, «main»).
+      - name: Guardar la hora
+        env:
+          PARTIDO: ${{ inputs.partido }}
+          TIPO: ${{ inputs.tipo }}
+          HORA: ${{ inputs.hora }}
+          RAMA: ${{ github.ref_name }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for vez in 1 2 3 4 5; do
+            git fetch -q origin "$RAMA"
+            git reset -q --hard "origin/$RAMA"
+            node src/manuales.js
+            git add salidas-manuales.json
+            if git diff --cached --quiet; then
+              echo "salidas-manuales.json ya estaba así."
+              exit 0
+            fi
+            git commit -q -m 'Hora puesta a mano desde la web'
+            if git push -q origin "HEAD:$RAMA"; then
+              exit 0
+            fi
+            echo "Otro cambio se ha guardado a la vez; se vuelve a intentar."
+            sleep $((vez * 3))
+          done
+          echo "::error::No se ha podido guardar el cambio; prueba otra vez desde la web."
+          exit 1
+
+      # Lo guardado con el token de esta ejecución no lanza calendario.yml (GitHub no encadena ejecuciones así),
+      # salvo que se pida explícitamente: workflow_dispatch sí está permitido.
+      - name: Publicar la web
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RAMA: ${{ github.ref_name }}
+        run: gh workflow run calendario.yml --ref "$RAMA"

@@ -5,6 +5,7 @@
 // plantilla es otra (el diseño nuevo; la del .ps1 y su traducción se retiraron).
 
 import { readFileSync } from 'node:fs';
+import { idPartido } from './manuales.js';
 import { conHora } from './partidos.js';
 import { aEntero, aviso, claveSinCaja, fmt, hora, ordenarUnicos, txt } from './util.js';
 import { mensajesWhatsApp } from './whatsapp.js';
@@ -63,9 +64,9 @@ function datosPabellones(partidos, pabellones) {
 // Los datos de la página (el JSON de <script id="datos">), sin el escudo (lo añade crearHtml).
 // generado: { pared, utc } (o directamente el Date de pared). salidas: el de configSalidas o null.
 // pabellones: la caché de resolverPabellones o null. pedirBus: el de configPedirBus o null.
-// clasificaciones: las de clasificaciones() de resultados.js.
+// clasificaciones: las de clasificaciones() de resultados.js. edicion: el de configEdicion (manuales.js) o null.
 function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ics, xlsx, generado, urlPublicada,
-  salidas, pabellones, pedirBus, duracion, clasificaciones = [] }) {
+  salidas, pabellones, pedirBus, duracion, clasificaciones = [], edicion = null }) {
   const pared = generado instanceof Date ? generado : generado.pared;
   const bus = pedirBus ? { ...pedirBus, dur: aEntero(duracion) } : null;
   const pub = RE_PUBLICADA.exec(txt(urlPublicada));
@@ -87,6 +88,9 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
     // vel: la velocidad del bus (km/h) si el viaje sale de los km; red: a qué minutos se redondea la salida.
     sal: salidas ? { origen: salidas.origen, cal: salidas.calentamiento, vel: salidas.velocidadBus ?? null, red: salidas.redondeo } : null,
     bus,
+    // Cambiar salidas desde la web («Modo entrenador»): el repositorio, el workflow que publica y su rama.
+    // cifrada: la llave cifrada con la contraseña de los entrenadores (sin la contraseña no sirve de nada).
+    edicion: edicion ? { repo: edicion.repo, workflow: edicion.workflow, rama: edicion.rama, ...(edicion.cifrada ? { cifrada: edicion.cifrada } : {}) } : null,
     pabs: datosPabellones(partidos, pabellones),
     equipos: equipos.map((e) => ({
       n: e.nombre, cat: e.categoria, ck: e.claveCategoria, ics: e.ics, np: e.partidos.length,
@@ -115,6 +119,10 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
       wa: mensajeDe(p),
       // Partido de prueba (demo.js): la página solo lo enseña con «?demo» en la dirección.
       ...(p.demo ? { dm: 1 } : {}),
+      // id: los 8 primeros caracteres del UID (para cambiar la hora desde la web); sm: hora puesta a mano (la
+      // salida, fuera, o el calentamiento, en casa).
+      ...(p.uid ? { id: idPartido(p) } : {}),
+      ...(p.horaManual ? { sm: 1 } : {}),
     })),
     clas: clasificaciones.map((c) => ({
       eq: c.equipo,

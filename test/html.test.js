@@ -117,8 +117,9 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   }));
   const d = datosDe(html);
 
-  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'pabs', 'equipos', 'partidos', 'clas', 'escudo', 'app']);
+  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'edicion', 'pabs', 'equipos', 'partidos', 'clas', 'escudo', 'app']);
   assert.equal(d.club, 'DOMPAVOLEI');
+  assert.equal(d.edicion, null);   // sin config.json › edicion, no se cambian salidas desde la web
   assert.equal(d.escudo, '');   // sin rutaEscudo
   assert.equal(d.app, false);   // sin app instalable
   // Nombre corto del club (config.json › nombre_corto) para «DOMPA INFANTIL» en la página; sin él, ''.
@@ -144,9 +145,11 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
     { n: 'DOMPAVOLEI SM', cat: 'Senior M', ck: 'senior', ics: '', np: 0 },
   ]);
   assert.deepEqual(Object.keys(d.partidos[0]),
-    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun', 'r', 'wa']);
+    ['f', 'h', 'e', 'cat', 'ck', 'comp', 'l', 'v', 'lo', 'vo', 'pab', 'cond', 's', 'ca', 'vj', 'casa', 'seg', 'sp', 'mun', 'r', 'wa', 'id']);
+  // id: los 8 primeros caracteres del UID (para cambiar la salida desde la web).
+  assert.deepEqual(d.partidos.map((p) => p.id), partidos.map((p) => p.uid.slice(0, 8)));
   const comun = { cat: 'Infantil F', ck: 'infantil', comp: 'LIGA INFANTIL F' };
-  assert.deepEqual(d.partidos.map(({ wa, ...resto }) => resto), [
+  assert.deepEqual(d.partidos.map(({ wa, id, ...resto }) => resto), [
     { f: '2026-10-03', h: '17:30', e: 'c', ...comun, l: 'CV VIGO', v: 'DOMPAVOLEI IF1', lo: false, vo: true,
       pab: 'PAV. DAS TRAVESAS', cond: 'visitante', s: '14:45', ca: '16:00', vj: 75, casa: false, seg: false, sp: '', mun: 'Vigo', r: null },
     // 2º partido del día en el mismo pabellón: sin calentamiento ni viaje propios; la salida es la del primero.
@@ -185,7 +188,7 @@ test('crearHtml: sin salidas, sin pabellones y sin dirección publicada', () => 
 test('crearHtml: los valores que faltan salen como null, sin perder la propiedad', () => {
   const p = partido({ estado: 'rara', categoria: undefined, municipio: undefined });
   const d = datosDe(crearHtml(opciones({ partidos: [p] })));
-  assert.equal(Object.keys(d.partidos[0]).length, 21);
+  assert.equal(Object.keys(d.partidos[0]).length, 22);   // con id (tiene UID); sin dm ni sm
   assert.equal(d.partidos[0].e, null);
   assert.equal(d.partidos[0].cat, null);
   assert.equal(d.partidos[0].mun, '');
@@ -364,4 +367,11 @@ test('crearHtml: los partidos de prueba van marcados (dm) y su mensaje de WhatsA
   assert.equal(d.partidos[1].dm, 1);
   assert.match(d.partidos[1].wa, /^🧪 \*PRUEBA\*: este partido no es real\.\n\n🏐 \*DOMPAVOLEI CF1\*/);
   assert.doesNotMatch(d.partidos[0].wa, /PRUEBA/);
+});
+
+test('crearHtml: edicion (cambiar horas desde la web), con la llave cifrada de los entrenadores si la hay', () => {
+  const cifrada = `v1.600000.${'A'.repeat(22)}.${'b'.repeat(16)}.${'c'.repeat(150)}`;
+  const base = { repo: 'albovy/calendario-dompavolei', workflow: 'salida.yml', rama: 'main' };
+  assert.deepEqual(datosDe(crearHtml(opciones({ partidos: [partido()], edicion: base }))).edicion, base);
+  assert.deepEqual(datosDe(crearHtml(opciones({ partidos: [partido()], edicion: { ...base, cifrada } }))).edicion, { ...base, cifrada });
 });

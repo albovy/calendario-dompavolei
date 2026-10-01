@@ -9,6 +9,9 @@
     "duracion_minutos": 120,
     "demo": true,
     "calendario_publicado": "https://albovy.github.io/calendario-dompavolei/calendario.ics",
+    "edicion": {
+        "repo": "albovy/calendario-dompavolei"
+    },
     "salidas": {
         "origen": "Os Remedios",
         "latitud": 42.3442759,

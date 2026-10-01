@@ -49,6 +49,7 @@ import { crearHistorial } from './historial.js';
 import { crearHtml } from './html.js';
 import { crearIcs } from './ics.js';
 import { buscarClubs, catalogoClubs, fechaCruda, partidosApi } from './isquad.js';
+import { aplicarManuales, configEdicion, leerManuales } from './manuales.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
 import { actualizarResultados, anadirResultados, clasificaciones } from './resultados.js';
 import { anadirSalidas, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
@@ -122,6 +123,7 @@ export function rutasConfig(ruta) {
     pabellones: join(dirname(config), 'pabellones.json'),
     temporadaAnterior: join(dirname(config), 'temporada-anterior.json'),
     resultados: join(dirname(config), 'resultados.json'),
+    manuales: join(dirname(config), 'salidas-manuales.json'),
     escudo: join(dirname(config), 'escudo.png'),
     iconos: join(dirname(config), 'iconos'),
   };
@@ -479,8 +481,16 @@ export async function principal(args, ahora = new Date()) {
     pabellones = await resolverPabellones(partidos, salidas, fechaPared(rango.anio - 1, 8, 1), rutas.pabellones,
       generado.pared);
     anadirSalidas(partidos, pabellones, salidas);
+    // Las horas puestas a mano desde la web (salidas-manuales.json, ver manuales.js) mandan sobre las calculadas.
+    const manuales = aplicarManuales(partidos, leerManuales(rutas.manuales));
+    if (manuales.aplicadas) {
+      paso(`${manuales.aplicadas} ${manuales.aplicadas === 1 ? 'hora puesta' : 'horas puestas'} a mano (salidas-manuales.json).`);
+    }
+    for (const c of manuales.caducadas) {
+      aviso(`Hora puesta a mano que ya no vale (${c}): vuelve la calculada. Se puede poner otra desde la web.`);
+    }
     const sinCalcular = ordenarUnicos(partidos
-      .filter((p) => conHora(p) && !p.enCasa && !p.segundo && p.viajeMin === null)
+      .filter((p) => conHora(p) && !p.enCasa && !p.segundo && p.viajeMin === null && !p.horaManual)
       .map((p) => p.pabellon || '(sin pabellón)'));
     if (sinCalcular.length) {
       aviso(`Sin tiempo de viaje para: ${sinCalcular.join('; ')}. Se puede poner a mano en config.json (salidas > tiempos_viaje_minutos).`);
@@ -544,6 +554,8 @@ export async function principal(args, ahora = new Date()) {
     partidos: demo.length ? [...partidos, ...demo].sort((a, b) => a.fecha - b.fecha || a.ordenCategoria - b.ordenCategoria) : partidos,
     equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
+    // Cambiar salidas desde la web: solo con horas de salida y config.json › edicion.
+    edicion: salidas ? configEdicion(cfg) : null,
     rutaEscudo: rutas.escudo,
     app: prepararApp({ carpetaIconos: rutas.iconos, carpetaSalida, nombreClub, nombreCorto, urlPublicada }),
   };

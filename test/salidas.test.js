@@ -94,7 +94,8 @@ test('salidas: casa, fuera, 2º partido, tiempo a mano y pabellón desconocido',
     'En casa · calentamiento 10:30 · partido 11:30',
     'Salida 09:30 desde Os Remedios · bus 1 h || Calentamiento 10:30 · partido 11:30',
     '2º partido del día: se va con el primero (salida 09:30)',
-    'Salida 16:15 desde Os Remedios · bus 40 min || Calentamiento 17:00 · partido 18:00',
+    // El calentamiento de fuera empieza al llegar: 16:15 + 40 min = 16:55 (con el redondeo, algo más de 1 h).
+    'Salida 16:15 desde Os Remedios · bus 40 min || Calentamiento 16:55 · partido 18:00',
     'Viaje sin calcular · calentamiento 11:00 · partido 12:00',
     'Salida 16:00 desde Os Remedios · bus 1 h || Calentamiento 17:00 · partido 18:00 (provisional)',
     '',
@@ -431,7 +432,9 @@ test('viaje a 100 km/h con los km por carretera (lo que piden los entrenadores) 
     partido('2026-10-06 11:30', 'SIN KM', 'SF1'),
   ];
   anadirSalidas(ps, pabs, cfg);
-  assert.deepEqual(ps.map((p) => [p.viajeMin, hm(p.salida)]), [[105, '08:30'], [30, '10:30'], [30, '10:00'], [60, '09:30']]);
+  // El calentamiento empieza al llegar (salida + viaje): lo que se gana al redondear la salida es calentamiento.
+  assert.deepEqual(ps.map((p) => [p.viajeMin, hm(p.salida), hm(p.calentamiento)]),
+    [[105, '08:30', '10:15'], [30, '10:30', '11:00'], [30, '10:00', '10:30'], [60, '09:30', '10:30']]);
   // Nunca a y cuarto ni a menos cuarto.
   for (const p of ps) assert.ok(['00', '30'].includes(hm(p.salida).slice(3)), hm(p.salida));
   // En casa, como siempre: el calentamiento, sin salida.

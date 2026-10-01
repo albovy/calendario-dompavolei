@@ -275,6 +275,39 @@ main { display: block; padding-bottom: 32px; }
   font: 600 14px/1 var(--cond); letter-spacing: .02em;
 }
 .boton-wa.wa { background: var(--tinta); border-color: var(--tinta); color: var(--sup); }
+/* Cambiar la salida (modo entrenador): el editor de la hora y lo que pasó al guardar, a lo ancho de la fila.
+   Los campos, a 16 px: con menos, el iPhone amplía la página al tocarlos. */
+.editor-sal {
+  grid-column: 1 / -1; margin-top: 10px; padding: 10px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  border: 1.5px solid var(--control); border-radius: 10px;
+}
+.es-campo { font: 600 15px/1.2 var(--cond); letter-spacing: .03em; }
+.es-hora {
+  min-height: 44px; padding: 0 10px; border: 1.5px solid var(--control); border-radius: 10px; background: var(--sup); color: var(--tinta);
+  font: 700 22px/1 var(--cond); font-variant-numeric: tabular-nums;
+}
+.es-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.es-botones .boton[disabled] { opacity: .6; cursor: progress; }
+.es-pista { flex-basis: 100%; margin: 0; font: 500 15px/1.35 var(--txt); color: var(--tinta2); }
+.es-pista:empty { display: none; }
+.aviso-sal { grid-column: 1 / -1; margin: 8px 0 0; font: 500 15px/1.35 var(--txt); }
+.aviso-sal.ok { color: var(--agua); }
+.aviso-sal.mal { color: var(--ambar); font-weight: 600; }
+.llave-fila { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.llave {
+  flex: 1 1 220px; min-width: 0; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--control); border-radius: 10px;
+  background: var(--sup); color: var(--tinta); font: 400 16px/1 var(--txt);
+}
+.llave-msg { margin: 8px 0 0; color: var(--tinta); }
+.llave-msg:empty { display: none; }
+.crear-clave { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--borde); }
+.crear-clave p { margin: 0 0 6px; }
+.crear-t { color: var(--tinta); font: 600 16px/1.2 var(--cond); letter-spacing: .03em; }
+.cifrada {
+  display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 8px 10px; resize: vertical;
+  border: 1.5px solid var(--control); border-radius: 10px; background: var(--sup); color: var(--tinta);
+  font: 400 13px/1.35 ui-monospace, Consolas, monospace; overflow-wrap: anywhere;
+}
 /* Detalle desplegable */
 .det { grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde); font: 400 15px/1.4 var(--txt); color: var(--tinta2); }
 .det p { margin: 0 0 4px; }
@@ -345,7 +378,8 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     --fondo: #fff; --sup: #fff; --borde: #bbb; --control: #666; --tinta: #000; --tinta2: #333; --marino-t: #000;
     --agua: #000; --agua-r: #666; --ambar: #000; --elegido: #000; --elegido-t: #fff;
   }
-  .instalar, .aviso-copia, .aviso-demo, .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos { display: none !important; }
+  .instalar, .aviso-copia, .aviso-demo, .btn-cal, .panel-cal, .pestanas, .fijos, #seg-vista, .acc, .chev, .mes-nav, #bloque-equipos,
+  .editor-sal, .aviso-sal { display: none !important; }
   .det[hidden] { display: block !important; }
   .solo-impresion { display: block; margin-top: 4px; font-weight: 600; color: #000; }
   body { font-size: 12px; }
@@ -415,6 +449,31 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
         <li><b>Outlook:</b> haz doble clic en el archivo .ics.</li>
         <li>Importar crea una copia fija: si la federación cambia algo, borra ese calendario e impórtalo otra vez.</li>
       </ul>
+    </details>
+    <!-- Modo entrenador (con config.json › edicion): la llave para cambiar las salidas del bus desde la página. -->
+    <details class="ayuda-cal oculto" id="entrenador">
+      <summary>Modo entrenador: cambiar la salida del bus</summary>
+      <p id="entrenador-texto"></p>
+      <div class="llave-fila" id="llave-fila">
+        <label class="sr-only" for="llave">Contraseña o llave de entrenador</label>
+        <input type="password" id="llave" class="llave" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Pega aquí la llave">
+        <button type="button" class="boton principal" id="guardar-llave">Activar</button>
+      </div>
+      <button type="button" class="boton oculto" id="quitar-llave">Quitar la llave de este navegador</button>
+      <p class="llave-msg" id="llave-msg" role="status"></p>
+      <!-- Con la llave puesta: cifrarla con una contraseña para los entrenadores (va a config.json › edicion › cifrada). -->
+      <div class="crear-clave oculto" id="crear-clave">
+        <p class="crear-t">Contraseña para los entrenadores</p>
+        <p>Así no hace falta pasarles la llave: la página la lleva cifrada con esta contraseña, que tiene que ser al azar (la da «Sugerir»).</p>
+        <div class="llave-fila">
+          <label class="sr-only" for="clave-nueva">Contraseña nueva</label>
+          <input type="text" id="clave-nueva" class="llave" readonly autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Pulsa «Sugerir»">
+          <button type="button" class="boton" id="sugerir-clave">Sugerir</button>
+          <button type="button" class="boton principal" id="crear-cifrada">Crear</button>
+        </div>
+        <textarea class="cifrada oculto" id="cifrada" readonly rows="4" aria-label="Llave cifrada (para config.json)"></textarea>
+        <p class="llave-msg" id="crear-msg" role="status"></p>
+      </div>
     </details>
   </div>
 </div>
@@ -815,9 +874,10 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     } else if (p.seg) {
       r = etq('2.º partido', true) + grande(p.h) + (p.sp ? debajo('bus de ' + p.sp) : p.casa ? debajo('en casa') : '');
     } else if (p.s) {
-      r = etq('Salida') + grande(p.s) + debajo('partido ' + p.h);
+      // sm: la puso a mano un entrenador desde la página (salidas-manuales.json): la ve todo el mundo.
+      r = etq('Salida') + grande(p.s) + debajo('partido ' + p.h) + (p.sm ? debajo('puesta a mano') : '');
     } else if (p.casa) {
-      r = etq('En casa', true) + grande(p.ca || p.h) + debajo('partido ' + p.h);
+      r = etq('En casa', true) + grande(p.ca || p.h) + debajo('partido ' + p.h) + (p.sm ? debajo('puesta a mano') : '');
     } else {
       r = etq('Partido', true) + grande(p.h) + debajo('salida sin calcular', true);
     }
@@ -834,10 +894,18 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
         ? ['i-bus', 'Se va con el partido anterior' + (p.sp ? ' (salida ' + p.sp + ')' : '')]
         : ['i-casa', 'En casa, después del partido anterior']];
     }
-    var calent = ['i-calor', 'Calentamiento ' + p.ca];
-    if (p.casa) return [['i-casa', 'En casa'], calent];
-    if (p.s) return [['i-bus', duracion(p.vj) + ' en bus' + (p.mun ? ' hasta ' + nombrePropio(p.mun) : '')], calent];
-    return [['i-bus', 'Viaje sin calcular'], calent];
+    // El calentamiento, con lo que dura: fuera empieza al llegar (salida + viaje), así que depende de la salida.
+    // Sin hora de calentamiento (una salida a mano sin viaje calculado: no se sabe cuándo se llega), sin la línea.
+    var minCal = p.ca ? aMin(p.h) - aMin(p.ca) : 0;
+    var calent = p.ca ? [['i-calor', 'Calentamiento ' + p.ca + ' (' + (minCal > 0 ? duracion(minCal) : 'sin tiempo') + ')' +
+      (p.casa && p.sm ? ' · puesto a mano' : '')]] : [];
+    if (p.casa) return [['i-casa', 'En casa']].concat(calent);
+    if (p.s) {
+      // Con la salida puesta a mano el viaje puede estar sin calcular (vj 0): entonces, sin duración.
+      var bus = (p.vj ? duracion(p.vj) + ' en bus' : 'En bus') + (p.mun ? ' hasta ' + nombrePropio(p.mun) : '');
+      return [['i-bus', bus + (p.sm ? ' · salida puesta a mano' : '')]].concat(calent);
+    }
+    return [['i-bus', 'Viaje sin calcular']].concat(calent);
   }
 
   // Botón "Pedir bus": abre el correo con la petición ya redactada para la empresa de autobuses.
@@ -848,7 +916,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   function claveEquipo(p) { return nuestros(p).map(function (n) { return n.toUpperCase(); }).sort().join('/'); }
   function mismoEquipo(a, b) { return claveEquipo(a) === claveEquipo(b); }
   function enlaceBus(p) {
-    if (!D.bus || !p.s || yaJugado(p)) return '';
+    if (!D.bus || !p.s || yaJugado(p) || p.pendiente) return '';
     var grupo = D.partidos.filter(function (x) { return x.f === p.f && x.pab === p.pab && conHora(x) && mismoEquipo(x, p); });
     var ult = grupo[grupo.length - 1];
     var d = fechaDe(p.f);
@@ -867,11 +935,12 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       '- Destino: ' + destinoBus,
       '- ' + (grupo.length > 1 ? 'Partidos: ' : 'Partido: ') + partidos.join('; '),
       '- Regreso: al terminar' + (grupo.length > 1 ? ' el último partido' : ' el partido') + ', hacia las ' + hm(fin) +
-        '; llegada aproximada a ' + D.bus.origen + ' a las ' + hm(llegada),
+        // Sin viaje calculado (una salida puesta a mano), no se sabe cuándo se llega.
+        (p.vj ? '; llegada aproximada a ' + D.bus.origen + ' a las ' + hm(llegada) : ''),
       '- Plazas: ' + (D.bus.plazas || '__')
     ];
     D.partidos.forEach(function (o) {
-      if (o !== p && o.f === p.f && o.pab === p.pab && o.s && !mismoEquipo(o, p)) {
+      if (o !== p && o.f === p.f && o.pab === p.pab && o.s && !o.pendiente && !mismoEquipo(o, p)) {
         l.push('', 'Ese día también viaja ' + nuestros(o).join(' y ') + ' al mismo pabellón (salida ' + o.s + '): se podría compartir el autobús.');
       }
     });
@@ -908,7 +977,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       encodeURIComponent(web) + ';end') + '">';
   }
   function botonesWhatsApp(p, i) {
-    if (!p.wa || jugado(p)) return '';
+    if (!p.wa || jugado(p) || p.pendiente) return '';   // pendiente: hora cambiada, aún sin publicar
     return enlaceWhatsApp(p.wa) + icono('i-msg') + 'WhatsApp</a>' +
       '<button type="button" class="boton-wa copiar" data-i="' + i + '">' + icono('i-copia') + '<span>Copiar</span></button>';
   }
@@ -992,11 +1061,334 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       dentro + '<span class="sr-only">' + esc(' (ver ' + p.pab + ' en Google Maps)') + '</span></a>';
   }
 
+  // --- Modo entrenador: cambiar horas desde la página ---------------------------------------------------
+  // Con config.json › edicion (D.edicion) y horas de salida. En los partidos de fuera se cambia la salida del
+  // bus; en los de casa, el calentamiento. La hora del partido nunca cambia: lo que gana o pierde tiempo es el
+  // calentamiento, que fuera empieza al llegar (salida + viaje). La llave es un token de GitHub de grano fino
+  // que solo puede lanzar los workflows de este repositorio; los entrenadores la consiguen con la contraseña
+  // (más abajo) o pegándola, y se queda solo en su navegador (nunca va en la página). Al guardar se lanza
+  // salida.yml (workflow_dispatch), que guarda la hora en salidas-manuales.json y vuelve a publicar la web.
+  var edicion = D.edicion && D.sal ? D.edicion : null;
+  var CLAVE_LLAVE = CLAVE + ':llave';
+  // De dónde salió la llave recordada: la llave cifrada de config.json con la que se entró, o «directa» (pegada).
+  var CLAVE_LLAVE_DE = CLAVE_LLAVE + '-de';
+  // Solo las de grano fino: una clásica («ghp_») suele abrir todos los repositorios de quien la crea.
+  var RE_LLAVE = /^github_pat_\w{20,}$/;
+  var RE_HM = /^([01]\d|2[0-3]):[0-5]\d$/;
+  // La llave cifrada con la contraseña de los entrenadores (ver «Contraseña de los entrenadores»).
+  var RE_CIFRADA = /^v1\.(\d{4,7})\.([\w-]{22})\.([\w-]{16})\.([\w-]{40,600})$/;
+  var cifrada = edicion && RE_CIFRADA.test(edicion.cifrada || '') ? edicion.cifrada : '';
+  var llave = '';
+  var editando = null;      // el partido con el editor abierto
+  var horaEscrita = null;   // lo escrito en el campo: al repintar (enviando, tras un error, filtros...) se queda
+  var enviando = false;
+  function olvidarLlave() {
+    llave = '';
+    editando = null;
+    try { localStorage.removeItem(CLAVE_LLAVE); localStorage.removeItem(CLAVE_LLAVE_DE); } catch (e) { /* sin almacenamiento */ }
+  }
+  if (edicion) {
+    var llaveDe = '';
+    try { llave = localStorage.getItem(CLAVE_LLAVE) || ''; llaveDe = localStorage.getItem(CLAVE_LLAVE_DE) || ''; } catch (e) { /* sin almacenamiento */ }
+    // Si se entró con una contraseña que ya no es la de config.json (se cambió o se quitó), se olvida.
+    if (!RE_LLAVE.test(llave) || (llaveDe && llaveDe !== 'directa' && llaveDe !== cifrada)) olvidarLlave();
+  }
+  function urlWorkflow() { return 'https://api.github.com/repos/' + edicion.repo + '/actions/workflows/' + encodeURIComponent(edicion.workflow); }
+  function cabecerasApi(l) {
+    return { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + l, 'X-GitHub-Api-Version': '2022-11-28' };
+  }
+  // Se puede cambiar la salida de los partidos de fuera y el calentamiento de los de casa, por jugar; no los del
+  // 2.º partido del día (van con el 1.º).
+  function editable(p) {
+    return !!(edicion && llave && conHora(p) && !p.seg && !jugado(p) && (p.id || p.dm) && (!p.casa || p.ca));
+  }
+  function tipoHora(p) { return p.casa ? 'calentamiento' : 'salida'; }
+  // Tras «Enviado» (aún sin publicar), la que se envió; si no, la de la página.
+  function horaActual(p) { return p.pendiente && p.enviada ? p.enviada : p.casa ? p.ca : p.s; }
+  // ¿Está puesta a mano? (Tras «Enviado», según lo enviado: '' es volver a la calculada.)
+  function aMano(p) { return p.pendiente ? !!p.enviada : !!p.sm; }
+  // El partido como lo lee src/manuales.js (textoPartido): id, fecha y hora, y los equipos.
+  function textoPartido(p) { return 'id:' + p.id + ' · ' + p.f + ' ' + p.h + ' · ' + p.l + ' vs ' + p.v; }
+  // Con esta salida, ¿cuándo se llega (minutos del día)? Sin viaje calculado, no se sabe (null).
+  function llegadaCon(p, hora) { return p.casa || !p.vj ? null : aMin(hora) + p.vj; }
+  function llegarTarde(p, llegada) {
+    return 'Con ' + duracion(p.vj) + ' de viaje se llegaría ' + (llegada > aMin(p.h) ? 'a las ' + hm(llegada) + ', después del partido' : 'justo a la hora del partido') +
+      ' (' + p.h + ')';
+  }
+
+  // Lo que queda de calentamiento con la hora escrita (debajo del campo, mientras se elige).
+  function pistaEditor(p, hora) {
+    if (!RE_HM.test(hora)) return '';
+    var partido = aMin(p.h);
+    if (aMin(hora) >= partido) return 'Tiene que ser antes del partido (' + p.h + ').';
+    if (p.casa) return duracion(partido - aMin(hora)) + ' de calentamiento antes del partido (' + p.h + ').';
+    var llegada = llegadaCon(p, hora);
+    if (llegada === null) return '';
+    if (llegada >= partido) return llegarTarde(p, llegada) + ': sin calentamiento.';
+    return 'Llegada hacia las ' + hm(llegada) + ': ' + duracion(partido - llegada) + ' de calentamiento (partido a las ' + p.h + ').';
+  }
+  function botonCambiarHora(p, i) {
+    if (!editable(p) || editando === p) return '';
+    return '<button type="button" class="boton-wa cambiar-sal" id="cs-' + i + '" data-i="' + i + '">' + icono(p.casa ? 'i-calor' : 'i-bus') +
+      (p.casa ? 'Cambiar calentamiento' : 'Cambiar salida') + '</button>';
+  }
+  // El editor (si está abierto) y lo que pasó al guardar (p.avisoSal: { ok, texto }). Mientras se manda, quieto.
+  function editorHora(p, i) {
+    var aviso = p.avisoSal ? '<p class="aviso-sal ' + (p.avisoSal.ok ? 'ok' : 'mal') + '">' + esc(p.avisoSal.texto) + '</p>' : '';
+    if (editando !== p) return aviso;
+    var valor = horaEscrita !== null ? horaEscrita : horaActual(p);
+    var quieto = enviando ? ' disabled' : '';
+    return '<div class="editor-sal" id="es-caja" tabindex="-1" role="group" aria-labelledby="es-t">' +
+      '<label class="es-campo" id="es-t" for="sal-hora">' + (p.casa ? 'Nueva hora de calentamiento' : 'Nueva hora de salida') + '</label>' +
+      '<input type="time" id="sal-hora" class="es-hora" value="' + esc(valor) + '" aria-describedby="es-pista"' + quieto + '>' +
+      '<div class="es-botones">' +
+      '<button type="button" class="boton principal sal-guardar" data-i="' + i + '"' + (enviando ? ' disabled>Guardando…' : '>Guardar') + '</button>' +
+      '<button type="button" class="boton sal-cancelar" data-i="' + i + '"' + quieto + '>Cancelar</button>' +
+      (aMano(p) ? '<button type="button" class="boton sal-calculada" data-i="' + i + '"' + quieto + '>Volver a la calculada</button>' : '') +
+      '</div><p class="es-pista" id="es-pista" aria-live="polite">' + esc(pistaEditor(p, valor)) + '</p></div>' + aviso;
+  }
+  function abrirEditor(p) {
+    if (!p || enviando) return;
+    editando = p;
+    horaEscrita = null;
+    p.avisoSal = null;
+    pintar('sal-hora');
+  }
+  function cerrarEditor() {
+    var p = editando;
+    if (!p || enviando) return;
+    editando = null;
+    pintar('cs-' + D.partidos.indexOf(p));
+  }
+  // Lo que pasó, en la fila y para los lectores de pantalla (#estado, después del recuento de pintar()).
+  function avisarHora(p, ok, texto, cerrar) {
+    enviando = false;
+    if (cerrar) editando = null;
+    p.avisoSal = { ok: ok, texto: texto };
+    pintar(cerrar ? 'cs-' + D.partidos.indexOf(p) : 'sal-hora');
+    $('estado').textContent = texto;
+  }
+  // La hora del campo: «HH:MM» (sin segundos; «8:30» de un navegador sin selector de hora, con su cero).
+  function horaDelEditor() {
+    var v = String($('sal-hora').value || '').trim().slice(0, 5);
+    return /^\d:\d\d$/.test(v) ? '0' + v : v;
+  }
+  function errorGitHub(status) {
+    if (status === 403 || status === 404) {
+      return 'GitHub no deja guardar con esta llave (error ' + status + '): no se ha guardado. Puede que le falte el permiso «Actions: Read and write» o que haya caducado: pide una nueva al club.';
+    }
+    if (status === 422) return 'GitHub no ha aceptado el cambio (error 422): no se ha guardado. Avisa a quien lleva la web.';
+    return 'GitHub no ha podido guardarlo: no se ha guardado. Prueba otra vez en un momento (error ' + status + ' de GitHub).';
+  }
+  // Un partido de prueba: nada a GitHub; el cambio solo se ve aquí, para enseñarlo (y se puede deshacer).
+  function cambiarPrueba(p, hora) {
+    if (p.original === undefined) p.original = { s: p.s, ca: p.ca };
+    if (!hora) { p.s = p.original.s; p.ca = p.original.ca; } else if (p.casa) p.ca = hora;
+    else { p.s = hora; p.ca = p.vj ? hm(llegadaCon(p, hora)) : ''; }
+    p.sm = hora ? 1 : 0;
+  }
+  var ENVIADO = 'En 2 o 3 minutos estará en la web: recarga entonces para mandar el WhatsApp o pedir el bus con la hora nueva.';
+  // hora: «HH:MM», o '' para volver a la calculada.
+  function guardarHora(p, hora) {
+    if (!p || enviando || !editable(p)) return;
+    if (!RE_HM.test(hora) && (hora || !aMano(p))) { avisarHora(p, false, 'Escribe la hora, por ejemplo 08:30.'); return; }
+    if (hora && hora >= p.h) { avisarHora(p, false, 'La hora tiene que ser antes del partido (' + p.h + ').'); return; }
+    // (Tras «Enviado», no: puede ser volver a la de antes, y repetirla no cambia nada.)
+    if (hora && !p.pendiente && hora === horaActual(p)) { avisarHora(p, true, 'Es la misma hora: no hay nada que cambiar.', true); return; }
+    var llegada = hora ? llegadaCon(p, hora) : null;
+    if (llegada !== null && llegada >= aMin(p.h)) { avisarHora(p, false, llegarTarde(p, llegada) + ': pon una salida más temprana.'); return; }
+    var que = p.casa ? 'calentamiento a las ' : 'salida a las ';
+    if (p.dm) {
+      cambiarPrueba(p, hora);
+      avisarHora(p, true, 'Partido de prueba: el cambio no se guarda. En uno de verdad, en 2 o 3 minutos estaría en la web.', true);
+      return;
+    }
+    if (navigator.onLine === false) { avisarHora(p, false, 'Sin conexión: no se ha guardado. Prueba otra vez cuando tengas internet.'); return; }
+    enviando = true;
+    pintar('es-caja');
+    var corte = window.AbortController ? new window.AbortController() : null;
+    var reloj = corte ? setTimeout(function () { corte.abort(); }, 20000) : null;
+    var cabeceras = cabecerasApi(llave);
+    cabeceras['Content-Type'] = 'application/json';
+    var cuerpo = { ref: edicion.rama, inputs: { partido: textoPartido(p), tipo: tipoHora(p), hora: hora } };
+    var opciones = { method: 'POST', headers: cabeceras, body: JSON.stringify(cuerpo) };
+    if (corte) opciones.signal = corte.signal;
+    function fin() { if (reloj !== null) clearTimeout(reloj); }
+    // GitHub contesta en cuanto recibe el cambio; guardarlo y publicar lleva 2 o 3 minutos más: «Enviado».
+    // Hasta recargar, la fila no ofrece WhatsApp ni «Pedir bus» (llevarían la hora vieja).
+    fetch(urlWorkflow() + '/dispatches', opciones).then(function (r) {
+      fin();
+      if (r.ok) {
+        D.partidos.forEach(function (o) { if (o.f === p.f && mismoEquipo(o, p)) o.pendiente = true; });
+        p.enviada = hora;
+        avisarHora(p, true, '✓ Enviado: ' + (hora ? que + hora : 'vuelve la hora calculada') + '. ' + ENVIADO, true);
+      } else if (r.status === 401) {
+        olvidarLlave();
+        $('llave-msg').textContent = '';
+        pintarEntrenador();
+        avisarHora(p, false, 'La llave ya no vale (ha caducado o la han cambiado): no se ha guardado. ' +
+          (cifrada ? 'Vuelve a escribir la contraseña' : 'Pega una llave nueva') + ' en «+ Calendario › Modo entrenador».', true);
+      } else avisarHora(p, false, errorGitHub(r.status));
+    }, function () {
+      // Sin respuesta (sin red, o GitHub no contesta en 20 s): puede que haya llegado igual.
+      fin();
+      avisarHora(p, false, 'No se sabe si se ha guardado: no hay conexión o GitHub no contesta. Mira la web en unos minutos o prueba otra vez (repetirlo no duplica nada).');
+    });
+  }
+
+  // --- Contraseña de los entrenadores ------------------------------------------------------------------
+  // Para no tener que pasarles la llave: quien la tiene la cifra aquí con una contraseña al azar («Sugerir») y el
+  // texto cifrado va a config.json › edicion › cifrada (D.edicion.cifrada). Los entrenadores escriben la
+  // contraseña y la página descifra la llave en su navegador. El texto cifrado es público (va en la página y en el
+  // repositorio): lo que lo protege es que la contraseña sea al azar (~79 bits; una pensada, aunque sea larga, se
+  // adivina probando) y que cada prueba cueste (PBKDF2-SHA-256, 600 000 vueltas). AES-GCM: con otra contraseña,
+  // el descifrado falla. Formato: «v1.<vueltas>.<sal>.<iv>.<cifrado>», en base64url.
+  var VUELTAS = 600000;
+  var LETRAS = 'abcdefghjkmnpqrstuvwxyz23456789';   // sin las que se confunden (0/o, 1/l/i)
+  var RE_SUGERIDA = /^[a-hjkmnp-z2-9]{4}(-[a-hjkmnp-z2-9]{4}){3}$/;
+  var hayCifrado = !!(window.crypto && window.crypto.subtle && window.TextEncoder && window.TextDecoder);
+  function aB64(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function deB64(t) {
+    var s = atob(t.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice(0, (4 - t.length % 4) % 4));
+    var b = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+    return b;
+  }
+  function claveDe(contrasena, sal, vueltas) {
+    var sutil = window.crypto.subtle;
+    return sutil.importKey('raw', new TextEncoder().encode(contrasena), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+      return sutil.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt: sal, iterations: vueltas }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+  }
+  function cifrar(texto, contrasena) {
+    var sal = window.crypto.getRandomValues(new Uint8Array(16)), iv = window.crypto.getRandomValues(new Uint8Array(12));
+    return claveDe(contrasena, sal, VUELTAS).then(function (k) {
+      return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, new TextEncoder().encode(texto));
+    }).then(function (c) { return ['v1', VUELTAS, aB64(sal), aB64(iv), aB64(new Uint8Array(c))].join('.'); });
+  }
+  function descifrar(texto, contrasena) {
+    var m = RE_CIFRADA.exec(texto);
+    return claveDe(contrasena, deB64(m[2]), +m[1]).then(function (k) {
+      return window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64(m[3]) }, k, deB64(m[4]));
+    }).then(function (b) { return new TextDecoder().decode(b); });
+  }
+  // Una contraseña al azar: 4 grupos de 4 letras y cifras de LETRAS (31): ~79 bits.
+  function sugerirContrasena() {
+    var r = [];
+    while (r.length < 16) {
+      var b = window.crypto.getRandomValues(new Uint8Array(32));
+      for (var i = 0; i < b.length && r.length < 16; i++) {
+        if (b[i] < 248) r.push(LETRAS.charAt(b[i] % 31));   // 248 = 8 x 31: así todas salen igual de a menudo
+      }
+    }
+    return [r.slice(0, 4), r.slice(4, 8), r.slice(8, 12), r.slice(12)].map(function (g) { return g.join(''); }).join('-');
+  }
+
+  // El panel «Modo entrenador»: pedir la contraseña (o la llave), o decir que está activado y dejar quitarla; con
+  // la llave puesta, crear la contraseña de los entrenadores.
+  function pintarEntrenador() {
+    $('entrenador').classList.toggle('oculto', !edicion);
+    if (!edicion) return;
+    $('entrenador-texto').textContent = llave
+      ? 'Activado en este navegador: en los partidos por jugar sale «Cambiar salida» (fuera) o «Cambiar calentamiento» (en casa). La hora que pongas estará en la web en 2 o 3 minutos.'
+      : 'Para cambiar la hora de salida del bus o del calentamiento desde esta página, ' +
+        (cifrada ? 'escribe la contraseña que te ha pasado el club.' : 'pega la llave que te ha pasado el club.') + ' Se guarda solo en este navegador.';
+    $('llave').placeholder = cifrada ? 'Contraseña' : 'Pega aquí la llave';
+    $('llave-fila').classList.toggle('oculto', !!llave);
+    $('quitar-llave').classList.toggle('oculto', !llave);
+    $('crear-clave').classList.toggle('oculto', !llave || !hayCifrado);
+  }
+  // Antes de guardarla, la llave se comprueba con GitHub (solo mira el workflow: no lanza nada; que pueda lanzarlo
+  // se ve al guardar). de: la llave cifrada de la que salió, o «directa».
+  function verificarLlave(l, de) {
+    var msg = $('llave-msg');
+    msg.textContent = 'Comprobando la llave…';
+    var corte = window.AbortController ? new window.AbortController() : null;
+    var reloj = corte ? setTimeout(function () { corte.abort(); }, 20000) : null;
+    var opciones = { headers: cabecerasApi(l) };
+    if (corte) opciones.signal = corte.signal;
+    function fin() { if (reloj !== null) clearTimeout(reloj); }
+    fetch(urlWorkflow(), opciones).then(function (r) {
+      fin();
+      if (!r.ok) {
+        msg.textContent = r.status === 401 ? 'La llave no vale o ha caducado. Pide una nueva al club.'
+          : 'La llave no da acceso al calendario del club (error ' + r.status + '). Pide una nueva al club.';
+        return;
+      }
+      llave = l;
+      try { localStorage.setItem(CLAVE_LLAVE, l); localStorage.setItem(CLAVE_LLAVE_DE, de); } catch (e) { /* sin almacenamiento: vale mientras siga abierta */ }
+      $('llave').value = '';
+      msg.textContent = '✓ Llave aceptada: ya puedes cambiar horas. Busca «Cambiar salida» o «Cambiar calentamiento» en los partidos.';
+      pintarEntrenador();
+      pintar();
+    }, function () { fin(); msg.textContent = 'No se ha podido comprobar la llave (sin conexión o GitHub no contesta): prueba otra vez.'; });
+  }
+  // Lo escrito: la llave tal cual (quien lleva la web) o la contraseña (con la llave cifrada en config.json).
+  function comprobarLlave() {
+    var v = String($('llave').value || '').trim();
+    var msg = $('llave-msg');
+    if (RE_LLAVE.test(v)) { verificarLlave(v, 'directa'); return; }
+    if (!cifrada) {
+      msg.textContent = 'Eso no parece una llave: empieza por «github_pat_». Cópiala entera del mensaje del club.';
+      return;
+    }
+    if (!v) { msg.textContent = 'Escribe la contraseña que te ha pasado el club.'; return; }
+    if (!hayCifrado) { msg.textContent = 'Este navegador no puede comprobar la contraseña: prueba con otro (Chrome, Safari...).'; return; }
+    msg.textContent = 'Comprobando la contraseña…';
+    var junta = v.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (junta.length === 16) v = junta.match(/.{4}/g).join('-');
+    descifrar(cifrada, v).then(function (l) {
+      if (RE_LLAVE.test(l)) verificarLlave(l, cifrada);
+      else msg.textContent = 'Contraseña incorrecta: mira que esté bien escrita.';
+    }, function () { msg.textContent = 'Contraseña incorrecta: mira que esté bien escrita.'; });
+  }
+  // Crear la llave cifrada con la contraseña sugerida (la llave es la de este navegador).
+  function crearCifrada() {
+    var c = String($('clave-nueva').value || '').trim();
+    var msg = $('crear-msg');
+    if (!RE_SUGERIDA.test(c)) {
+      msg.textContent = 'Pulsa «Sugerir»: tiene que ser una contraseña al azar (una pensada, aunque sea larga, se puede adivinar probando, y la llave cifrada es pública).';
+      return;
+    }
+    msg.textContent = 'Cifrando…';
+    cifrar(llave, c).then(function (t) {
+      if (String($('clave-nueva').value || '').trim() !== c) return;   // mientras, otra con «Sugerir»
+      $('cifrada').value = t;
+      $('cifrada').classList.remove('oculto');
+      msg.textContent = 'Listo. Este texto no es la contraseña ni la llave: es la llave cifrada. Pásaselo a quien lleva la web para ponerlo en ' +
+        'config.json (edicion › cifrada). La contraseña, solo a los entrenadores.';
+    }, function () { msg.textContent = 'No se ha podido cifrar en este navegador: prueba con otro.'; });
+  }
+  pintarEntrenador();
+  $('guardar-llave').addEventListener('click', comprobarLlave);
+  $('llave').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); comprobarLlave(); } });
+  $('quitar-llave').addEventListener('click', function () {
+    olvidarLlave();
+    $('llave-msg').textContent = 'Llave quitada de este navegador.';
+    $('clave-nueva').value = '';
+    borrarCifrada();
+    pintarEntrenador();
+    pintar('llave');
+  });
+  function borrarCifrada() {
+    $('cifrada').value = '';
+    $('cifrada').classList.add('oculto');
+    $('crear-msg').textContent = '';
+  }
+  // Una contraseña nueva: lo cifrado con la anterior ya no casa con ella.
+  $('sugerir-clave').addEventListener('click', function () { $('clave-nueva').value = sugerirContrasena(); borrarCifrada(); });
+  $('crear-cifrada').addEventListener('click', crearCifrada);
+  $('cifrada').addEventListener('focus', function () { $('cifrada').select(); });
+
   // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.
   function filaPartido(p, marca) {
     var i = D.partidos.indexOf(p), jug = jugado(p);
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
-    var acc = botonesWhatsApp(p, i) + enlaceBus(p);
+    var acc = botonesWhatsApp(p, i) + enlaceBus(p) + botonCambiarHora(p, i);
     var local = p.lo ? nombreEquipo(p.l) : p.l, visit = p.vo ? nombreEquipo(p.v) : p.v;
     return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-cat="' + esc(p.ck) + '" data-i="' + i + '">' +
       columnaHora(p, jug) +
@@ -1011,7 +1403,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       (p.r ? textoResultado(p) : '') + '</div>' +
       '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + local + ' contra ' + visit) + '">' +
       icono('i-flecha', 16) + '</button>' +
-      (acc ? '<div class="acc">' + acc + '</div>' : '') + detalle(p, i) + '</article>';
+      (acc ? '<div class="acc">' + acc + '</div>' : '') + editorHora(p, i) + detalle(p, i) + '</article>';
   }
 
   function tablaClas(c) {
@@ -1179,13 +1571,32 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     if (cp) { copiar(D.partidos[+cp.getAttribute('data-i')].wa, cp); return; }
     var ch = ev.target.closest('.chev');
     if (ch) { alternarDetalle(ch); return; }
+    // Modo entrenador: abrir el editor de la salida, guardar, cancelar o volver a la calculada.
+    var es = ev.target.closest('.cambiar-sal');
+    if (es) { abrirEditor(D.partidos[+es.getAttribute('data-i')]); return; }
+    es = ev.target.closest('.sal-guardar');
+    if (es) { guardarHora(D.partidos[+es.getAttribute('data-i')], horaDelEditor()); return; }
+    es = ev.target.closest('.sal-calculada');
+    if (es) { guardarHora(D.partidos[+es.getAttribute('data-i')], ''); return; }
+    if (ev.target.closest('.sal-cancelar')) { cerrarEditor(); return; }
     if (ev.target.id === 'quitar') {
       st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
       guardar(); marcarChips(); pintar(); return;
     }
     var c = ev.target.closest('[data-ir]'); if (c) irADia(c.getAttribute('data-ir'));
   });
+  // Mientras se elige la hora, lo que queda de calentamiento.
+  main.addEventListener('input', function (ev) {
+    if (!editando || ev.target !== $('sal-hora')) return;
+    horaEscrita = horaDelEditor();
+    $('es-pista').textContent = pistaEditor(editando, horaEscrita);
+  });
   main.addEventListener('keydown', function (ev) {
+    // En el campo de la hora: Intro guarda y Escape cierra el editor.
+    if (editando && ev.target === $('sal-hora')) {
+      if (ev.key === 'Enter') { ev.preventDefault(); guardarHora(editando, horaDelEditor()); return; }
+      if (ev.key === 'Escape') { cerrarEditor(); return; }
+    }
     if (ev.key !== 'Enter' && ev.key !== ' ') return;
     var c = ev.target.closest('[data-ir]'); if (c) { ev.preventDefault(); irADia(c.getAttribute('data-ir')); }
   });
@@ -1222,8 +1633,10 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   var avisoCopia = $('aviso-copia');
   var reintentos = null;
   function recargar() { location.reload(); }
+  // Las automáticas, no con el editor de horas abierto o mandando (se perdería lo que se está haciendo).
+  function recargarSola() { if (!enviando && !(editando && $('sal-hora'))) recargar(); }
   // Solo si aún se ve la copia (el service worker puede haber dicho ya que está al día).
-  function recargarSiCopia() { if (!avisoCopia.hidden) recargar(); }
+  function recargarSiCopia() { if (!avisoCopia.hidden) recargarSola(); }
   if (esCopia) {
     $('aviso-copia-texto').textContent = 'Sin conexión: esta es la copia guardada, con los datos del ' + D.generado + '.';
     avisoCopia.hidden = false;
@@ -1244,7 +1657,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     navigator.serviceWorker.onmessage = function (ev) {
       var m = ev.data || {};
       if (m.type !== 'sw-fresh' || !esCopia) return;
-      if (m.changed) { recargar(); return; }
+      if (m.changed) { recargarSola(); return; }
       // La red trajo la misma que se ve: ya está al día.
       avisoCopia.hidden = true;
       if (reintentos !== null) { clearInterval(reintentos); reintentos = null; }
@@ -1263,7 +1676,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       var copiaVisible = esCopia && !avisoCopia.hidden;
       if (!copiaVisible && Date.now() - cargada <= 30 * 60 * 1000) return;
       var vuelta = Date.now();
-      siHayRed(function () { if (tocada < vuelta) recargar(); }, 3000);
+      siHayRed(function () { if (tocada < vuelta) recargarSola(); }, 3000);
     });
   }
 

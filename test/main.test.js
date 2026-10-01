@@ -572,6 +572,79 @@ test('demo (config.json): dos partidos de prueba solo en la página; ni en el .i
   }
 });
 
+test('horas a mano (salidas-manuales.json): salida de fuera y calentamiento en casa, a la página, al .ics, a WhatsApp y al 2.º partido; si la federación movió el partido, aviso', async () => {
+  const config = {
+    clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }],
+    salidas: { origen: 'Os Remedios', latitud: 42.3442759, longitud: -7.8713948, velocidad_bus_kmh: 100, redondeo_salida_minutos: 30 },
+    edicion: { repo: 'albovy/calendario-dompavolei' },
+  };
+  const dir = carpetaConConfig(config);
+  try {
+    const origen = '42.3442759,-7.8713948';
+    writeFileSync(join(dir, 'pabellones.json'), JSON.stringify({
+      'PAVILLON DE LUGO': { id_campo: '2', municipio: 'LUGO', direccion: 'X', lat: 43.01, lon: -7.55, km: 100, minutos_coche: 70, fuente: 'osrm', origen, fecha: '2026-09-24' },
+      'ANEXO OS REMEDIOS - PISTA 1': { id_campo: '1', municipio: 'OURENSE', direccion: 'X', lat: 42.3438638, lon: -7.8701618, km: 0.7, minutos_coche: 1, fuente: 'osrm', origen, fecha: '2026-09-24' },
+    }));
+    // Dos partidos del mismo equipo el mismo día en Lugo (el 2.º va con el bus del 1.º) y uno en casa.
+    const enLugo = (fecha, local) => ({ ...fila(fecha, local, 'DOMPAVOLEI CF1', '1', DOMPA), campo: 'PAVILLON DE LUGO' });
+    const enCasa = fila('2026-10-04 12:00:00', 'DOMPAVOLEI IF1', 'RIVAL', DOMPA, '1');
+    const generar = async (filas) => {
+      const salida = join(dir, 'salida');
+      const [, consola] = await enSilencio(() => conFetch(soloPartidos(filas),
+        () => principal(['--config', dir, '--salida', salida, '--nombre-base', 'cal', '--temporada', '2026-27'], new Date('2026-10-01T10:00:00Z'))));
+      const ics = readFileSync(join(salida, 'cal.ics'), 'utf8').replace(/\r\n /g, '');
+      return { d: datosDePagina(join(salida, 'cal.html')), ics, consola };
+    };
+    const filas = [enLugo('2026-10-03 11:30:00', 'RIVAL'), enLugo('2026-10-03 13:00:00', 'OTRO'), enCasa];
+    const resumen = (d) => d.partidos.map((p) => [p.s, p.ca, p.sp, p.sm]);
+
+    // Sin cambios, lo calculado: 11:30 − 1 h de calentamiento − 1 h de bus = 09:30; el calentamiento, al llegar
+    // (09:30 + 1 h). En casa, 1 h antes. Cada partido lleva su id (los 8 primeros caracteres del UID) y la
+    // página, a dónde mandar los cambios.
+    let g = await generar(filas);
+    const [id, , idCasa] = g.d.partidos.map((p) => p.id);
+    assert.match(id, /^[0-9a-f]{8}$/);
+    assert.equal(new Set(g.d.partidos.map((p) => p.id)).size, 3);
+    assert.deepEqual(resumen(g.d), [['09:30', '10:30', '', undefined], ['', '', '09:30', undefined], ['', '11:00', '', undefined]]);
+    assert.deepEqual(g.d.edicion, { repo: 'albovy/calendario-dompavolei', workflow: 'salida.yml', rama: 'main' });
+
+    // Con las horas a mano (las que guarda salida.yml): la salida de Lugo, 45 min antes (se llega antes: más
+    // calentamiento), y el calentamiento en casa, a las 10:30.
+    writeFileSync(join(dir, 'salidas-manuales.json'), JSON.stringify({
+      [id]: { partido: '2026-10-03 11:30', tipo: 'salida', hora: '08:45', texto: 'RIVAL vs DOMPAVOLEI CF1', cambiado: '2026-10-01T09:00:00.000Z' },
+      [idCasa]: { partido: '2026-10-04 12:00', tipo: 'calentamiento', hora: '10:30', texto: 'DOMPAVOLEI IF1 vs RIVAL', cambiado: '2026-10-01T09:00:00.000Z' },
+    }));
+    g = await generar(filas);
+    assert.deepEqual(resumen(g.d), [['08:45', '09:45', '', 1], ['', '', '08:45', undefined], ['', '10:30', '', 1]]);
+    assert.match(g.ics, /Salida 08:45 desde Os Remedios · bus 1 h\\nCalentamiento 09:45 · partido 11:30/);
+    assert.match(g.ics, /En casa · calentamiento 10:30 · partido 12:00/);
+    assert.match(g.ics, /DTSTART;TZID=Europe\/Madrid:20261004T103000/);
+    assert.match(g.d.partidos[0].wa, /Salida: 08:45\* desde Os Remedios/);
+    assert.match(g.d.partidos[0].wa, /Calentamiento: 09:45/);
+    assert.ok(g.consola.includes('  2 horas puestas a mano (salidas-manuales.json).'), g.consola.join('\n'));
+
+    // La federación cambia la hora del de Lugo: vuelve la calculada, con aviso.
+    g = await generar([enLugo('2026-10-03 12:00:00', 'RIVAL'), enLugo('2026-10-03 13:30:00', 'OTRO'), enCasa]);
+    assert.equal(g.d.partidos[0].id, id);   // el mismo partido
+    assert.deepEqual([g.d.partidos[0].s, g.d.partidos[0].sm], ['10:00', undefined]);
+    assert.ok(g.consola.some((l) => l.startsWith('  ! Hora puesta a mano que ya no vale')
+      && l.includes('RIVAL vs DOMPAVOLEI CF1: era el 2026-10-03 11:30 y ahora es el 2026-10-03 12:00')), g.consola.join('\n'));
+    assert.ok(g.consola.includes('  1 hora puesta a mano (salidas-manuales.json).'), g.consola.join('\n'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  // Sin «edicion» en config.json, la página no la ofrece.
+  const otra = carpetaConConfig();
+  try {
+    const salida = join(otra, 'salida');
+    await enSilencio(() => conFetch(soloPartidos([fila('2026-10-03 12:00:00', 'RIVAL', 'DOMPAVOLEI CF1', '1', DOMPA)]),
+      () => principal(['--config', otra, '--salida', salida, '--nombre-base', 'cal', '--temporada', '2026-27'], new Date('2026-10-01T10:00:00Z'))));
+    assert.equal(datosDePagina(join(salida, 'cal.html')).edicion, null);
+  } finally {
+    rmSync(otra, { recursive: true, force: true });
+  }
+});
+
 // Lo que ejecuta bash en el bloque «run: |» de un paso del workflow: sus líneas sin la sangría común, como
 // las deja YAML.
 function pasoRun(workflow, nombre) {
@@ -642,4 +715,33 @@ test('el workflow: primero mira si la máquina llega a la federación; si no, te
   }
   // La prueba de red (temporal) ya no está.
   assert.equal(existsSync(join(REPO, '.github', 'workflows', 'diagnostico-red.yml')), false);
+});
+
+test('salida.yml: la página lo lanza con el partido, el tipo y la hora; guarda salidas-manuales.json y lanza la publicación', () => {
+  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'salida.yml'), 'utf8').replace(/\r\n/g, '\n');
+  const disparos = workflow.slice(workflow.indexOf('\non:\n'), workflow.indexOf('\npermissions:'));
+  // Solo workflow_dispatch (la página), con tres entradas: el partido (obligatorio), el tipo y la hora.
+  assert.match(disparos, /^ {2}workflow_dispatch:\n {4}inputs:\n {6}partido:\n(?: {8}[^\n]+\n)*? {8}required: true\n(?: {8}[^\n]+\n)*? {8}type: string\n/m);
+  // El tipo: la salida del bus (fuera) o el calentamiento (en casa); GitHub solo admite esas dos.
+  assert.match(disparos, /^ {6}tipo:\n(?: {8}[^\n]+\n)*? {8}required: true\n(?: {8}[^\n]+\n)*? {8}type: choice\n {8}options: \[salida, calentamiento\]\n/m);
+  assert.match(disparos, /^ {6}hora:\n(?: {8}[^\n]+\n)*? {8}required: false\n(?: {8}[^\n]+\n)*? {8}type: string\n/m);
+  assert.doesNotMatch(disparos, /push:|schedule:|pull_request/);
+  // Guardar y lanzar la publicación; nada más.
+  assert.match(workflow, /^permissions:\n {2}contents: write[^\n]*\n {2}actions: write[^\n]*\n\n/m);
+  // Los cambios de un mismo partido, en fila y sin cancelar el que está en marcha: vale el último (si llega
+  // otro mientras uno espera, ese que esperaba ya no hace falta). Los de partidos distintos no se esperan
+  // (en calendario.yml, la nueva cancela a la que siga en marcha: un cambio así se perdería).
+  assert.match(workflow, /^concurrency:\n {2}group: salida-\$\{\{ inputs\.partido \}\}\n {2}cancel-in-progress: false\n/m);
+  // En Linux: no necesita llegar a la federación.
+  assert.match(workflow, /^ {4}runs-on: ubuntu-latest\n {4}timeout-minutes: 5\n/m);
+  // Las entradas, solo en variables de entorno: nunca ${{ ... }} dentro de un script (se podría colar código).
+  assert.match(workflow, /- name: Guardar la hora\n {8}env:\n {10}PARTIDO: \$\{\{ inputs\.partido \}\}\n {10}TIPO: \$\{\{ inputs\.tipo \}\}\n {10}HORA: \$\{\{ inputs\.hora \}\}\n {10}RAMA: \$\{\{ github\.ref_name \}\}\n {8}run: \|\n/);
+  for (const [, cuerpo] of workflow.matchAll(/\n( +)run: ([^\n]*(?:\n\1 +[^\n]*|\n\s*(?=\n))*)/g)) assert.doesNotMatch(cuerpo, /\$\{\{/, cuerpo);
+  const guardar = pasoRun(workflow, 'Guardar la hora');
+  // Cada intento empieza desde lo último guardado (si otro cambio se guardó a la vez, se rehace encima).
+  // En la rama desde la que la lanzó la página (config.json › edicion › rama).
+  assert.match(guardar, /for vez in 1 2 3 4 5; do\n {2}git fetch -q origin "\$RAMA"\n {2}git reset -q --hard "origin\/\$RAMA"\n {2}node src\/manuales\.js\n {2}git add salidas-manuales\.json\n/);
+  assert.match(guardar, /if git push -q origin "HEAD:\$RAMA"; then\n {4}exit 0\n {2}fi/);
+  assert.match(guardar, /::error::[^\n]*\nexit 1$/);
+  assert.match(workflow, /- name: Publicar la web\n {8}env:\n {10}GH_TOKEN: \$\{\{ github\.token \}\}\n {10}RAMA: \$\{\{ github\.ref_name \}\}\n {8}run: gh workflow run calendario\.yml --ref "\$RAMA"\n$/);
 });

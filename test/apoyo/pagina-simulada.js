@@ -4,6 +4,7 @@
 // pruebas: node --test lo carga y no hace nada.) getElementById se inventa cualquier id que se le pida:
 // que los que usa el código existan lo comprueba aparte test/pagina.test.js.
 
+import { webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
@@ -119,6 +120,8 @@ export function abrirPagina(codigo, datos, {
       return red(url, opciones);
     },
     AbortController,
+    // El cifrado del navegador (la contraseña de los entrenadores): el de Node, que es el mismo WebCrypto.
+    crypto: webcrypto, TextEncoder, TextDecoder, atob, btoa,
     performance: { getEntriesByType: (tipo) => (tipo === 'resource' ? recursos.map((name) => ({ name })) : []) },
     setInterval(fn) { const id = siguienteIntervalo++; pagina.intervalos.set(id, fn); return id; },
     clearInterval(id) { pagina.intervalos.delete(id); },
@@ -133,8 +136,8 @@ export function abrirPagina(codigo, datos, {
     history: { replaceState(_estado, _titulo, url) { pagina.direcciones.push(url); } },
     eventoInstalar,
     localStorage: almacen
-      ? { getItem(k) { return almacen.has(k) ? almacen.get(k) : null; }, setItem(k, v) { almacen.set(k, String(v)); } }
-      : { getItem() { return null; }, setItem() {} },
+      ? { getItem(k) { return almacen.has(k) ? almacen.get(k) : null; }, setItem(k, v) { almacen.set(k, String(v)); }, removeItem(k) { almacen.delete(k); } }
+      : { getItem() { return null; }, setItem() {}, removeItem() {} },
     // El aviso «✓ Copiado» se quitaría a los 2 s: en las pruebas no hace falta.
     setTimeout() { return 0; }, clearTimeout() {},
     print() {}, scrollTo() {}, getComputedStyle() { return {}; },

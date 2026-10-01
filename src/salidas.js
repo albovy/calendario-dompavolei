@@ -367,6 +367,9 @@ export function anadirSalidas(partidos, pabellones, cfgSalidas) {
       s = sumarMinutos(s, -(minutosDelDia % cfg.redondeo));
       p.salida = s;
       p.inicio = s;
+      // La hora del partido no se mueve: el calentamiento empieza al llegar (salida + viaje), así que lo que se
+      // gana al redondear la salida (o el margen) es calentamiento. Igual con una salida puesta a mano (manuales.js).
+      p.calentamiento = sumarMinutos(s, viaje);
     } else {
       p.inicio = p.calentamiento;
     }
@@ -382,10 +385,12 @@ export function lineasSalida(p, cfgSalidas) {
     const ref = p.salidaPrimero;
     return [`2º partido del día: se va con el primero${ref && ref.salida ? ` (salida ${hora(ref.salida)})` : ''}`];
   }
-  const horas = `calentamiento ${hora(p.calentamiento)} · partido ${hora(p.fecha)}${p.estado === 'provisional' ? ' (provisional)' : ''}`;
+  // Sin calentamiento: una salida puesta a mano sin viaje calculado (no se sabe cuándo se llega; manuales.js).
+  const horas = `${p.calentamiento ? `calentamiento ${hora(p.calentamiento)} · ` : ''}partido ${hora(p.fecha)}${p.estado === 'provisional' ? ' (provisional)' : ''}`;
   if (p.enCasa) return [`En casa · ${horas}`];
   if (p.salida) {
-    return [`Salida ${hora(p.salida)} desde ${cfgSalidas.origen} · bus ${formatDuracion(p.viajeMin)}`,
+    // Sin viaje calculado solo puede ser una salida puesta a mano (manuales.js): sin «bus ...».
+    return [`Salida ${hora(p.salida)} desde ${cfgSalidas.origen}${p.viajeMin != null ? ` · bus ${formatDuracion(p.viajeMin)}` : ''}`,
       horas.charAt(0).toUpperCase() + horas.slice(1)];
   }
   return [`Viaje sin calcular · ${horas}`];
