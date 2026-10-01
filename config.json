@@ -10,7 +10,8 @@
     "demo": true,
     "calendario_publicado": "https://albovy.github.io/calendario-dompavolei/calendario.ics",
     "edicion": {
-        "repo": "albovy/calendario-dompavolei"
+        "repo": "albovy/calendario-dompavolei",
+        "cifrada": "v1.600000.QeqDWp904UhqEfqkUAQP4g.xl9ga_9pU_WjJ9KK.qTYK_uwgEjuD4GUV91rxOaU8IVVzboF5U1n4gd8pvZdqZuV1zg_d08R7jKFzYHOvwKizbZxW-IZXXmAkgBmWD0PRWP5BPj7BOLKOFD0iX78RfGtubaVootrQa7OqfBdIiRiCTCTZNcIsQO-J_w"
     },
     "salidas": {
         "origen": "Os Remedios",
