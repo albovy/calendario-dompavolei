@@ -51,7 +51,7 @@
     "4063",
     "4064"
    ],
-   "revisado": "2026-10-03 12:17"
+   "revisado": "2026-10-03 14:17"
   },
   "TORNEO APERTURA XUVENIL F": {
    "id": "1507",
@@ -205,10 +205,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-03 12:17",
+   "consultado": "2026-10-03 14:17",
    "terminado": false,
-   "firma": "163073ae6ffde71e",
-   "firma_clasificacion": "163073ae6ffde71e",
+   "firma": "a430a216d1bfd8ed",
+   "firma_clasificacion": "a430a216d1bfd8ed",
    "partidos": [
     {
      "local": "SEI SAN NARCISO IF",
@@ -290,9 +290,25 @@
      "visitante": "DOMPAVOLEI IF1",
      "dia": "2026-10-03",
      "hora": "12:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       16
+      ],
+      [
+       25,
+       20
+      ],
+      [
+       25,
+       23
+      ]
+     ]
     }
    ],
    "clasificacion": [
