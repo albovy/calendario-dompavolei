@@ -30,7 +30,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-10-04 15:17"
+   "revisado": "2026-10-04 16:17"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -73,7 +73,7 @@
     "4093",
     "4094"
    ],
-   "revisado": "2026-10-04 15:17"
+   "revisado": "2026-10-04 16:17"
   }
  },
  "grupos": {
@@ -84,10 +84,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-04 15:17",
-   "terminado": false,
-   "firma": "093ab5fdb4bfc86a",
-   "firma_clasificacion": "093ab5fdb4bfc86a",
+   "consultado": "2026-10-04 16:17",
+   "terminado": true,
+   "firma": "2880bf70ec1b99f0",
+   "firma_clasificacion": "2880bf70ec1b99f0",
    "partidos": [
     {
      "local": "CV CIUDAD DE A CORUÑA JF B",
@@ -148,18 +148,50 @@
      "visitante": "CV CIUDAD DE A CORUÑA JF B",
      "dia": "2026-10-04",
      "hora": "10:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       10
+      ],
+      [
+       25,
+       15
+      ],
+      [
+       25,
+       21
+      ]
+     ]
     },
     {
      "local": "DOMPAVOLEI XF1",
      "visitante": "RIBEIRA SACRA A",
      "dia": "2026-10-04",
      "hora": "13:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       14,
+       25
+      ],
+      [
+       13,
+       25
+      ],
+      [
+       15,
+       25
+      ]
+     ]
     }
    ],
    "clasificacion": [
@@ -167,34 +199,34 @@
      "pos": 1,
      "equipo": "RIBEIRA SACRA A",
      "club": "206572586",
-     "pt": 6,
-     "pj": 2,
-     "pg": 2,
+     "pt": 12,
+     "pj": 4,
+     "pg": 4,
      "pp": 0,
-     "sf": 6,
+     "sf": 12,
      "sc": 0
     },
     {
      "pos": 2,
-     "equipo": "CV CIUDAD DE A CORUÑA JF B",
-     "club": "206572595",
+     "equipo": "DOMPAVOLEI XF1",
+     "club": "206572580",
      "pt": 3,
-     "pj": 2,
+     "pj": 4,
      "pg": 1,
-     "pp": 1,
-     "sf": 3,
-     "sc": 4
+     "pp": 3,
+     "sf": 4,
+     "sc": 9
     },
     {
      "pos": 3,
-     "equipo": "DOMPAVOLEI XF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 2,
-     "pg": 0,
-     "pp": 2,
-     "sf": 1,
-     "sc": 6
+     "equipo": "CV CIUDAD DE A CORUÑA JF B",
+     "club": "206572595",
+     "pt": 3,
+     "pj": 4,
+     "pg": 1,
+     "pp": 3,
+     "sf": 3,
+     "sc": 10
     }
    ]
   },
@@ -564,7 +596,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-04 15:17",
+   "consultado": "2026-10-04 16:17",
    "terminado": false,
    "firma": "196f7047cfd07e36",
    "firma_clasificacion": "196f7047cfd07e36",
