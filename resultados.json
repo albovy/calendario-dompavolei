@@ -30,7 +30,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-10-05 21:17"
+   "revisado": "2026-10-05 22:28"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -596,10 +596,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-05 21:17",
-   "terminado": false,
-   "firma": "196f7047cfd07e36",
-   "firma_clasificacion": "196f7047cfd07e36",
+   "consultado": "2026-10-05 22:28",
+   "terminado": true,
+   "firma": "8140367632ae59d3",
+   "firma_clasificacion": "8140367632ae59d3",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
@@ -631,64 +631,104 @@
      "visitante": "XUVENIL TEIS B",
      "dia": "2026-10-04",
      "hora": "10:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       9
+      ],
+      [
+       25,
+       6
+      ],
+      [
+       25,
+       22
+      ]
+     ]
     },
     {
      "local": "DOMPAVOLEI CF1",
      "visitante": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "dia": "2026-10-04",
      "hora": "13:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      2
+     ],
+     "sets": [
+      [
+       25,
+       20
+      ],
+      [
+       25,
+       23
+      ],
+      [
+       15,
+       25
+      ],
+      [
+       22,
+       25
+      ],
+      [
+       15,
+       12
+      ]
+     ]
     }
    ],
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
-     "club": "206572608",
-     "pt": 6,
-     "pj": 2,
-     "pg": 2,
+     "equipo": "DOMPAVOLEI CF1",
+     "club": "206572580",
+     "pt": 8,
+     "pj": 3,
+     "pg": 3,
      "pp": 0,
-     "sf": 6,
-     "sc": 1
+     "sf": 9,
+     "sc": 2
     },
     {
      "pos": 2,
-     "equipo": "DOMPAVOLEI CF1",
-     "club": "206572580",
-     "pt": 3,
-     "pj": 1,
-     "pg": 1,
-     "pp": 0,
-     "sf": 3,
-     "sc": 0
+     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "club": "206572608",
+     "pt": 7,
+     "pj": 3,
+     "pg": 2,
+     "pp": 1,
+     "sf": 8,
+     "sc": 4
     },
     {
      "pos": 3,
      "equipo": "PESCADOR XAV SANXENXO",
      "club": "206572588",
-     "pt": 0,
-     "pj": 2,
-     "pg": 0,
+     "pt": 2,
+     "pj": 3,
+     "pg": 1,
      "pp": 2,
-     "sf": 1,
-     "sc": 6
+     "sf": 4,
+     "sc": 8
     },
     {
      "pos": 4,
      "equipo": "XUVENIL TEIS B",
      "club": "206572585",
-     "pt": 0,
-     "pj": 1,
+     "pt": 1,
+     "pj": 3,
      "pg": 0,
-     "pp": 1,
-     "sf": 0,
-     "sc": 3
+     "pp": 3,
+     "sf": 2,
+     "sc": 9
     }
    ]
   }
