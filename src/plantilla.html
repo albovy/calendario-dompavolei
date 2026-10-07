@@ -1463,9 +1463,22 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
         window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
     } catch (e) { return false; }
   }
+  // La página, abierta en Chrome (desde el navegador de dentro de una app en Android).
+  function urlChrome() {
+    return 'intent://' + location.host + location.pathname + (location.search || '') + '#Intent;scheme=' + location.protocol.replace(':', '') +
+      ';package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+  }
   function panelInsta(p, i) {
     if (instaP !== p) return '';
     var h = '<div class="editor-sal insta-caja" id="ig-caja" tabindex="-1" role="group" aria-label="Imagen para Instagram">';
+    // El navegador de dentro de una app en Android (Instagram, Facebook...) no guarda ni comparte la imagen:
+    // ni se prepara; a Chrome.
+    if (esWebViewAndroid) {
+      return h + '<p class="ig-t">Imagen para Instagram</p>' +
+        '<p class="es-pista">Desde el navegador de esta app no se puede guardar ni publicar la imagen: ábrela en Chrome.</p>' +
+        '<div class="es-botones"><a class="boton principal" id="ig-chrome" href="' + esc(urlChrome()) + '">Abrir en Chrome</a>' +
+        '<button type="button" class="boton ig-cerrar" data-i="' + i + '">Cerrar</button></div></div>';
+    }
     if (instaFase === 'preparando') {
       h += '<p class="ig-t">Preparando la imagen…</p><div class="es-botones">' +
         '<button type="button" class="boton ig-cerrar" id="ig-cancelar" data-i="' + i + '">Cancelar</button></div>';
@@ -1510,7 +1523,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     soltarInsta();
     editando = null;   // uno a la vez: el editor de la hora o el panel de Instagram
     instaP = p; instaFase = 'elegir';
-    pintar('ig-historia');
+    pintar(esWebViewAndroid ? 'ig-chrome' : 'ig-historia');
   }
   function cerrarInsta() {
     var p = instaP;
@@ -1610,7 +1623,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     var a = document.createElement('a');
     a.href = instaUrl; a.download = instaNombre;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    avisarInsta('✓ Descargada: ' + instaNombre, false, 'ig-descargar');
+    avisarInsta('✓ Descarga iniciada: ' + instaNombre, false, 'ig-descargar');
   }
 
   // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.

@@ -1867,3 +1867,25 @@ test('instagram: el pabellón del próximo partido, como nombre pero con sus sig
   assert.equal(r.dibujos[0].pabellon, 'Anexo PM Os Remedios - Anexo Os Remedios');
   assert.equal(r.dibujos[0].lugar, 'Ourense');
 });
+
+test('instagram: en el navegador de dentro de una app en Android (Instagram, Facebook...) no se puede guardar ni publicar: se dice que se abra en Chrome', async () => {
+  const UA_WV = 'Mozilla/5.0 (Linux; Android 14; SM-S921B; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0 Mobile Safari/537.36';
+  const p = abrirInsta({ ua: UA_WV, consultas: ['(pointer: coarse)'] });
+  const r = navegadorDeMentira(p, { compartir: false });
+  pulsarInsta(p, 'insta', 0);
+  const f = fila(p.contenido.innerHTML, 0);
+  assert.match(texto(f.html), /Desde el navegador de esta app no se puede guardar ni publicar la imagen: ábrela en Chrome/);
+  assert.match(f.html, /<a class="boton principal" id="ig-chrome" href="intent:\/\/example\.org\/calendario\/#Intent;scheme=https;package=com\.android\.chrome;S\.browser_fallback_url=https%3A%2F%2Fexample\.org%2Fcalendario%2F;end">Abrir en Chrome<\/a>/);
+  assert.doesNotMatch(f.html, /ig-formato/);   // ni se prepara: no serviría de nada
+  assert.equal(p.doc.activeElement, p.porId('ig-chrome'));
+  assert.deepEqual(r.scripts, []);
+  // En un navegador normal, la descarga solo se da por empezada (si el navegador la bloquea, no se sabe).
+  const q = abrirInsta();
+  const r2 = navegadorDeMentira(q);
+  pulsarInsta(q, 'insta', 0);
+  pulsarInsta(q, 'ig-formato', 0, 'historia');
+  await esperar(); await esperar();
+  pulsarInsta(q, 'ig-descargar', 0);
+  assert.equal(r2.descargas.length, 1);
+  assert.match(texto(fila(q.contenido.innerHTML, 0).html), /✓ Descarga iniciada: dompa-victoria-2026-09-20-historia\.png/);
+});

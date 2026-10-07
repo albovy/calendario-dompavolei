@@ -127,7 +127,7 @@ El logo va en la carpeta `patrocinadores/`, junto a `config.json`, en PNG (mejor
 WebP: los iPhone con iOS 13 o anterior no lo leen), con un nombre de archivo sin acentos ni espacios. Como mucho
 4 patrocinadores. Sin patrocinador, en su lugar sale «¡VAMOS, DOMPA!»; si un logo no carga, la página avisa. Con
 `"instagram": false` se quita el botón. En los derbis no hay botón (uno de los nuestros saldría como rival). Si la
-imagen tarda más de 20 s (una wifi sin internet), se avisa; mientras se prepara, se puede cancelar.
+imagen tarda más de 20 s (una wifi sin internet), se avisa; mientras se prepara, se puede cancelar. Desde el navegador de dentro de una app en Android (al abrir el enlace en Instagram o Facebook) no se puede guardar ni publicar la imagen: la página lo dice y ofrece abrirla en Chrome.
 
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 
