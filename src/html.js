@@ -65,8 +65,9 @@ function datosPabellones(partidos, pabellones) {
 // generado: { pared, utc } (o directamente el Date de pared). salidas: el de configSalidas o null.
 // pabellones: la caché de resolverPabellones o null. pedirBus: el de configPedirBus o null.
 // clasificaciones: las de clasificaciones() de resultados.js. edicion: el de configEdicion (manuales.js) o null.
+// insta: el de prepararInstagram (instagram.js) o null.
 function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ics, xlsx, generado, urlPublicada,
-  salidas, pabellones, pedirBus, duracion, clasificaciones = [], edicion = null }) {
+  salidas, pabellones, pedirBus, duracion, clasificaciones = [], edicion = null, insta = null }) {
   const pared = generado instanceof Date ? generado : generado.pared;
   const bus = pedirBus ? { ...pedirBus, dur: aEntero(duracion) } : null;
   const pub = RE_PUBLICADA.exec(txt(urlPublicada));
@@ -91,6 +92,8 @@ function datosPagina({ partidos, equipos, nombreClub, nombreCorto, temporada, ic
     // Cambiar salidas desde la web («Modo entrenador»): el repositorio, el workflow que publica y su rama.
     // cifrada: la llave cifrada con la contraseña de los entrenadores (sin la contraseña no sirve de nada).
     edicion: edicion ? { repo: edicion.repo, workflow: edicion.workflow, rama: edicion.rama, ...(edicion.cifrada ? { cifrada: edicion.cifrada } : {}) } : null,
+    // Botón «Instagram» del modo entrenador: los logos del patrocinador (pat) y la versión de arte.js (v), o null.
+    insta: insta ? { pat: insta.patrocinadores.map((x) => ({ logo: x.logo, nombre: x.nombre })), v: insta.v } : null,
     pabs: datosPabellones(partidos, pabellones),
     equipos: equipos.map((e) => ({
       n: e.nombre, cat: e.categoria, ck: e.claveCategoria, ics: e.ics, np: e.partidos.length,

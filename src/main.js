@@ -48,6 +48,7 @@ import { partidosDemo } from './demo.js';
 import { crearHistorial } from './historial.js';
 import { crearHtml } from './html.js';
 import { crearIcs } from './ics.js';
+import { prepararInstagram } from './instagram.js';
 import { buscarClubs, catalogoClubs, fechaCruda, partidosApi } from './isquad.js';
 import { aplicarManuales, configEdicion, leerManuales } from './manuales.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
@@ -550,12 +551,15 @@ export async function principal(args, ahora = new Date()) {
   writeFileSync(join(carpetaSalida, archivoIcs),
     crearIcs(partidos, `Voleibol · ${nombreClub}`, descripcion, duracion, generado, salidas, opcionesIcs), 'utf8');
   writeFileSync(join(carpetaSalida, archivoXlsx), crearXlsx(partidos, generado.pared, nombreClub, salidas));
+  // Cambiar horas desde la web (modo entrenador): solo con horas de salida y config.json › edicion. Con él, el
+  // botón «Instagram» (arte.js y los logos del patrocinador, junto a la página).
+  const edicion = salidas ? configEdicion(cfg) : null;
+  const insta = edicion ? prepararInstagram({ cfg, carpetaConfig: dirname(rutas.config), carpetaSalida }) : null;
   const opcionesHtml = {
     partidos: demo.length ? [...partidos, ...demo].sort((a, b) => a.fecha - b.fecha || a.ordenCategoria - b.ordenCategoria) : partidos,
     equipos, nombreClub, nombreCorto, temporada: rango.etiqueta, ics: archivoIcs, xlsx: archivoXlsx, generado,
     urlPublicada, salidas, pabellones, pedirBus: configPedirBus(cfg, salidas), duracion, clasificaciones: tablas,
-    // Cambiar salidas desde la web: solo con horas de salida y config.json › edicion.
-    edicion: salidas ? configEdicion(cfg) : null,
+    edicion, insta,
     rutaEscudo: rutas.escudo,
     app: prepararApp({ carpetaIconos: rutas.iconos, carpetaSalida, nombreClub, nombreCorto, urlPublicada }),
   };
@@ -603,6 +607,7 @@ export async function principal(args, ahora = new Date()) {
   console.log(`    ${archivoIcs}   <- calendario para importar (copia fija)`);
   console.log(`    ${archivoXlsx}  <- Excel`);
   if (conEquipos) console.log(`    equipos${sep}  <- un calendario .ics por equipo (${equipos.length})`);
+  if (insta) console.log(`    arte.js${insta.patrocinadores.length ? ` y patrocinadores${sep}` : ''}  <- artes para Instagram (modo entrenador)`);
   if (opcionesHtml.app) console.log(`    manifest.webmanifest, sw.js, iconos${sep}  <- para instalar la página como app en el móvil`);
   if (demo.length) paso(`${demo.length} partidos de prueba en la página (solo se ven con «?demo» en la dirección).`);
   if (urlPublicada) {

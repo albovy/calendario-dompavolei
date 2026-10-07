@@ -607,6 +607,11 @@ test('horas a mano (salidas-manuales.json): salida de fuera y calentamiento en c
     assert.equal(new Set(g.d.partidos.map((p) => p.id)).size, 3);
     assert.deepEqual(resumen(g.d), [['09:30', '10:30', '', undefined], ['', '', '09:30', undefined], ['', '11:00', '', undefined]]);
     assert.deepEqual(g.d.edicion, { repo: 'albovy/calendario-dompavolei', workflow: 'salida.yml', rama: 'main' });
+    // Con el modo entrenador, el botón «Instagram»: arte.js junto a la página (sin patrocinador todavía).
+    assert.deepEqual(g.d.insta.pat, []);
+    assert.match(g.d.insta.v, /^[0-9a-f]{8}$/);   // la versión de arte.js
+    assert.ok(existsSync(join(dir, 'salida', 'arte.js')));
+    assert.ok(g.consola.some((l) => /^ {4}arte\.js +<- artes para Instagram/.test(l)), g.consola.join('\n'));
 
     // Con las horas a mano (las que guarda salida.yml): la salida de Lugo, 45 min antes (se llega antes: más
     // calentamiento), y el calentamiento en casa, a las 10:30.
@@ -640,6 +645,8 @@ test('horas a mano (salidas-manuales.json): salida de fuera y calentamiento en c
     await enSilencio(() => conFetch(soloPartidos([fila('2026-10-03 12:00:00', 'RIVAL', 'DOMPAVOLEI CF1', '1', DOMPA)]),
       () => principal(['--config', otra, '--salida', salida, '--nombre-base', 'cal', '--temporada', '2026-27'], new Date('2026-10-01T10:00:00Z'))));
     assert.equal(datosDePagina(join(salida, 'cal.html')).edicion, null);
+    assert.equal(datosDePagina(join(salida, 'cal.html')).insta, null);
+    assert.equal(existsSync(join(salida, 'arte.js')), false);
   } finally {
     rmSync(otra, { recursive: true, force: true });
   }

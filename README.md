@@ -105,6 +105,30 @@ guarda en el navegador de cada entrenador, para esta dirección (`albovy.github.
 publiquen en esa misma dirección podrían leerla, así que ahí solo deben ir páginas propias. Sin `edicion` en
 `config.json`, la página no ofrece cambiar horas.
 
+### Imágenes para Instagram
+
+En el modo entrenador, los partidos con resultado (no los derbis) y los que están por jugar con día y hora
+confirmados tienen un botón **Instagram**. Al pulsarlo se elige **Historia** (1080×1920) o **Publicación**
+(1080×1350). La imagen se hace en el momento en el propio móvil: victoria, derrota («SEGUIMOS») o próximo
+partido, con el escudo y el rosa del equipo. Sale en pequeño con **Publicar en Instagram**, que abre la app con
+la imagen (desde el menú de compartir del móvil) y espera a que se confirme allí, y **Descargar**, por si se
+quiere retocar antes. Nada se publica sin confirmarlo en Instagram. No lleva fotos ni nombres de jugadoras.
+
+La dibuja `src/arte.js`, que se publica junto a la página solo si hay modo entrenador (`edicion` en
+`config.json`). La página lo descarga al pulsar el botón por primera vez, así que las familias no lo descargan.
+
+El patrocinador del club sale en la imagen del próximo partido. Se pone en `config.json`:
+
+```json
+"instagram": { "patrocinadores": [{ "logo": "patrocinadores/logo.png", "nombre": "Nombre del patrocinador" }] }
+```
+
+El logo va en la carpeta `patrocinadores/`, junto a `config.json`, en PNG (mejor con fondo transparente) o JPG (no
+WebP: los iPhone con iOS 13 o anterior no lo leen), con un nombre de archivo sin acentos ni espacios. Como mucho
+4 patrocinadores. Sin patrocinador, en su lugar sale «¡VAMOS, DOMPA!»; si un logo no carga, la página avisa. Con
+`"instagram": false` se quita el botón. En los derbis no hay botón (uno de los nuestros saldría como rival). Si la
+imagen tarda más de 20 s (una wifi sin internet), se avisa; mientras se prepara, se puede cancelar.
+
 Para actualizar a mano: pestaña **Actions** › **Calendario Dompavolei** › **Run workflow**.
 
 Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://nodejs.org/) instalado):

@@ -117,9 +117,10 @@ test('crearHtml: mismos datos, claves y formatos que New-Html', () => {
   }));
   const d = datosDe(html);
 
-  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'edicion', 'pabs', 'equipos', 'partidos', 'clas', 'escudo', 'app']);
+  assert.deepEqual(Object.keys(d), ['club', 'corto', 'temporada', 'generado', 'ics', 'xlsx', 'pub', 'sal', 'bus', 'edicion', 'insta', 'pabs', 'equipos', 'partidos', 'clas', 'escudo', 'app']);
   assert.equal(d.club, 'DOMPAVOLEI');
   assert.equal(d.edicion, null);   // sin config.json › edicion, no se cambian salidas desde la web
+  assert.equal(d.insta, null);     // ni botón «Instagram»
   assert.equal(d.escudo, '');   // sin rutaEscudo
   assert.equal(d.app, false);   // sin app instalable
   // Nombre corto del club (config.json › nombre_corto) para «DOMPA INFANTIL» en la página; sin él, ''.
@@ -352,7 +353,8 @@ test('crearHtml: con app, la cabecera enlaza el manifiesto y los iconos, y la p�
   assert.ok(!sinApple.includes('apple-touch-icon'));
   // Sin app: nada de eso.
   const sin = crearHtml(opciones());
-  assert.ok(!/rel="manifest"|apple-touch-icon|apple-mobile-web-app-title|iconos\//.test(sin));
+  // (En la cabecera: el código de la página nombra iconos/512.png para el escudo de los artes de Instagram.)
+  assert.ok(!/rel="manifest"|apple-touch-icon|apple-mobile-web-app-title|iconos\//.test(sin.slice(0, sin.indexOf('</head>'))));
   assert.equal(datosDe(sin).app, false);
 });
 

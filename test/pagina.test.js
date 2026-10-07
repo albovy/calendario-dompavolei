@@ -1646,3 +1646,224 @@ test('contraseña: con la llave cifrada ya en config.json, nada de «Sugerir»: 
   // Sin llave cifrada todavía, con la llave puesta sale el apartado (para crearla).
   assert.deepEqual([visible(abrirEntrenador(), 'crear-clave'), visible(abrirEntrenador(), 'cambiar-clave')], [true, false]);
 });
+
+// --- Instagram (modo entrenador): los artes de victoria, derrota y próximo partido -----------------------------
+
+// Partidos: victoria (de visitante, 1-3), derrota (de local, 1-3), por jugar con día y hora, provisional,
+// derbi con resultado y sin hora.
+function partidosInsta() {
+  return [
+    partido({ id: 'a1', f: '2026-09-20', h: '10:00', l: 'CV RIVAL', v: 'DOMPAVOLEI IF1', r: { m: [1, 3], s: [[25, 20], [18, 25], [20, 25], [21, 25]] }, comp: 'LIGA INFANTIL F' }),
+    partido({ id: 'a2', f: '2026-09-19', h: '12:00', l: 'DOMPAVOLEI IF1', v: 'CV OTRO', lo: true, vo: false, cond: 'local', casa: true, r: { m: [1, 3], s: [[25, 20], [18, 25], [20, 25], [21, 25]] } }),
+    partido({ id: 'a3', f: '2026-09-26', h: '10:00', pab: 'PABELLÓN COLEGIO SAN NARCISO - PISTA 1', mun: 'MARÍN', s: '07:30', vj: 75 }),
+    partido({ id: 'a4', f: '2026-09-27', h: '12:00', e: 'p' }),
+    partido({ id: 'a5', f: '2026-09-18', h: '18:00', l: 'DOMPAVOLEI IF1', v: 'DOMPAVOLEI IF1', lo: true, vo: true, cond: 'derbi', r: { m: [3, 0], s: [[25, 1], [25, 1], [25, 1]] } }),
+    partido({ id: 'a6', f: '2026-10-10', h: '', e: 'h' }),
+    partido({ id: 'a7', f: '2026-10-03', h: '18:00', l: 'DOMPAVOLEI IF1', v: 'DOMPAVOLEI IF1', lo: true, vo: true, cond: 'derbi' }),
+  ];
+}
+const conInsta = (html) => [...html.matchAll(/class="boton-wa insta" id="ig-(\d+)" data-i="\1"/g)].map((m) => +m[1]);
+// Lo que haría el navegador (arte.js ya cargado, lienzo, imágenes, archivo, compartir...), de mentira.
+function navegadorDeMentira(p, { compartir = true, arte = true, fuentes = true } = {}) {
+  const v = p.ventana;
+  const r = { dibujos: [], compartidos: [], descargas: [], scripts: [] };
+  if (arte) {
+    v.DompaArte = {
+      medidas: (f) => ({ W: 1080, H: f === 'historia' ? 1920 : 1350 }),
+      dibujar: (ctx, o) => { r.dibujos.push(JSON.parse(JSON.stringify({ ...o, escudo: o.escudo && o.escudo.src, logos: o.logos.map((x) => x.src) }))); return {}; },
+    };
+  }
+  const crear = p.doc.createElement;
+  p.doc.createElement = (etiqueta) => {
+    const el = crear(etiqueta);
+    if (etiqueta === 'canvas') Object.assign(el, { getContext: () => ({}), toBlob: (cb) => Promise.resolve().then(() => cb({ blob: true })) });
+    if (etiqueta === 'a') el.click = () => r.descargas.push({ href: el.href, download: el.download });
+    if (etiqueta === 'script') r.scripts.push(el);
+    return el;
+  };
+  p.doc.fonts = { load: () => Promise.resolve(fuentes ? [{ family: 'Barlow' }] : []), check: () => true };
+  v.Image = class { set src(s) { this._src = s; Promise.resolve().then(() => (s.includes('no-esta') ? this.onerror() : this.onload())); } get src() { return this._src; } };
+  v.File = class { constructor(partes, nombre, o) { Object.assign(this, { partes, name: nombre, type: o.type }); } };
+  v.URL = { createObjectURL: () => 'blob:imagen', revokeObjectURL() {} };
+  if (compartir) {
+    v.navigator.canShare = (d) => !!(d.files && d.files.length);
+    v.navigator.share = (d) => { r.compartidos.push(d); return Promise.resolve(); };
+  }
+  return r;
+}
+function pulsarInsta(p, clase, i, formato) {
+  const b = elemento(p.doc, 'button');
+  b.classList.add(clase);
+  b.setAttribute('data-i', i);
+  if (formato) b.setAttribute('data-f', formato);
+  p.contenido.oyentes.click({ target: b });
+}
+const abrirInsta = (opciones = {}) => abrirEntrenador({ partidos: partidosInsta(), campos: { insta: { pat: [] }, corto: 'Dompa' }, ...opciones });
+
+test('instagram: el botón, solo en modo entrenador y en los partidos con resultado (no derbis) o por jugar con día y hora', () => {
+  assert.deepEqual(conInsta(abrirInsta({ llave: '' }).contenido.innerHTML), []);
+  assert.deepEqual(conInsta(abrirEntrenador({ partidos: partidosInsta() }).contenido.innerHTML), []);   // sin D.insta
+  assert.deepEqual(conInsta(abrirInsta().contenido.innerHTML), [0, 1, 2]);
+  assert.match(PLANTILLA, /<symbol id="i-insta"/);
+});
+
+test('instagram: elegir historia o publicación y los datos de cada arte (victoria, derrota, próximo)', async () => {
+  const p = abrirInsta();
+  const r = navegadorDeMentira(p);
+  pulsarInsta(p, 'insta', 0);
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, /class="boton principal ig-formato" data-i="0" data-f="historia" id="ig-historia">Historia</);
+  assert.match(f.html, /data-f="publicacion"[^>]*>Publicación</);
+  assert.equal(p.doc.activeElement, p.porId('ig-historia'));
+  pulsarInsta(p, 'ig-formato', 0, 'historia');
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /Preparando la imagen/);
+  await esperar(); await esperar();
+  assert.deepEqual(r.dibujos[0], {
+    arte: 'victoria', formato: 'historia', escudo: 'iconos/512.png', logos: [],
+    datos: { local: 'CV RIVAL', visitante: 'DOMPA INFANTIL', nuestro: 'visitante', categoria: 'INFANTIL F', sl: 1, sv: 3,
+      sets: [[25, 20], [18, 25], [20, 25], [21, 25]], fecha: 'Domingo 20 de septiembre', competicion: 'LIGA INFANTIL F' },
+  });
+  f = fila(p.contenido.innerHTML, 0);
+  assert.match(f.html, /<img class="ig-vista" src="blob:imagen"/);
+  // Derrota (de local) y próximo partido (con el pabellón y el sitio como nombres).
+  for (const [i, formato] of [[1, 'publicacion'], [2, 'historia']]) {
+    pulsarInsta(p, 'insta', i);
+    pulsarInsta(p, 'ig-formato', i, formato);
+    await esperar(); await esperar();
+  }
+  assert.deepEqual([r.dibujos[1].arte, r.dibujos[1].formato, r.dibujos[1].datos.nuestro, r.dibujos[1].datos.sl], ['derrota', 'publicacion', 'local', 1]);
+  assert.deepEqual(r.dibujos[2].datos, {
+    local: 'CV RIVAL', visitante: 'DOMPA INFANTIL', nuestro: 'visitante', categoria: 'INFANTIL F',
+    diaSemana: 'Sábado', dia: '26', mes: 'septiembre', hora: '10:00', pabellon: 'Pabellón Colegio San Narciso', lugar: 'Marín',
+  });
+});
+
+test('instagram: «Publicar en Instagram» abre la app (el menú del móvil) con la imagen; «Descargar», para retocarla; en el ordenador, solo «Descargar»', async () => {
+  let p = abrirInsta({ consultas: ['(pointer: coarse)'] });
+  let r = navegadorDeMentira(p);
+  pulsarInsta(p, 'insta', 2);
+  pulsarInsta(p, 'ig-formato', 2, 'publicacion');
+  await esperar(); await esperar();
+  let f = fila(p.contenido.innerHTML, 2);
+  assert.match(f.html, /class="boton principal ig-compartir" id="ig-compartir" data-i="2"><svg[^>]*><use href="#i-insta"\/><\/svg>Publicar en Instagram</);
+  assert.match(f.html, /class="boton ig-descargar" id="ig-descargar" data-i="2">Descargar</);   // la segunda opción
+  assert.match(texto(f.html), /Se abre el menú del móvil: elige Instagram y confirma allí la publicación/);
+  assert.equal(p.doc.activeElement, p.porId('ig-compartir'));
+  pulsarInsta(p, 'ig-compartir', 2);
+  await esperar();
+  assert.equal(r.compartidos.length, 1);
+  assert.deepEqual([r.compartidos[0].files[0].name, r.compartidos[0].files[0].type], ['dompa-proximo-2026-09-26-publicacion.png', 'image/png']);
+  assert.match(texto(fila(p.contenido.innerHTML, 2).html), /✓ Hecho: termina allí la publicación/);
+  assert.match(p.estado.textContent, /Hecho: termina allí/);   // también para los lectores de pantalla
+  pulsarInsta(p, 'ig-descargar', 2);
+  assert.deepEqual(r.descargas, [{ href: 'blob:imagen', download: 'dompa-proximo-2026-09-26-publicacion.png' }]);
+  // En el ordenador (sin pantalla táctil), aunque tenga menú de compartir, no trae Instagram: solo «Descargar», y
+  // se dice por qué.
+  p = abrirInsta();
+  r = navegadorDeMentira(p);
+  pulsarInsta(p, 'insta', 0);
+  pulsarInsta(p, 'ig-formato', 0, 'historia');
+  await esperar(); await esperar();
+  f = fila(p.contenido.innerHTML, 0);
+  assert.doesNotMatch(f.html, /ig-compartir/);
+  assert.match(f.html, /class="boton principal ig-descargar" id="ig-descargar" data-i="0">Descargar</);
+  assert.match(texto(f.html), /Desde aquí no se puede publicar en Instagram: descárgala o hazlo desde el móvil/);
+  // «Cerrar» quita el panel y deja el botón.
+  pulsarInsta(p, 'ig-cerrar', 0);
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 0).html, /ig-vista/);
+  assert.deepEqual(conInsta(p.contenido.innerHTML), [0, 1, 2]);
+});
+
+test('instagram: sin conexión (no carga arte.js) o sin las letras, se dice y se puede volver a probar', async () => {
+  let p = abrirInsta();
+  let r = navegadorDeMentira(p, { arte: false });
+  pulsarInsta(p, 'insta', 0);
+  pulsarInsta(p, 'ig-formato', 0, 'historia');
+  assert.equal(r.scripts.length, 1);
+  assert.equal(r.scripts[0].src, 'arte.js');
+  r.scripts[0].onerror();
+  await esperar(); await esperar();
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.match(texto(f.html), /Sin conexión \(o va muy lenta\): no se puede preparar la imagen ahora/);
+  assert.match(f.html, /class="aviso-sal mal"/);
+  assert.match(f.html, /data-f="historia"/);   // se puede volver a probar
+  // Las letras (Barlow) no cargan: no se hace con otras.
+  p = abrirInsta();
+  r = navegadorDeMentira(p, { fuentes: false });
+  pulsarInsta(p, 'insta', 0);
+  pulsarInsta(p, 'ig-formato', 0, 'historia');
+  await esperar(); await esperar();
+  assert.deepEqual(r.dibujos, []);
+  assert.match(texto(fila(p.contenido.innerHTML, 0).html), /No se han podido cargar las letras/);
+});
+
+test('instagram: mientras se prepara se puede cancelar (lo que llegue después no cuenta) y abrir otro', async () => {
+  const p = abrirInsta();
+  const r = navegadorDeMentira(p, { arte: false });   // arte.js no contesta (una wifi sin internet)
+  pulsarInsta(p, 'insta', 0);
+  pulsarInsta(p, 'ig-formato', 0, 'historia');
+  let f = fila(p.contenido.innerHTML, 0);
+  assert.match(texto(f.html), /Preparando la imagen/);
+  assert.match(f.html, /class="boton ig-cerrar" id="ig-cancelar" data-i="0">Cancelar</);
+  assert.equal(p.doc.activeElement, p.porId('ig-cancelar'));
+  pulsarInsta(p, 'ig-cerrar', 0);
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 0).html, /ig-caja/);
+  // arte.js llega tarde: no se enseña nada.
+  p.ventana.DompaArte = { medidas: () => ({ W: 1, H: 1 }), dibujar: () => { r.dibujos.push('tarde'); } };
+  r.scripts[0].onload();
+  await esperar(); await esperar();
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 0).html, /ig-vista/);
+  // Y se puede abrir el de otro partido (también mientras otro se prepara).
+  pulsarInsta(p, 'insta', 1);
+  pulsarInsta(p, 'ig-formato', 1, 'historia');
+  pulsarInsta(p, 'insta', 2);
+  assert.match(fila(p.contenido.innerHTML, 2).html, /id="ig-historia"/);
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 1).html, /ig-caja/);
+});
+
+test('instagram: si el logo del patrocinador no carga, la imagen sale sin él pero se avisa', async () => {
+  const p = abrirEntrenador({ partidos: partidosInsta(), campos: { insta: { pat: [{ logo: 'patrocinadores/no-esta.png', nombre: 'X' }] }, corto: 'Dompa' } });
+  const r = navegadorDeMentira(p);
+  pulsarInsta(p, 'insta', 2);
+  pulsarInsta(p, 'ig-formato', 2, 'historia');
+  await esperar(); await esperar();
+  assert.deepEqual(r.dibujos[0].logos, []);
+  assert.match(texto(fila(p.contenido.innerHTML, 2).html), /No se ha podido cargar el logo del patrocinador: la imagen va sin él/);
+});
+
+test('instagram: «Quitar la llave» y el editor de la hora cierran el panel; con él a la vista, la página no se recarga sola', async () => {
+  let p = abrirInsta();
+  navegadorDeMentira(p);
+  pulsarInsta(p, 'insta', 0);
+  p.porId('quitar-llave').oyentes.click({});
+  assert.doesNotMatch(p.contenido.innerHTML, /ig-caja|boton-wa insta/);
+  p = abrirInsta();
+  pulsarInsta(p, 'insta', 2);
+  pulsarEnLista(p, 'cambiar-sal', 2);
+  assert.doesNotMatch(fila(p.contenido.innerHTML, 2).html, /ig-caja/);
+  assert.match(fila(p.contenido.innerHTML, 2).html, /id="sal-hora"/);
+  // Al volver de Instagram tras 30 minutos (a por el otro formato), no se pierde.
+  p = abrirInsta({ campos: { insta: { pat: [] }, corto: 'Dompa', app: true } });
+  pulsarInsta(p, 'insta', 0);
+  const ahora = Date.now();
+  p.ventana.Date.now = () => ahora + 31 * 60000;
+  p.doc.oyentes.visibilitychange({});
+  await esperar();
+  assert.equal(p.recargas, 0);
+});
+
+test('instagram: el pabellón del próximo partido, como nombre pero con sus siglas; arte.js con su versión', async () => {
+  const partidos = partidosInsta();
+  partidos[2].pab = 'ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 1';
+  partidos[2].mun = 'OURENSE';
+  const p = abrirEntrenador({ partidos, campos: { insta: { pat: [], v: 'abc12345' }, corto: 'Dompa' } });
+  const r = navegadorDeMentira(p, { arte: false });
+  pulsarInsta(p, 'insta', 2);
+  pulsarInsta(p, 'ig-formato', 2, 'historia');
+  assert.equal(r.scripts[0].src, 'arte.js?v=abc12345');
+  p.ventana.DompaArte = { medidas: () => ({ W: 1080, H: 1920 }), dibujar: (ctx, o) => { r.dibujos.push(JSON.parse(JSON.stringify(o.datos))); } };
+  r.scripts[0].onload();
+  await esperar(); await esperar(); await esperar();
+  assert.equal(r.dibujos[0].pabellon, 'Anexo PM Os Remedios - Anexo Os Remedios');
+  assert.equal(r.dibujos[0].lugar, 'Ourense');
+});

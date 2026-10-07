@@ -288,6 +288,9 @@ main { display: block; padding-bottom: 32px; }
 }
 .es-botones { display: flex; flex-wrap: wrap; gap: 8px; }
 .es-botones .boton[disabled] { opacity: .6; cursor: progress; }
+/* Instagram: la imagen preparada, en pequeño, antes de compartirla */
+.ig-t { flex-basis: 100%; margin: 0; font: 600 16px/1.2 var(--cond); letter-spacing: .03em; }
+.ig-vista { display: block; width: 112px; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: #fff; }
 .es-pista { flex-basis: 100%; margin: 0; font: 500 15px/1.35 var(--txt); color: var(--tinta2); }
 .es-pista:empty { display: none; }
 .aviso-sal { grid-column: 1 / -1; margin: 8px 0 0; font: 500 15px/1.35 var(--txt); }
@@ -407,6 +410,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   <symbol id="i-bus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="2"/><path d="M4 11h16M8 18v2M16 18v2M7.5 14.5h.01M16.5 14.5h.01"/></symbol>
   <symbol id="i-calor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a6 6 0 0 0 6-6c0-2.5-1.5-4.5-3-6-.5 2-1.5 3-3 3.5.5-3-1-6.5-4-8.5 0 4-4 6.5-4 11a6 6 0 0 0 6 6Z"/><path d="M12 21a2.5 2.5 0 0 1-2.5-2.5c0-1.5 1.5-2.5 2.5-4 1 1.5 2.5 2.5 2.5 4A2.5 2.5 0 0 1 12 21Z"/></symbol>
   <symbol id="i-casa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-insta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></symbol>
   <symbol id="i-copa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></symbol>
 </svg>
 
@@ -1092,6 +1096,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     llave = '';
     llaveDe = '';
     editando = null;
+    soltarInsta();   // sin llave, tampoco el panel de Instagram
     try { localStorage.removeItem(CLAVE_LLAVE); localStorage.removeItem(CLAVE_LLAVE_DE); } catch (e) { /* sin almacenamiento */ }
   }
   var llaveDe = '';
@@ -1157,6 +1162,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   }
   function abrirEditor(p) {
     if (!p || enviando) return;
+    soltarInsta();   // uno a la vez: el editor de la hora o el panel de Instagram
     editando = p;
     horaEscrita = null;
     p.avisoSal = null;
@@ -1398,11 +1404,220 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   $('cambiar-clave').addEventListener('click', function () { cambiarClave = true; pintarEntrenador(); $('sugerir-clave').focus(); });
   $('cifrada').addEventListener('focus', function () { $('cifrada').select(); });
 
+  // --- Instagram (modo entrenador): la imagen de victoria, derrota o próximo partido -----------------------
+  // Con la llave puesta y D.insta (config.json › edicion; ver instagram.js). La dibuja arte.js en el propio móvil
+  // (se carga al pulsar por primera vez, con su versión: las familias no lo descargan) con las letras de la
+  // página, el escudo y el logo del patrocinador. Primero se prepara y se ve en pequeño; luego «Publicar en
+  // Instagram» abre el menú de compartir del móvil (el iPhone solo lo deja abrir justo después de un toque: por
+  // eso son dos pasos), y allí Instagram, que espera a que se confirme; o «Descargar», para retocarla antes.
+  var instaP = null;         // el partido con el panel abierto
+  var instaFase = '';        // elegir | preparando | lista | error
+  var instaMsg = '', instaMal = false, instaAviso = '';
+  var instaArchivo = null, instaUrl = '', instaNombre = '';
+  var instaTurno = 0;        // cada preparación; una que llega tarde (se canceló o se pidió otra) no cuenta
+  var compartiendo = false;
+  var ESPERA_ARTE = 20000;   // sin respuesta en 20 s (una wifi sin internet): se avisa en vez de esperar siempre
+  // Qué arte toca: victoria o derrota (con resultado) o próximo partido (por jugar, con día y hora confirmados).
+  // Los derbis, ninguno: ganamos y perdemos a la vez, y uno de los nuestros saldría como rival.
+  function arteDe(p) {
+    if (p.cond === 'derbi') return '';
+    if (p.r) {
+      if (!p.r.s || !p.r.s.length) return '';
+      var m = delClub(p, p.r.m);
+      return m[0] > m[1] ? 'victoria' : m[0] < m[1] ? 'derrota' : '';
+    }
+    return !jugado(p) && p.e === 'c' && p.h ? 'proximo' : '';
+  }
+  function fechaLarga(f) { var d = fechaDe(f); return mayuscula(DIAS[d.getDay()]) + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()]; }
+  // El pabellón como nombre propio, pero con sus siglas (PM, IES, CEIP...: «Anexo PM Os Remedios»).
+  var SIGLAS = ['ies', 'ceip', 'cpi', 'cpr', 'eei', 'cifp', 'ifp', 'pm', 'cd', 'cv', 'cmd', 'udc', 'usc', 'uvigo'];
+  function nombrePabellon(s) {
+    return nombrePropio(s).split(' ').map(function (w) {
+      var l = w.toLowerCase().replace(/[.,]/g, '');
+      return SIGLAS.indexOf(l) >= 0 || (l.length > 1 && !/[aeiouáéíóú]/.test(l)) ? w.toUpperCase() : w;
+    }).join(' ');
+  }
+  // Los datos del arte (arte.js): los equipos como en la página («DOMPA INFANTIL 1»); nada de jugadoras.
+  function datosArte(p, arte) {
+    var d = fechaDe(p.f);
+    var base = {
+      local: p.lo ? nombreEquipo(p.l) : p.l, visitante: p.vo ? nombreEquipo(p.v) : p.v,
+      nuestro: p.lo ? 'local' : 'visitante', categoria: String(p.cat || '').toUpperCase()
+    };
+    if (arte === 'proximo') {
+      base.diaSemana = mayuscula(DIAS[d.getDay()]); base.dia = String(d.getDate()); base.mes = MESES[d.getMonth()];
+      base.hora = p.h; base.pabellon = p.pab ? nombrePabellon(pabCorto(p.pab)) : ''; base.lugar = p.mun ? nombrePropio(p.mun) : '';
+      return base;
+    }
+    base.sl = p.r.m[0]; base.sv = p.r.m[1]; base.sets = p.r.s; base.fecha = fechaLarga(p.f); base.competicion = p.comp || '';
+    return base;
+  }
+  function botonInstagram(p, i) {
+    if (!edicion || !llave || !D.insta || instaP === p || !arteDe(p)) return '';
+    return '<button type="button" class="boton-wa insta" id="ig-' + i + '" data-i="' + i + '">' + icono('i-insta') + 'Instagram</button>';
+  }
+  // «Publicar en Instagram», solo en el móvil: el menú de compartir del ordenador no tiene Instagram.
+  function puedePublicar() {
+    try {
+      return !!(instaArchivo && navigator.canShare && navigator.share && navigator.canShare({ files: [instaArchivo] }) &&
+        window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    } catch (e) { return false; }
+  }
+  function panelInsta(p, i) {
+    if (instaP !== p) return '';
+    var h = '<div class="editor-sal insta-caja" id="ig-caja" tabindex="-1" role="group" aria-label="Imagen para Instagram">';
+    if (instaFase === 'preparando') {
+      h += '<p class="ig-t">Preparando la imagen…</p><div class="es-botones">' +
+        '<button type="button" class="boton ig-cerrar" id="ig-cancelar" data-i="' + i + '">Cancelar</button></div>';
+    } else if (instaFase === 'lista') {
+      var pub = puedePublicar();
+      h += '<img class="ig-vista" src="' + esc(instaUrl) + '" alt="Imagen para Instagram">' + '<div class="es-botones">' +
+        (pub ? '<button type="button" class="boton principal ig-compartir" id="ig-compartir" data-i="' + i + '">' + icono('i-insta') + 'Publicar en Instagram</button>' : '') +
+        '<button type="button" class="boton' + (pub ? '' : ' principal') + ' ig-descargar" id="ig-descargar" data-i="' + i + '">Descargar</button>' +
+        '<button type="button" class="boton ig-cerrar" data-i="' + i + '">Cerrar</button></div>' +
+        // «Publicar»: el menú de compartir del móvil (la web no puede abrir Instagram directamente); «Descargar»,
+        // para retocarla antes.
+        '<p class="es-pista">' + (pub ? 'Se abre el menú del móvil: elige Instagram y confirma allí la publicación. «Descargar», para retocarla antes.'
+          : 'Desde aquí no se puede publicar en Instagram: descárgala o hazlo desde el móvil.') + '</p>';
+      if (instaAviso) h += '<p class="aviso-sal mal">' + esc(instaAviso) + '</p>';
+    } else {
+      h += '<p class="ig-t">Imagen para Instagram</p><div class="es-botones">' +
+        '<button type="button" class="boton principal ig-formato" data-i="' + i + '" data-f="historia" id="ig-historia">Historia</button>' +
+        '<button type="button" class="boton principal ig-formato" data-i="' + i + '" data-f="publicacion">Publicación</button>' +
+        '<button type="button" class="boton ig-cerrar" data-i="' + i + '">Cancelar</button></div>';
+    }
+    if (instaMsg) h += '<p class="aviso-sal ' + (instaMal ? 'mal' : 'ok') + '">' + esc(instaMsg) + '</p>';
+    return h + '</div>';
+  }
+  // Lo que pasó, en el panel y para los lectores de pantalla (#estado, después del recuento de pintar()).
+  function avisarInsta(texto, mal, foco) {
+    instaMsg = texto; instaMal = !!mal;
+    pintar(foco);
+    if (texto) $('estado').textContent = texto;
+  }
+  function soltarImagen() {
+    if (instaUrl) { try { URL.revokeObjectURL(instaUrl); } catch (e) { /* nada */ } }
+    instaUrl = ''; instaArchivo = null; instaNombre = ''; instaAviso = '';
+  }
+  // Cierra el panel sin pintar (también lo que se estuviera preparando).
+  function soltarInsta() {
+    instaTurno++;
+    soltarImagen();
+    instaP = null; instaFase = ''; instaMsg = ''; instaMal = false; compartiendo = false;
+  }
+  function abrirInsta(p) {
+    if (!p || enviando) return;
+    soltarInsta();
+    editando = null;   // uno a la vez: el editor de la hora o el panel de Instagram
+    instaP = p; instaFase = 'elegir';
+    pintar('ig-historia');
+  }
+  function cerrarInsta() {
+    var p = instaP;
+    if (!p) return;
+    soltarInsta();
+    pintar('ig-' + D.partidos.indexOf(p));
+  }
+  // arte.js (con su versión), una vez (si falla, se puede volver a probar).
+  var cargandoArte = null;
+  function cargarArte() {
+    if (window.DompaArte) return Promise.resolve();
+    if (!cargandoArte) {
+      cargandoArte = new Promise(function (ok, mal) {
+        var s = document.createElement('script');
+        s.src = 'arte.js' + (D.insta && D.insta.v ? '?v=' + encodeURIComponent(D.insta.v) : '');
+        s.onload = function () { if (window.DompaArte) ok(); else { cargandoArte = null; mal(new Error('arte.js')); } };
+        s.onerror = function () { cargandoArte = null; mal(new Error('arte.js')); };
+        (document.head || document.body).appendChild(s);
+      });
+    }
+    return cargandoArte;
+  }
+  // Las letras del arte (Barlow, las de la página): si no cargan (también si su hoja de estilos no llegó: entonces
+  // load() no encuentra ninguna), no se hace con otras.
+  function letrasArte() {
+    if (!document.fonts || !document.fonts.load) return Promise.resolve(true);
+    var f = ['500 40px "Barlow Condensed"', '600 40px "Barlow Condensed"', '700 40px "Barlow Condensed"', '400 40px "Barlow"', '500 40px "Barlow"', '600 40px "Barlow"'];
+    return Promise.all(f.map(function (x) { return document.fonts.load(x, 'ÁÉÍÓÚÑáéíóúñ0123456789–·¡!'); })).then(function (caras) {
+      return caras.every(function (c) { return c && c.length > 0; });
+    }, function () { return false; });
+  }
+  function cargarImagen(src) {
+    return new Promise(function (ok) {
+      var im = new Image();
+      im.onload = function () { ok(im); };
+      im.onerror = function () { ok(null); };
+      im.src = src;
+    });
+  }
+  // El escudo grande de la app (iconos/512.png); si no está, el de la página.
+  function escudoArte() {
+    return cargarImagen('iconos/512.png').then(function (im) { return im || (D.escudo ? cargarImagen(D.escudo) : null); });
+  }
+  function logosArte(arte) {
+    if (arte !== 'proximo') return Promise.resolve([]);
+    return Promise.all((D.insta.pat || []).map(function (x) { return cargarImagen(x.logo); }));
+  }
+  function hacerArte(p, formato) {
+    var arte = arteDe(p);
+    if (!arte || instaP !== p || instaFase === 'preparando') return;
+    var turno = ++instaTurno;
+    soltarImagen();
+    instaFase = 'preparando'; instaMsg = ''; instaMal = false;
+    pintar('ig-cancelar');
+    var reloj = null;
+    var tarde = new Promise(function (ok, mal) { reloj = setTimeout(function () { mal(new Error('tarde')); }, ESPERA_ARTE); });
+    Promise.race([Promise.all([cargarArte(), letrasArte(), escudoArte(), logosArte(arte)]), tarde]).then(function (r) {
+      if (!r[1]) throw new Error('letras');
+      var logos = r[3].filter(Boolean);
+      if (logos.length < r[3].length) instaAviso = 'No se ha podido cargar el logo del patrocinador: la imagen va sin él. Prueba otra vez con internet.';
+      var m = window.DompaArte.medidas(formato), lienzo = document.createElement('canvas');
+      lienzo.width = m.W; lienzo.height = m.H;
+      window.DompaArte.dibujar(lienzo.getContext('2d'), { arte: arte, formato: formato, datos: datosArte(p, arte), escudo: r[2], logos: logos });
+      return new Promise(function (ok, mal) { lienzo.toBlob(function (b) { if (b) ok(b); else mal(new Error('imagen')); }, 'image/png'); });
+    }).then(function (blob) {
+      clearTimeout(reloj);
+      if (turno !== instaTurno) return;   // se canceló, o se pidió otra
+      instaNombre = 'dompa-' + arte + '-' + p.f + '-' + formato + '.png';
+      instaArchivo = new File([blob], instaNombre, { type: 'image/png' });
+      instaUrl = URL.createObjectURL(blob);
+      instaFase = 'lista';
+      // El foco, al botón del panel, salvo que se esté en otro sitio (el editor de la hora no puede estar abierto).
+      avisarInsta('', false, puedePublicar() ? 'ig-compartir' : 'ig-descargar');
+    }, function (e) {
+      clearTimeout(reloj);
+      if (turno !== instaTurno) return;
+      instaFase = 'error'; instaAviso = '';
+      avisarInsta(e && (e.message === 'arte.js' || e.message === 'tarde') ? 'Sin conexión (o va muy lenta): no se puede preparar la imagen ahora. Prueba otra vez con internet.'
+        : e && e.message === 'letras' ? 'No se han podido cargar las letras de la imagen: prueba otra vez con internet.'
+          : 'No se ha podido preparar la imagen' + (e && e.errores ? ' (' + e.errores.join(', ') + ')' : '') + '.', true, 'ig-historia');
+    });
+  }
+  function publicarInsta() {
+    if (!puedePublicar() || compartiendo) return;   // un segundo toque con el menú ya abriéndose: nada
+    compartiendo = true;
+    navigator.share({ files: [instaArchivo] }).then(function () {
+      compartiendo = false;
+      avisarInsta('✓ Hecho: termina allí la publicación.', false, 'ig-compartir');
+    }, function (e) {
+      compartiendo = false;
+      if (e && (e.name === 'AbortError' || e.name === 'InvalidStateError')) return;   // se cerró el menú: nada
+      avisarInsta('No se ha podido abrir el menú del móvil: usa «Descargar» y súbela desde la galería.', true, 'ig-descargar');
+    });
+  }
+  function descargarInsta() {
+    if (!instaUrl) return;
+    var a = document.createElement('a');
+    a.href = instaUrl; a.download = instaNombre;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    avisarInsta('✓ Descargada: ' + instaNombre, false, 'ig-descargar');
+  }
+
   // Una fila por partido (nunca se juntan los dos partidos de un día). marca: «Próxima salida» o nada.
   function filaPartido(p, marca) {
     var i = D.partidos.indexOf(p), jug = jugado(p);
     var cond = p.cond === 'local' ? 'Local' : p.cond === 'visitante' ? 'Visitante' : 'Derbi';
-    var acc = botonesWhatsApp(p, i) + enlaceBus(p) + botonCambiarHora(p, i);
+    var acc = botonesWhatsApp(p, i) + enlaceBus(p) + botonCambiarHora(p, i) + botonInstagram(p, i);
     var local = p.lo ? nombreEquipo(p.l) : p.l, visit = p.vo ? nombreEquipo(p.v) : p.v;
     return '<article class="fila' + (marca ? ' prox' : '') + (jug ? ' jugada' : '') + '" data-cat="' + esc(p.ck) + '" data-i="' + i + '">' +
       columnaHora(p, jug) +
@@ -1417,7 +1632,7 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
       (p.r ? textoResultado(p) : '') + '</div>' +
       '<button type="button" class="chev" aria-expanded="false" aria-controls="det-' + i + '" aria-label="' + esc('Más datos: ' + local + ' contra ' + visit) + '">' +
       icono('i-flecha', 16) + '</button>' +
-      (acc ? '<div class="acc">' + acc + '</div>' : '') + editorHora(p, i) + detalle(p, i) + '</article>';
+      (acc ? '<div class="acc">' + acc + '</div>' : '') + editorHora(p, i) + panelInsta(p, i) + detalle(p, i) + '</article>';
   }
 
   function tablaClas(c) {
@@ -1593,6 +1808,14 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
     es = ev.target.closest('.sal-calculada');
     if (es) { guardarHora(D.partidos[+es.getAttribute('data-i')], ''); return; }
     if (ev.target.closest('.sal-cancelar')) { cerrarEditor(); return; }
+    // Instagram: abrir el panel, elegir formato, compartir, descargar o cerrar.
+    es = ev.target.closest('.insta');
+    if (es) { abrirInsta(D.partidos[+es.getAttribute('data-i')]); return; }
+    es = ev.target.closest('.ig-formato');
+    if (es) { hacerArte(D.partidos[+es.getAttribute('data-i')], es.getAttribute('data-f') === 'publicacion' ? 'publicacion' : 'historia'); return; }
+    if (ev.target.closest('.ig-compartir')) { publicarInsta(); return; }
+    if (ev.target.closest('.ig-descargar')) { descargarInsta(); return; }
+    if (ev.target.closest('.ig-cerrar')) { cerrarInsta(); return; }
     if (ev.target.id === 'quitar') {
       st.eq = []; st.cond = 'todos'; st.per = perElegido = 'todo';
       guardar(); marcarChips(); pintar(); return;
@@ -1647,8 +1870,9 @@ footer h2 { margin: 0 0 10px; font: 600 14px/1 var(--cond); letter-spacing: .12e
   var avisoCopia = $('aviso-copia');
   var reintentos = null;
   function recargar() { location.reload(); }
-  // Las automáticas, no con el editor de horas abierto o mandando (se perdería lo que se está haciendo).
-  function recargarSola() { if (!enviando && !(editando && $('sal-hora'))) recargar(); }
+  // Las automáticas, no con el editor de horas o el panel de Instagram a la vista, ni mandando (se perdería lo
+  // que se está haciendo: p. ej. al volver de Instagram a por el otro formato).
+  function recargarSola() { if (!enviando && !(editando && $('sal-hora')) && !(instaP && $('ig-caja'))) recargar(); }
   // Solo si aún se ve la copia (el service worker puede haber dicho ya que está al día).
   function recargarSiCopia() { if (!avisoCopia.hidden) recargarSola(); }
   if (esCopia) {
