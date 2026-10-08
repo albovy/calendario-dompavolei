@@ -11,6 +11,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "ALONSO RODRIGUEZ - PISTA CENTRAL": {
+        "id_campo": "5",
+        "municipio": "NOIA",
+        "direccion": "RÚA CALZADA, 2, 15200 NOIA, A CORUÑA",
+        "lat": 42.787903,
+        "lon": -8.886684599999999,
+        "km": 134.9,
+        "minutos_coche": 93,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
     "ANEXO OS REMEDIOS - PISTA 1": {
         "id_campo": "1077",
         "municipio": "OURENSE",
@@ -34,6 +46,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-29"
+    },
+    "ANEXO OS REMEDIOS CAMPO1 - PISTA 1": {
+        "id_campo": "792",
+        "municipio": "OURENSE",
+        "direccion": "RÚA PARDO DE CELA, 2, 32002 OURENSE",
+        "lat": 42.3442759,
+        "lon": -7.871394800000001,
+        "km": 0,
+        "minutos_coche": 0,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
     },
     "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 1": {
         "id_campo": "162",
@@ -71,6 +95,30 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "CASA DO DEPORTE - PISTA CENTRAL": {
+        "id_campo": "70",
+        "municipio": "LUGO",
+        "direccion": "AV. INFANTA ELENA, 11, 27297 LUGO",
+        "lat": 43.0256477,
+        "lon": -7.560063,
+        "km": 94.2,
+        "minutos_coche": 74,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
+    "CENTRO GALEGO DE TECNIFICACION DEPORTIVA": {
+        "id_campo": "94",
+        "municipio": "PONTEVEDRA",
+        "direccion": "RÚA PADRE FERNANDO OLMEDO, 1, 36002 PONTEVEDRA",
+        "lat": 42.4320761,
+        "lon": -8.638048699999999,
+        "km": 92.9,
+        "minutos_coche": 73,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
     "PABELLÓN COLEGIO SAN NARCISO - PISTA 1": {
         "id_campo": "151",
         "municipio": "MARÍN",
@@ -82,6 +130,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
+    },
+    "PABELLÓN MUNICIPAL DE COIA - PISTA 1": {
+        "id_campo": "804",
+        "municipio": "VIGO",
+        "direccion": "AV. DE CASTELAO, 66, COIA, 36209 VIGO, PONTEVEDRA",
+        "lat": 42.2180651,
+        "lon": -8.7503969,
+        "km": 100.3,
+        "minutos_coche": 73,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
     },
     "POLIDEPORTIVO DE LOS INSTITUTOS, PISTA 2": {
         "id_campo": "171",
@@ -106,6 +166,54 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
+    },
+    "RAMON CABANILLAS - PISTA CENTRAL": {
+        "id_campo": "98",
+        "municipio": "CAMBADOS",
+        "direccion": "AV. ROSALÍA DE CASTRO, 18, 36630 CAMBADOS, PONTEVEDRA",
+        "lat": 42.5196857,
+        "lon": -8.810736499999999,
+        "km": 123.6,
+        "minutos_coche": 96,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
+    "RESTOLLAL - PISTA CENTRAL": {
+        "id_campo": "53",
+        "municipio": "SANTIAGO DE COMPOSTELA",
+        "direccion": "RÚA DE EMILIO E MANUEL, 3, 15702 SANTIAGO DE COMPOSTELA, A CORUÑA",
+        "lat": 42.8634002,
+        "lon": -8.5449149,
+        "km": 100.2,
+        "minutos_coche": 68,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
+    "RODEIRA - PISTA CENTRAL": {
+        "id_campo": "81",
+        "municipio": "CANGAS",
+        "direccion": "AV. DE OURENSE, 45, 36947 CANGAS, PONTEVEDRA",
+        "lat": 42.2639476,
+        "lon": -8.7755069,
+        "km": 113.7,
+        "minutos_coche": 81,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
+    },
+    "TORRES COLOMER": {
+        "id_campo": "107",
+        "municipio": "PALMEIRA",
+        "direccion": "RÚA BARREIRO, 23, 15959 INSUELA, A CORUÑA",
+        "lat": 42.58178969999999,
+        "lon": -8.9609501,
+        "km": 160.4,
+        "minutos_coche": 111,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-08"
     },
     "VALLE INCLAN": {
         "id_campo": "65",

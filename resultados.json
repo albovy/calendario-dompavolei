@@ -4,6 +4,16 @@
   "206572580"
  ],
  "competiciones": {
+  "1ªDIV. SENIOR MASCULINA": {
+   "id": "1516",
+   "torneos": [
+    "3859",
+    "3860",
+    "3857",
+    "3858"
+   ],
+   "revisado": "2026-10-08 14:17"
+  },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
    "torneos": [
@@ -376,6 +386,294 @@
      "pp": 2,
      "sf": 0,
      "sc": 6
+    }
+   ]
+  },
+  "3857": {
+   "competicion": "1ªDIV. SENIOR MASCULINA",
+   "id_competicion": "1516",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI SM1"
+   ],
+   "consultado": "2026-10-08 14:17",
+   "terminado": false,
+   "firma": "a942585d8878fc8f",
+   "firma_clasificacion": "a942585d8878fc8f",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "CLUB VOLEIBOL SANTIAGO",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CALVO XIRIA VOLEI",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "CLUB VIGO VOLEIBOL",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "CLUB VOLEIBOL PONTEVEDRA SM1",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "A LERIA CAMBADOS",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2026-11-21",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "CLUB VOLEIBOL NOIA",
+     "dia": "2026-11-28",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XABARINS CAIXA RURAL GALEGA LUGO",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "MANIOTAS SM",
+     "dia": "2026-12-19",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL SANTIAGO",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "CALVO XIRIA VOLEI",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VIGO VOLEIBOL",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL PONTEVEDRA SM1",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "A LERIA CAMBADOS",
+     "dia": "2027-02-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL NOIA",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2027-02-27",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM1",
+     "visitante": "XABARINS CAIXA RURAL GALEGA LUGO",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "MANIOTAS SM",
+     "visitante": "DOMPAVOLEI SM1",
+     "dia": "2027-03-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL NOIA",
+     "club": "206572604",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
+     "club": "206572577",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "A LERIA CAMBADOS",
+     "club": "206572588",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CALVO XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "club": "206572608",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VIGO VOLEIBOL",
+     "club": "206572606",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI SM1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "XABARINS CAIXA RURAL GALEGA LUGO",
+     "club": "206572584",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "MANIOTAS SM",
+     "club": "206572587",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
     }
    ]
   },
