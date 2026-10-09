@@ -23,6 +23,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-09"
     },
+    "ALONSO RODRIGUEZ - PISTA 1": {
+        "id_campo": "6",
+        "municipio": "NOIA",
+        "direccion": "RÚA CALZADA, 2, 15200 NOIA, A CORUÑA",
+        "lat": 42.787903,
+        "lon": -8.886684599999999,
+        "km": 134.9,
+        "minutos_coche": 93,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "ALONSO RODRIGUEZ - PISTA CENTRAL": {
         "id_campo": "5",
         "municipio": "NOIA",
@@ -130,6 +142,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
+    },
+    "O POMPEO": {
+        "id_campo": "78",
+        "municipio": "OURENSE",
+        "direccion": "R. DO VILAR, 38, 32005 OURENSE",
+        "lat": 42.3330158,
+        "lon": -7.8648552,
+        "km": 2.2,
+        "minutos_coche": 5,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
     },
     "PABELLÓN COLEGIO SAN NARCISO - PISTA 1": {
         "id_campo": "151",

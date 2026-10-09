@@ -24,6 +24,16 @@
    ],
    "revisado": "2026-10-09 08:17"
   },
+  "2ªDIV. SENIOR MASCULINA": {
+   "id": "1531",
+   "torneos": [
+    "3917",
+    "3918",
+    "3919",
+    "3920"
+   ],
+   "revisado": "2026-10-09 09:17"
+  },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
    "torneos": [
@@ -678,6 +688,236 @@
      "pos": 0,
      "equipo": "MANIOTAS SM",
      "club": "206572587",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "3917": {
+   "competicion": "2ªDIV. SENIOR MASCULINA",
+   "id_competicion": "1531",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI SM O BARCO"
+   ],
+   "consultado": "2026-10-09 09:17",
+   "terminado": false,
+   "firma": "f759e8fbd6513ce2",
+   "firma_clasificacion": "f759e8fbd6513ce2",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "CS MOTOR VOLEY RIVEIRA SENIOR B",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL PONTEVEDRA SM2",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "CV MEGATOXOS",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "CLUB VOLEIBOL NOIA",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "CV OLEIROS SMB",
+     "dia": "2026-11-21",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "C.V. NARON VOLEA",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CS MOTOR VOLEY RIVEIRA SENIOR B",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "CLUB VOLEIBOL PONTEVEDRA SM2",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV MEGATOXOS",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL NOIA",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SM O BARCO",
+     "visitante": "ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV OLEIROS SMB",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2027-02-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "C.V. NARON VOLEA",
+     "visitante": "DOMPAVOLEI SM O BARCO",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL NOIA",
+     "club": "206572604",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM2",
+     "club": "206572577",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "C.V. NARON VOLEA",
+     "club": "206572598",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CV OLEIROS SMB",
+     "club": "206572590",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "club": "206572597",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CS MOTOR VOLEY RIVEIRA SENIOR B",
+     "club": "206572608",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CV MEGATOXOS",
+     "club": "206573095",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI SM O BARCO",
+     "club": "206572580",
      "pt": 0,
      "pj": 0,
      "pg": 0,
