@@ -14,6 +14,16 @@
    ],
    "revisado": "2026-10-08 14:17"
   },
+  "2ªDIV. SENIOR FEMENINA": {
+   "id": "1532",
+   "torneos": [
+    "3921",
+    "3922",
+    "3923",
+    "3924"
+   ],
+   "revisado": "2026-10-09 08:17"
+  },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
    "torneos": [
@@ -668,6 +678,236 @@
      "pos": 0,
      "equipo": "MANIOTAS SM",
      "club": "206572587",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "3921": {
+   "competicion": "2ªDIV. SENIOR FEMENINA",
+   "id_competicion": "1532",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI SF1"
+   ],
+   "consultado": "2026-10-09 08:17",
+   "terminado": false,
+   "firma": "97d4b68fcd741430",
+   "firma_clasificacion": "97d4b68fcd741430",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "C.V. NARON VOLEA C",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "C.V. NARON VOLEA B",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "CLUB VIGO VOLEIBOL B",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "ASESORIA CERVANTES XIRIA VOLEI",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "CLUB VOLEIBOL PONTEVEDRA SF2",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XABARINS BRAVU",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "CV MEGATOXOS",
+     "dia": "2026-12-19",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "C.V. NARON VOLEA C",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "C.V. NARON VOLEA B",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VIGO VOLEIBOL B",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "ASESORIA CERVANTES XIRIA VOLEI",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL PONTEVEDRA SF2",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "XABARINS BRAVU",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV MEGATOXOS",
+     "visitante": "DOMPAVOLEI SF1",
+     "dia": "2027-03-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "XABARINS BRAVU",
+     "club": "206572584",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "C.V. NARON VOLEA B",
+     "club": "206572598",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI SF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VIGO VOLEIBOL B",
+     "club": "206572606",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "ASESORIA CERVANTES XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SF2",
+     "club": "206572577",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "C.V. NARON VOLEA C",
+     "club": "206572598",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CV MEGATOXOS",
+     "club": "206573095",
      "pt": 0,
      "pj": 0,
      "pg": 0,

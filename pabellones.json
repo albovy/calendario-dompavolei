@@ -11,6 +11,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "A SOLAINA - PISTA 1": {
+        "id_campo": "48",
+        "municipio": "NARÓN",
+        "direccion": "RÚA FINCA FEDERICO, 33, 15570 NARÓN, A CORUÑA",
+        "lat": 43.5002601,
+        "lon": -8.2009507,
+        "km": 191.4,
+        "minutos_coche": 127,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "ALONSO RODRIGUEZ - PISTA CENTRAL": {
         "id_campo": "5",
         "municipio": "NOIA",
@@ -143,6 +155,30 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
     },
+    "PALOMAR": {
+        "id_campo": "102",
+        "municipio": "LUGO",
+        "direccion": "RÚA ACCESO COMPLEXO DEP.PALO, 27, 27004 LUGO",
+        "lat": 43.0039646,
+        "lon": -7.5728739,
+        "km": 92.1,
+        "minutos_coche": 70,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
+    "PAVILLÓN MULTIUSOS DA XUNQUEIRA - PISTA CENTRAL": {
+        "id_campo": "91",
+        "municipio": "PONTEVEDRA",
+        "direccion": "RÚA CELSO EMILIO FERREIRO, 888, 36005 PONTEVEDRA",
+        "lat": 42.4383339,
+        "lon": -8.63734,
+        "km": 93.5,
+        "minutos_coche": 74,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "POLIDEPORTIVO DE LOS INSTITUTOS, PISTA 2": {
         "id_campo": "171",
         "municipio": "LUGO",
@@ -238,5 +274,17 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-29"
+    },
+    "XIMNASIO MUNICIPAL DE VALGA": {
+        "id_campo": "177",
+        "municipio": "VALGA",
+        "direccion": "LUGAR BEIRO, 18, 36647 BEIRO, PONTEVEDRA",
+        "lat": 42.6949552,
+        "lon": -8.686018299999999,
+        "km": 127.8,
+        "minutos_coche": 90,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
     }
 }
