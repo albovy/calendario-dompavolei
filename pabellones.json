@@ -1,4 +1,28 @@
 {
+    "A CACHADA - PISTA 1": {
+        "id_campo": "16",
+        "municipio": "BOIRO",
+        "direccion": "AV. DA CONSTITUCIÓN, 32, 15930 BOIRO, LA CORUÑA",
+        "lat": 42.6445667,
+        "lon": -8.8861674,
+        "km": 147.7,
+        "minutos_coche": 102,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
+    "A CARBALLEIRA": {
+        "id_campo": "105",
+        "municipio": "OURENSE",
+        "direccion": "RÚA DO CASTELO RAMIRO, 28, 32002 OURENSE",
+        "lat": 42.332355,
+        "lon": -7.8742318,
+        "km": 2.6,
+        "minutos_coche": 5,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "A PINGUELA - PISTA 1": {
         "id_campo": "68",
         "municipio": "MONFORTE DE LEMOS",
@@ -119,6 +143,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "CASA DO DEPORTE - PISTA 2": {
+        "id_campo": "72",
+        "municipio": "LUGO",
+        "direccion": "AV. INFANTA ELENA, 11, 27297 LUGO",
+        "lat": 43.0256477,
+        "lon": -7.560063,
+        "km": 94.2,
+        "minutos_coche": 74,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "CASA DO DEPORTE - PISTA CENTRAL": {
         "id_campo": "70",
         "municipio": "LUGO",
@@ -142,6 +178,42 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
+    },
+    "LICEO LA PAZ - PISTA 1": {
+        "id_campo": "28",
+        "municipio": "A CORUÑA",
+        "direccion": "RÚA SEBASTIÁN MARTÍNEZ RISCO, 12, 15009 A CORUÑA",
+        "lat": 43.3417503,
+        "lon": -8.4018856,
+        "km": 169.8,
+        "minutos_coche": 112,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
+    "MUNICIPAL SAN SADURNIÑO - PISTA 1": {
+        "id_campo": "37",
+        "municipio": "SAN SADURNIÑO",
+        "direccion": "ALDEA MARQUÉS FIGUEROA, 19, 15560 SAN SADURNIÑO, A CORUÑA",
+        "lat": 43.534537,
+        "lon": -8.0723079,
+        "km": 190.6,
+        "minutos_coche": 133,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
+    "O CONCO - PISTA 1": {
+        "id_campo": "57",
+        "municipio": "DUMBRÍA",
+        "direccion": "RÚA BUXAN, 0 S/N, 15151 DUMBRÍA, A CORUÑA",
+        "lat": 43.0121815,
+        "lon": -9.118527799999999,
+        "km": 159.4,
+        "minutos_coche": 120,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
     },
     "O POMPEO": {
         "id_campo": "78",
@@ -227,6 +299,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "RAMON CABANILLAS - PISTA 1": {
+        "id_campo": "99",
+        "municipio": "CAMBADOS",
+        "direccion": "AV. ROSALÍA DE CASTRO, 18, 36630 CAMBADOS, PONTEVEDRA",
+        "lat": 42.5196857,
+        "lon": -8.810736499999999,
+        "km": 123.6,
+        "minutos_coche": 96,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "RAMON CABANILLAS - PISTA CENTRAL": {
         "id_campo": "98",
         "municipio": "CAMBADOS",
@@ -238,6 +322,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
+    },
+    "RESTOLLAL - PISTA 1": {
+        "id_campo": "54",
+        "municipio": "SANTIAGO DE COMPOSTELA",
+        "direccion": "RÚA DE EMILIO E MANUEL, 3, 15702 SANTIAGO DE COMPOSTELA, A CORUÑA",
+        "lat": 42.8634002,
+        "lon": -8.5449149,
+        "km": 100.2,
+        "minutos_coche": 68,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
     },
     "RESTOLLAL - PISTA CENTRAL": {
         "id_campo": "53",
@@ -251,6 +347,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
     },
+    "RODEIRA - PISTA 1": {
+        "id_campo": "82",
+        "municipio": "CANGAS",
+        "direccion": "AV. DE OURENSE, 45, 36947 CANGAS, PONTEVEDRA",
+        "lat": 42.2639476,
+        "lon": -8.7755069,
+        "km": 113.7,
+        "minutos_coche": 81,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
+    },
     "RODEIRA - PISTA CENTRAL": {
         "id_campo": "81",
         "municipio": "CANGAS",
@@ -262,6 +370,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
+    },
+    "TEIS - PISTA 1": {
+        "id_campo": "88",
+        "municipio": "VIGO",
+        "direccion": "AVENIDA DE GALICIA, 105, 36216 VIGO, PONTEVEDRA",
+        "lat": 42.2522516,
+        "lon": -8.689887299999999,
+        "km": 96.1,
+        "minutos_coche": 69,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-09"
     },
     "TORRES COLOMER": {
         "id_campo": "107",

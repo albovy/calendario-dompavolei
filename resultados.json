@@ -14,6 +14,16 @@
    ],
    "revisado": "2026-10-09 10:17"
   },
+  "2ªDIV. INFANTIL FEMENINA": {
+   "id": "1541",
+   "torneos": [
+    "3957",
+    "3958",
+    "3959",
+    "3960"
+   ],
+   "revisado": "2026-10-09 11:17"
+  },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
    "torneos": [
@@ -33,6 +43,26 @@
     "3920"
    ],
    "revisado": "2026-10-09 09:17"
+  },
+  "2ªDIV. XUVENIL FEMENINA": {
+   "id": "1537",
+   "torneos": [
+    "3941",
+    "3942",
+    "3943",
+    "3944"
+   ],
+   "revisado": "2026-10-09 11:17"
+  },
+  "3ªDIV. CADETE FEMENINA": {
+   "id": "1557",
+   "torneos": [
+    "4021",
+    "4022",
+    "4023",
+    "4024"
+   ],
+   "revisado": "2026-10-09 11:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -1148,6 +1178,870 @@
      "pos": 0,
      "equipo": "CV MEGATOXOS",
      "club": "206573095",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "3941": {
+   "competicion": "2ªDIV. XUVENIL FEMENINA",
+   "id_competicion": "1537",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI XF1"
+   ],
+   "consultado": "2026-10-09 11:17",
+   "terminado": false,
+   "firma": "865f456534bbab7f",
+   "firma_clasificacion": "865f456534bbab7f",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "ACEITES ABRIL CVO JUV. AZUL FEM",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VIGO VOLEIBOL",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XAV CAMBADOS AZUL",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "CV CIUDAD DE A CORUÑA JF B",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "COSVAMA - MANIOTAS XF",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-11-21",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "COLEGIO LICEO LA PAZ",
+     "dia": "2026-11-28",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "A TABERNA VOLEIBOL RIVEIRA",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL SANTIAGO",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2026-12-19",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "ACEITES ABRIL CVO JUV. AZUL FEM",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "CLUB VIGO VOLEIBOL",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "XAV CAMBADOS AZUL",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV CIUDAD DE A CORUÑA JF B",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "COSVAMA - MANIOTAS XF",
+     "dia": "2027-02-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "COLEGIO LICEO LA PAZ",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2027-02-27",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "A TABERNA VOLEIBOL RIVEIRA",
+     "visitante": "DOMPAVOLEI XF1",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI XF1",
+     "visitante": "CLUB VOLEIBOL SANTIAGO",
+     "dia": "2027-03-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI XF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "XAV CAMBADOS AZUL",
+     "club": "206572588",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CV CIUDAD DE A CORUÑA JF B",
+     "club": "206572595",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "COSVAMA - MANIOTAS XF",
+     "club": "206572587",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "COLEGIO LICEO LA PAZ",
+     "club": "206572593",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "A TABERNA VOLEIBOL RIVEIRA",
+     "club": "206572608",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VIGO VOLEIBOL",
+     "club": "206572606",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "ACEITES ABRIL CVO JUV. AZUL FEM",
+     "club": "206572597",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "3957": {
+   "competicion": "2ªDIV. INFANTIL FEMENINA",
+   "id_competicion": "1541",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI IF1"
+   ],
+   "consultado": "2026-10-09 11:17",
+   "terminado": false,
+   "firma": "2807f5db66ddac38",
+   "firma_clasificacion": "2807f5db66ddac38",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "XUVENIL TEIS A",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VIGO VOLEIBOL",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "SEI SAN NARCISO IF",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XAV CAMBADOS AZUL",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "CV CIUDAD DE A CORUÑA INFANTIL B",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "RIBEIRA SACRA B",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-11-21",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "JEALSA BOIRO VOLEIBOL",
+     "dia": "2026-11-28",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "CLUB VOLEIBOL NOIA",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "ALDEBARAN SAN SADURNIÑO",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2026-12-19",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XUVENIL TEIS A",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "CLUB VIGO VOLEIBOL",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "SEI SAN NARCISO IF",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "XAV CAMBADOS AZUL",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CV CIUDAD DE A CORUÑA INFANTIL B",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "RIBEIRA SACRA B",
+     "dia": "2027-02-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "JEALSA BOIRO VOLEIBOL",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2027-02-27",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL NOIA",
+     "visitante": "DOMPAVOLEI IF1",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI IF1",
+     "visitante": "ALDEBARAN SAN SADURNIÑO",
+     "dia": "2027-03-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL NOIA",
+     "club": "206572604",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "RIBEIRA SACRA B",
+     "club": "206572586",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "JEALSA BOIRO VOLEIBOL",
+     "club": "206572599",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "XAV CAMBADOS AZUL",
+     "club": "206572588",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "SEI SAN NARCISO IF",
+     "club": "206572677",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "ALDEBARAN SAN SADURNIÑO",
+     "club": "206572609",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CV CIUDAD DE A CORUÑA INFANTIL B",
+     "club": "206572595",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VIGO VOLEIBOL",
+     "club": "206572606",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI IF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "XUVENIL TEIS A",
+     "club": "206572585",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    }
+   ]
+  },
+  "4021": {
+   "competicion": "3ªDIV. CADETE FEMENINA",
+   "id_competicion": "1557",
+   "nombre": "PRIMERA FASE - LIGA REGULAR",
+   "equipos": [
+    "DOMPAVOLEI CF1"
+   ],
+   "consultado": "2026-10-09 11:17",
+   "terminado": false,
+   "firma": "1063123bed94ed2f",
+   "firma_clasificacion": "1063123bed94ed2f",
+   "partidos": [
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "VOLEIBOL DUMBRIA",
+     "dia": "2026-10-17",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "C.V. NARON VOLEA B",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-10-24",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "EMEVE COLEXIO SAN LORENZO CF",
+     "dia": "2026-10-31",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL PONTEVEDRA CF2",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-11-07",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "XAV CAMBADOS BRANCO",
+     "dia": "2026-11-14",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "MANIOTAS CF AZUL",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-11-21",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "SEI SN CADETE FEM",
+     "dia": "2026-11-28",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "dia": "2026-12-12",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "CLUB VOLEIBOL SANTIAGO",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2026-12-19",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "VOLEIBOL DUMBRIA",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2027-01-09",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "C.V. NARON VOLEA B",
+     "dia": "2027-01-16",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "EMEVE COLEXIO SAN LORENZO CF",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2027-01-23",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "CLUB VOLEIBOL PONTEVEDRA CF2",
+     "dia": "2027-01-30",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "XAV CAMBADOS BRANCO",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2027-02-13",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "MANIOTAS CF AZUL",
+     "dia": "2027-02-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "SEI SN CADETE FEM",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2027-02-27",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "visitante": "DOMPAVOLEI CF1",
+     "dia": "2027-03-06",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    },
+    {
+     "local": "DOMPAVOLEI CF1",
+     "visitante": "CLUB VOLEIBOL SANTIAGO",
+     "dia": "2027-03-20",
+     "hora": "",
+     "estado": "Pendiente",
+     "marcador": null,
+     "sets": []
+    }
+   ],
+   "clasificacion": [
+    {
+     "pos": 0,
+     "equipo": "EMEVE COLEXIO SAN LORENZO CF",
+     "club": "206572578",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "XAV CAMBADOS BRANCO",
+     "club": "206572588",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "SEI SN CADETE FEM",
+     "club": "206572677",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "MANIOTAS CF AZUL",
+     "club": "206572587",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "club": "206572608",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "DOMPAVOLEI CF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "C.V. NARON VOLEA B",
+     "club": "206572598",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "VOLEIBOL DUMBRIA",
+     "club": "206572591",
+     "pt": 0,
+     "pj": 0,
+     "pg": 0,
+     "pp": 0,
+     "sf": 0,
+     "sc": 0
+    },
+    {
+     "pos": 0,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA CF2",
+     "club": "206572577",
      "pt": 0,
      "pj": 0,
      "pg": 0,
