@@ -275,6 +275,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-09"
     },
+    "PAVILLON VELLO O BARCO": {
+        "id_campo": "1295",
+        "municipio": "O BARCO",
+        "direccion": "O PAVILLÓN VELLO, CALLE ESPAÑA, O CHAO, VEIGADECABO, O BARCO, O BARCO DE VALDEORRAS, VALDEORRAS, OURENSE, GALICIA, 32300",
+        "lat": 42.416854991245934,
+        "lon": -6.984472239157349,
+        "km": 110,
+        "minutos_coche": 108,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-13"
+    },
     "POLIDEPORTIVO DE LOS INSTITUTOS, PISTA 2": {
         "id_campo": "171",
         "municipio": "LUGO",
