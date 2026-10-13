@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -32,7 +32,7 @@
     "3923",
     "3924"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "2ªDIV. SENIOR MASCULINA": {
    "id": "1531",
@@ -42,7 +42,7 @@
     "3919",
     "3920"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "2ªDIV. XUVENIL FEMENINA": {
    "id": "1537",
@@ -52,7 +52,7 @@
     "3943",
     "3944"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "3ªDIV. CADETE FEMENINA": {
    "id": "1557",
@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-12 08:17"
+   "revisado": "2026-10-13 08:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -446,7 +446,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
    "firma": "977646803a8fc680",
    "firma_clasificacion": "977646803a8fc680",
@@ -734,7 +734,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
    "firma": "f759e8fbd6513ce2",
    "firma_clasificacion": "f759e8fbd6513ce2",
@@ -964,7 +964,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
    "firma": "920e55a3f4e14ae2",
    "firma_clasificacion": "920e55a3f4e14ae2",
@@ -1194,15 +1194,15 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
-   "firma": "865f456534bbab7f",
-   "firma_clasificacion": "865f456534bbab7f",
+   "firma": "adfdc53f0e2a7c45",
+   "firma_clasificacion": "adfdc53f0e2a7c45",
    "partidos": [
     {
      "local": "DOMPAVOLEI XF1",
      "visitante": "ACEITES ABRIL CVO JUV. AZUL FEM",
-     "dia": "2026-10-17",
+     "dia": "2026-12-08",
      "hora": "",
      "estado": "Pendiente",
      "marcador": null,
@@ -1482,7 +1482,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
    "firma": "2807f5db66ddac38",
    "firma_clasificacion": "2807f5db66ddac38",
@@ -1770,10 +1770,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-12 08:17",
+   "consultado": "2026-10-13 08:17",
    "terminado": false,
-   "firma": "1063123bed94ed2f",
-   "firma_clasificacion": "1063123bed94ed2f",
+   "firma": "b7ba2266b2ab7651",
+   "firma_clasificacion": "b7ba2266b2ab7651",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
