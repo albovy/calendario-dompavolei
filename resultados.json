@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -32,7 +32,7 @@
     "3923",
     "3924"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "2ªDIV. SENIOR MASCULINA": {
    "id": "1531",
@@ -42,7 +42,7 @@
     "3919",
     "3920"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "2ªDIV. XUVENIL FEMENINA": {
    "id": "1537",
@@ -52,7 +52,7 @@
     "3943",
     "3944"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "3ªDIV. CADETE FEMENINA": {
    "id": "1557",
@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-13 08:17"
+   "revisado": "2026-10-14 08:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -446,16 +446,16 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "977646803a8fc680",
-   "firma_clasificacion": "977646803a8fc680",
+   "firma": "892385b64874dd79",
+   "firma_clasificacion": "892385b64874dd79",
    "partidos": [
     {
      "local": "DOMPAVOLEI SM1",
      "visitante": "CLUB VOLEIBOL SANTIAGO",
-     "dia": "2026-10-17",
-     "hora": "",
+     "dia": "2026-10-18",
+     "hora": "12:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -616,7 +616,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 0,
@@ -627,7 +627,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 0,
@@ -638,7 +638,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "A LERIA CAMBADOS",
      "club": "206572588",
      "pt": 0,
@@ -649,7 +649,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 0,
@@ -660,7 +660,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 0,
@@ -671,7 +671,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 0,
@@ -682,7 +682,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 0,
@@ -693,7 +693,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "DOMPAVOLEI SM1",
      "club": "206572580",
      "pt": 0,
@@ -704,7 +704,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 9,
      "equipo": "XABARINS CAIXA RURAL GALEGA LUGO",
      "club": "206572584",
      "pt": 0,
@@ -715,7 +715,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 10,
      "equipo": "MANIOTAS SM",
      "club": "206572587",
      "pt": 0,
@@ -734,16 +734,16 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "f759e8fbd6513ce2",
-   "firma_clasificacion": "f759e8fbd6513ce2",
+   "firma": "e4ad53931cfaf0a5",
+   "firma_clasificacion": "e4ad53931cfaf0a5",
    "partidos": [
     {
      "local": "DOMPAVOLEI SM O BARCO",
      "visitante": "CS MOTOR VOLEY RIVEIRA SENIOR B",
-     "dia": "2026-10-17",
-     "hora": "",
+     "dia": "2026-10-18",
+     "hora": "11:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -868,7 +868,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 0,
@@ -879,7 +879,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "CLUB VOLEIBOL PONTEVEDRA SM2",
      "club": "206572577",
      "pt": 0,
@@ -890,7 +890,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "C.V. NARON VOLEA",
      "club": "206572598",
      "pt": 0,
@@ -901,7 +901,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "CV OLEIROS SMB",
      "club": "206572590",
      "pt": 0,
@@ -912,7 +912,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "ACEITES ABRIL CVO JUNIOR MASCULINO",
      "club": "206572597",
      "pt": 0,
@@ -923,7 +923,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "CS MOTOR VOLEY RIVEIRA SENIOR B",
      "club": "206572608",
      "pt": 0,
@@ -934,7 +934,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "CV MEGATOXOS",
      "club": "206573095",
      "pt": 0,
@@ -945,7 +945,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "DOMPAVOLEI SM O BARCO",
      "club": "206572580",
      "pt": 0,
@@ -964,14 +964,14 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "920e55a3f4e14ae2",
-   "firma_clasificacion": "920e55a3f4e14ae2",
+   "firma": "4455a0e9c7937562",
+   "firma_clasificacion": "4455a0e9c7937562",
    "partidos": [
     {
-     "local": "DOMPAVOLEI SF1",
-     "visitante": "C.V. NARON VOLEA C",
+     "local": "C.V. NARON VOLEA C",
+     "visitante": "DOMPAVOLEI SF1",
      "dia": "2026-10-17",
      "hora": "",
      "estado": "Pendiente",
@@ -1033,8 +1033,8 @@
      "sets": []
     },
     {
-     "local": "C.V. NARON VOLEA C",
-     "visitante": "DOMPAVOLEI SF1",
+     "local": "DOMPAVOLEI SF1",
+     "visitante": "C.V. NARON VOLEA C",
      "dia": "2027-01-09",
      "hora": "",
      "estado": "Pendiente",
@@ -1098,7 +1098,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "XABARINS BRAVU",
      "club": "206572584",
      "pt": 0,
@@ -1109,7 +1109,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "C.V. NARON VOLEA B",
      "club": "206572598",
      "pt": 0,
@@ -1120,7 +1120,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "DOMPAVOLEI SF1",
      "club": "206572580",
      "pt": 0,
@@ -1131,7 +1131,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "CLUB VIGO VOLEIBOL B",
      "club": "206572606",
      "pt": 0,
@@ -1142,7 +1142,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "ASESORIA CERVANTES XIRIA VOLEI",
      "club": "206572607",
      "pt": 0,
@@ -1153,7 +1153,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "CLUB VOLEIBOL PONTEVEDRA SF2",
      "club": "206572577",
      "pt": 0,
@@ -1164,7 +1164,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "C.V. NARON VOLEA C",
      "club": "206572598",
      "pt": 0,
@@ -1175,7 +1175,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "CV MEGATOXOS",
      "club": "206573095",
      "pt": 0,
@@ -1194,10 +1194,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "adfdc53f0e2a7c45",
-   "firma_clasificacion": "adfdc53f0e2a7c45",
+   "firma": "b8bd089525db92b2",
+   "firma_clasificacion": "b8bd089525db92b2",
    "partidos": [
     {
      "local": "DOMPAVOLEI XF1",
@@ -1221,7 +1221,7 @@
      "local": "DOMPAVOLEI XF1",
      "visitante": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
      "dia": "2026-10-31",
-     "hora": "",
+     "hora": "12:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1364,7 +1364,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "DOMPAVOLEI XF1",
      "club": "206572580",
      "pt": 0,
@@ -1375,7 +1375,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "XAV CAMBADOS AZUL",
      "club": "206572588",
      "pt": 0,
@@ -1386,7 +1386,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 0,
@@ -1397,7 +1397,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "CV CIUDAD DE A CORUÑA JF B",
      "club": "206572595",
      "pt": 0,
@@ -1408,7 +1408,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "COSVAMA - MANIOTAS XF",
      "club": "206572587",
      "pt": 0,
@@ -1419,7 +1419,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
      "club": "206572607",
      "pt": 0,
@@ -1430,7 +1430,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "COLEGIO LICEO LA PAZ",
      "club": "206572593",
      "pt": 0,
@@ -1441,7 +1441,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "A TABERNA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 0,
@@ -1452,7 +1452,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 9,
      "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 0,
@@ -1463,7 +1463,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 10,
      "equipo": "ACEITES ABRIL CVO JUV. AZUL FEM",
      "club": "206572597",
      "pt": 0,
@@ -1482,16 +1482,16 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "2807f5db66ddac38",
-   "firma_clasificacion": "2807f5db66ddac38",
+   "firma": "8c687b316195c354",
+   "firma_clasificacion": "8c687b316195c354",
    "partidos": [
     {
      "local": "DOMPAVOLEI IF1",
      "visitante": "XUVENIL TEIS A",
-     "dia": "2026-10-17",
-     "hora": "",
+     "dia": "2026-10-18",
+     "hora": "10:15",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1652,7 +1652,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 0,
@@ -1663,7 +1663,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "RIBEIRA SACRA B",
      "club": "206572586",
      "pt": 0,
@@ -1674,7 +1674,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "JEALSA BOIRO VOLEIBOL",
      "club": "206572599",
      "pt": 0,
@@ -1685,7 +1685,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "XAV CAMBADOS AZUL",
      "club": "206572588",
      "pt": 0,
@@ -1696,7 +1696,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "SEI SAN NARCISO IF",
      "club": "206572677",
      "pt": 0,
@@ -1707,7 +1707,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "ALDEBARAN SAN SADURNIÑO",
      "club": "206572609",
      "pt": 0,
@@ -1718,7 +1718,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "CV CIUDAD DE A CORUÑA INFANTIL B",
      "club": "206572595",
      "pt": 0,
@@ -1729,7 +1729,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 0,
@@ -1740,7 +1740,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 9,
      "equipo": "DOMPAVOLEI IF1",
      "club": "206572580",
      "pt": 0,
@@ -1751,7 +1751,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 10,
      "equipo": "XUVENIL TEIS A",
      "club": "206572585",
      "pt": 0,
@@ -1770,16 +1770,16 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-13 08:17",
+   "consultado": "2026-10-14 08:17",
    "terminado": false,
-   "firma": "b7ba2266b2ab7651",
-   "firma_clasificacion": "b7ba2266b2ab7651",
+   "firma": "8365dfbabf97cae0",
+   "firma_clasificacion": "8365dfbabf97cae0",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
      "visitante": "VOLEIBOL DUMBRIA",
-     "dia": "2026-10-17",
-     "hora": "",
+     "dia": "2026-10-18",
+     "hora": "10:15",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1940,7 +1940,7 @@
    ],
    "clasificacion": [
     {
-     "pos": 0,
+     "pos": 1,
      "equipo": "EMEVE COLEXIO SAN LORENZO CF",
      "club": "206572578",
      "pt": 0,
@@ -1951,7 +1951,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 2,
      "equipo": "XAV CAMBADOS BRANCO",
      "club": "206572588",
      "pt": 0,
@@ -1962,7 +1962,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 3,
      "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 0,
@@ -1973,7 +1973,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 4,
      "equipo": "SEI SN CADETE FEM",
      "club": "206572677",
      "pt": 0,
@@ -1984,7 +1984,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 5,
      "equipo": "MANIOTAS CF AZUL",
      "club": "206572587",
      "pt": 0,
@@ -1995,7 +1995,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 6,
      "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "club": "206572608",
      "pt": 0,
@@ -2006,7 +2006,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 7,
      "equipo": "DOMPAVOLEI CF1",
      "club": "206572580",
      "pt": 0,
@@ -2017,7 +2017,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 8,
      "equipo": "C.V. NARON VOLEA B",
      "club": "206572598",
      "pt": 0,
@@ -2028,7 +2028,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 9,
      "equipo": "VOLEIBOL DUMBRIA",
      "club": "206572591",
      "pt": 0,
@@ -2039,7 +2039,7 @@
      "sc": 0
     },
     {
-     "pos": 0,
+     "pos": 10,
      "equipo": "CLUB VOLEIBOL PONTEVEDRA CF2",
      "club": "206572577",
      "pt": 0,
