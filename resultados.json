@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-18 14:17"
+   "revisado": "2026-10-18 15:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-18 14:17"
+   "revisado": "2026-10-18 15:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-18 14:17"
+   "revisado": "2026-10-18 15:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -446,19 +446,35 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-18 14:17",
+   "consultado": "2026-10-18 15:17",
    "terminado": false,
-   "firma": "092be9bda93fdd7c",
-   "firma_clasificacion": "092be9bda93fdd7c",
+   "firma": "750fb03a696845f4",
+   "firma_clasificacion": "750fb03a696845f4",
    "partidos": [
     {
      "local": "DOMPAVOLEI SM1",
      "visitante": "CLUB VOLEIBOL SANTIAGO",
      "dia": "2026-10-18",
      "hora": "12:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       11,
+       25
+      ],
+      [
+       17,
+       25
+      ],
+      [
+       15,
+       25
+      ]
+     ]
     },
     {
      "local": "CALVO XIRIA VOLEI",
@@ -617,6 +633,17 @@
    "clasificacion": [
     {
      "pos": 1,
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 3,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 0
+    },
+    {
+     "pos": 2,
      "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 3,
@@ -627,7 +654,7 @@
      "sc": 0
     },
     {
-     "pos": 2,
+     "pos": 3,
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 3,
@@ -638,7 +665,7 @@
      "sc": 0
     },
     {
-     "pos": 3,
+     "pos": 4,
      "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 3,
@@ -649,7 +676,7 @@
      "sc": 0
     },
     {
-     "pos": 4,
+     "pos": 5,
      "equipo": "CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 3,
@@ -660,7 +687,7 @@
      "sc": 1
     },
     {
-     "pos": 5,
+     "pos": 6,
      "equipo": "XABARINS CAIXA RURAL GALEGA LUGO",
      "club": "206572584",
      "pt": 0,
@@ -671,7 +698,7 @@
      "sc": 3
     },
     {
-     "pos": 6,
+     "pos": 7,
      "equipo": "A LERIA CAMBADOS",
      "club": "206572588",
      "pt": 0,
@@ -682,7 +709,7 @@
      "sc": 3
     },
     {
-     "pos": 7,
+     "pos": 8,
      "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 0,
@@ -693,7 +720,7 @@
      "sc": 3
     },
     {
-     "pos": 8,
+     "pos": 9,
      "equipo": "MANIOTAS SM",
      "club": "206572587",
      "pt": 0,
@@ -704,26 +731,15 @@
      "sc": 3
     },
     {
-     "pos": 9,
+     "pos": 10,
      "equipo": "DOMPAVOLEI SM1",
      "club": "206572580",
      "pt": 0,
-     "pj": 0,
+     "pj": 1,
      "pg": 0,
-     "pp": 0,
+     "pp": 1,
      "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 10,
-     "equipo": "CLUB VOLEIBOL SANTIAGO",
-     "club": "206572589",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
+     "sc": 3
     }
    ]
   },
@@ -1498,19 +1514,39 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-18 14:17",
+   "consultado": "2026-10-18 15:17",
    "terminado": false,
-   "firma": "b785b5d66d83575f",
-   "firma_clasificacion": "b785b5d66d83575f",
+   "firma": "39d21f050058909b",
+   "firma_clasificacion": "39d21f050058909b",
    "partidos": [
     {
      "local": "DOMPAVOLEI IF1",
      "visitante": "XUVENIL TEIS A",
      "dia": "2026-10-18",
      "hora": "10:15",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      1,
+      3
+     ],
+     "sets": [
+      [
+       14,
+       25
+      ],
+      [
+       24,
+       26
+      ],
+      [
+       25,
+       18
+      ],
+      [
+       19,
+       25
+      ]
+     ]
     },
     {
      "local": "CLUB VIGO VOLEIBOL",
@@ -1691,6 +1727,17 @@
     },
     {
      "pos": 3,
+     "equipo": "XUVENIL TEIS A",
+     "club": "206572585",
+     "pt": 3,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 1
+    },
+    {
+     "pos": 4,
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 3,
@@ -1701,7 +1748,7 @@
      "sc": 1
     },
     {
-     "pos": 4,
+     "pos": 5,
      "equipo": "CV CIUDAD DE A CORUÑA INFANTIL B",
      "club": "206572595",
      "pt": 2,
@@ -1712,7 +1759,7 @@
      "sc": 2
     },
     {
-     "pos": 5,
+     "pos": 6,
      "equipo": "SEI SAN NARCISO IF",
      "club": "206572677",
      "pt": 1,
@@ -1723,7 +1770,7 @@
      "sc": 3
     },
     {
-     "pos": 6,
+     "pos": 7,
      "equipo": "ALDEBARAN SAN SADURNIÑO",
      "club": "206572609",
      "pt": 0,
@@ -1734,7 +1781,18 @@
      "sc": 3
     },
     {
-     "pos": 7,
+     "pos": 8,
+     "equipo": "DOMPAVOLEI IF1",
+     "club": "206572580",
+     "pt": 0,
+     "pj": 1,
+     "pg": 0,
+     "pp": 1,
+     "sf": 1,
+     "sc": 3
+    },
+    {
+     "pos": 9,
      "equipo": "RIBEIRA SACRA B",
      "club": "206572586",
      "pt": 0,
@@ -1745,7 +1803,7 @@
      "sc": 3
     },
     {
-     "pos": 8,
+     "pos": 10,
      "equipo": "JEALSA BOIRO VOLEIBOL",
      "club": "206572599",
      "pt": 0,
@@ -1754,28 +1812,6 @@
      "pp": 1,
      "sf": 0,
      "sc": 3
-    },
-    {
-     "pos": 9,
-     "equipo": "DOMPAVOLEI IF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 10,
-     "equipo": "XUVENIL TEIS A",
-     "club": "206572585",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
     }
    ]
   },
@@ -1786,7 +1822,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-18 14:17",
+   "consultado": "2026-10-18 15:17",
    "terminado": false,
    "firma": "194a8455bf27b936",
    "firma_clasificacion": "194a8455bf27b936",
