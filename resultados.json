@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-18 18:17"
+   "revisado": "2026-10-18 19:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -1822,19 +1822,43 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-18 18:17",
+   "consultado": "2026-10-18 19:17",
    "terminado": false,
-   "firma": "04ccbd0bc4d53d4a",
-   "firma_clasificacion": "04ccbd0bc4d53d4a",
+   "firma": "a02cc6b350eb3c18",
+   "firma_clasificacion": "a02cc6b350eb3c18",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
      "visitante": "VOLEIBOL DUMBRIA",
      "dia": "2026-10-18",
      "hora": "10:15",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": []
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      2
+     ],
+     "sets": [
+      [
+       19,
+       25
+      ],
+      [
+       25,
+       21
+      ],
+      [
+       14,
+       25
+      ],
+      [
+       25,
+       19
+      ],
+      [
+       15,
+       12
+      ]
+     ]
     },
     {
      "local": "C.V. NARON VOLEA B",
@@ -2037,6 +2061,28 @@
     },
     {
      "pos": 5,
+     "equipo": "DOMPAVOLEI CF1",
+     "club": "206572580",
+     "pt": 2,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 2
+    },
+    {
+     "pos": 6,
+     "equipo": "VOLEIBOL DUMBRIA",
+     "club": "206572591",
+     "pt": 1,
+     "pj": 1,
+     "pg": 0,
+     "pp": 1,
+     "sf": 2,
+     "sc": 3
+    },
+    {
+     "pos": 7,
      "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "club": "206572608",
      "pt": 0,
@@ -2047,7 +2093,7 @@
      "sc": 3
     },
     {
-     "pos": 6,
+     "pos": 8,
      "equipo": "SEI SN CADETE FEM",
      "club": "206572677",
      "pt": 0,
@@ -2058,7 +2104,7 @@
      "sc": 3
     },
     {
-     "pos": 7,
+     "pos": 9,
      "equipo": "XAV CAMBADOS BRANCO",
      "club": "206572588",
      "pt": 0,
@@ -2069,7 +2115,7 @@
      "sc": 3
     },
     {
-     "pos": 8,
+     "pos": 10,
      "equipo": "C.V. NARON VOLEA B",
      "club": "206572598",
      "pt": 0,
@@ -2078,28 +2124,6 @@
      "pp": 1,
      "sf": 0,
      "sc": 3
-    },
-    {
-     "pos": 9,
-     "equipo": "DOMPAVOLEI CF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 10,
-     "equipo": "VOLEIBOL DUMBRIA",
-     "club": "206572591",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
     }
    ]
   },
