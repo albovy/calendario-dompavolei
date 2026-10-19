@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-18 15:17"
+   "revisado": "2026-10-19 11:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-18 15:17"
+   "revisado": "2026-10-19 11:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -446,7 +446,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-18 15:17",
+   "consultado": "2026-10-19 11:17",
    "terminado": false,
    "firma": "750fb03a696845f4",
    "firma_clasificacion": "750fb03a696845f4",
@@ -1514,10 +1514,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-18 15:17",
+   "consultado": "2026-10-19 11:17",
    "terminado": false,
-   "firma": "39d21f050058909b",
-   "firma_clasificacion": "39d21f050058909b",
+   "firma": "9bcbc032e9c8a4ee",
+   "firma_clasificacion": "9bcbc032e9c8a4ee",
    "partidos": [
     {
      "local": "DOMPAVOLEI IF1",
