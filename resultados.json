@@ -32,7 +32,7 @@
     "3923",
     "3924"
    ],
-   "revisado": "2026-10-18 08:17"
+   "revisado": "2026-10-19 08:17"
   },
   "2ªDIV. SENIOR MASCULINA": {
    "id": "1531",
@@ -52,7 +52,7 @@
     "3943",
     "3944"
    ],
-   "revisado": "2026-10-18 08:17"
+   "revisado": "2026-10-19 08:17"
   },
   "3ªDIV. CADETE FEMENINA": {
    "id": "1557",
@@ -996,10 +996,10 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-10-18 08:17",
+   "consultado": "2026-10-19 08:17",
    "terminado": false,
-   "firma": "80811607f4768d6f",
-   "firma_clasificacion": "80811607f4768d6f",
+   "firma": "4bfdb83ea867a3ab",
+   "firma_clasificacion": "4bfdb83ea867a3ab",
    "partidos": [
     {
      "local": "C.V. NARON VOLEA C",
@@ -1131,6 +1131,17 @@
    "clasificacion": [
     {
      "pos": 1,
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SF2",
+     "club": "206572577",
+     "pt": 3,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 0
+    },
+    {
+     "pos": 2,
      "equipo": "XABARINS BRAVU",
      "club": "206572584",
      "pt": 3,
@@ -1141,7 +1152,7 @@
      "sc": 0
     },
     {
-     "pos": 2,
+     "pos": 3,
      "equipo": "C.V. NARON VOLEA B",
      "club": "206572598",
      "pt": 0,
@@ -1152,7 +1163,18 @@
      "sc": 3
     },
     {
-     "pos": 3,
+     "pos": 4,
+     "equipo": "CV MEGATOXOS",
+     "club": "206573095",
+     "pt": 0,
+     "pj": 1,
+     "pg": 0,
+     "pp": 1,
+     "sf": 0,
+     "sc": 3
+    },
+    {
+     "pos": 5,
      "equipo": "DOMPAVOLEI SF1",
      "club": "206572580",
      "pt": 0,
@@ -1163,7 +1185,7 @@
      "sc": 0
     },
     {
-     "pos": 4,
+     "pos": 6,
      "equipo": "CLUB VIGO VOLEIBOL B",
      "club": "206572606",
      "pt": 0,
@@ -1174,7 +1196,7 @@
      "sc": 0
     },
     {
-     "pos": 5,
+     "pos": 7,
      "equipo": "ASESORIA CERVANTES XIRIA VOLEI",
      "club": "206572607",
      "pt": 0,
@@ -1185,31 +1207,9 @@
      "sc": 0
     },
     {
-     "pos": 6,
-     "equipo": "CLUB VOLEIBOL PONTEVEDRA SF2",
-     "club": "206572577",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 7,
+     "pos": 8,
      "equipo": "C.V. NARON VOLEA C",
      "club": "206572598",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 8,
-     "equipo": "CV MEGATOXOS",
-     "club": "206573095",
      "pt": 0,
      "pj": 0,
      "pg": 0,
@@ -1226,10 +1226,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-18 08:17",
+   "consultado": "2026-10-19 08:17",
    "terminado": false,
-   "firma": "723c10c7770cc8ca",
-   "firma_clasificacion": "723c10c7770cc8ca",
+   "firma": "977a19090b48a57d",
+   "firma_clasificacion": "977a19090b48a57d",
    "partidos": [
     {
      "local": "DOMPAVOLEI XF1",
@@ -1419,6 +1419,50 @@
     },
     {
      "pos": 3,
+     "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 3,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 0
+    },
+    {
+     "pos": 4,
+     "equipo": "XAV CAMBADOS AZUL",
+     "club": "206572588",
+     "pt": 3,
+     "pj": 1,
+     "pg": 1,
+     "pp": 0,
+     "sf": 3,
+     "sc": 0
+    },
+    {
+     "pos": 5,
+     "equipo": "COLEGIO LICEO LA PAZ",
+     "club": "206572593",
+     "pt": 0,
+     "pj": 1,
+     "pg": 0,
+     "pp": 1,
+     "sf": 0,
+     "sc": 3
+    },
+    {
+     "pos": 6,
+     "equipo": "CV CIUDAD DE A CORUÑA JF B",
+     "club": "206572595",
+     "pt": 0,
+     "pj": 1,
+     "pg": 0,
+     "pp": 1,
+     "sf": 0,
+     "sc": 3
+    },
+    {
+     "pos": 7,
      "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 0,
@@ -1429,7 +1473,7 @@
      "sc": 3
     },
     {
-     "pos": 4,
+     "pos": 8,
      "equipo": "COSVAMA - MANIOTAS XF",
      "club": "206572587",
      "pt": 0,
@@ -1440,53 +1484,9 @@
      "sc": 3
     },
     {
-     "pos": 5,
-     "equipo": "XAV CAMBADOS AZUL",
-     "club": "206572588",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 6,
-     "equipo": "CV CIUDAD DE A CORUÑA JF B",
-     "club": "206572595",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 7,
+     "pos": 9,
      "equipo": "DOMPAVOLEI XF1",
      "club": "206572580",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 8,
-     "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
-     "club": "206572607",
-     "pt": 0,
-     "pj": 0,
-     "pg": 0,
-     "pp": 0,
-     "sf": 0,
-     "sc": 0
-    },
-    {
-     "pos": 9,
-     "equipo": "COLEGIO LICEO LA PAZ",
-     "club": "206572593",
      "pt": 0,
      "pj": 0,
      "pg": 0,
