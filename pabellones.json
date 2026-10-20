@@ -263,6 +263,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
     },
+    "PABELLÓN MUNICIPAL DE COIA - PISTA 2": {
+        "id_campo": "805",
+        "municipio": "VIGO",
+        "direccion": "AV. DE CASTELAO, 66, COIA, 36209 VIGO, PONTEVEDRA",
+        "lat": 42.2180651,
+        "lon": -8.7503969,
+        "km": 101.9,
+        "minutos_coche": 73,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-20"
+    },
     "PALOMAR": {
         "id_campo": "102",
         "municipio": "LUGO",
