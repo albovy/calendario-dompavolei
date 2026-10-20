@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-19 15:17"
+   "revisado": "2026-10-20 11:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -1822,10 +1822,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-19 15:17",
+   "consultado": "2026-10-20 11:17",
    "terminado": false,
-   "firma": "8e2cbcb6760b9e28",
-   "firma_clasificacion": "8e2cbcb6760b9e28",
+   "firma": "9c3fce969894c5f6",
+   "firma_clasificacion": "9c3fce969894c5f6",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
