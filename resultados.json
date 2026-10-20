@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-19 11:17"
+   "revisado": "2026-10-20 08:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-19 11:17"
+   "revisado": "2026-10-20 08:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -32,7 +32,7 @@
     "3923",
     "3924"
    ],
-   "revisado": "2026-10-19 08:17"
+   "revisado": "2026-10-20 08:17"
   },
   "2ªDIV. SENIOR MASCULINA": {
    "id": "1531",
@@ -42,7 +42,7 @@
     "3919",
     "3920"
    ],
-   "revisado": "2026-10-19 09:17"
+   "revisado": "2026-10-20 08:17"
   },
   "2ªDIV. XUVENIL FEMENINA": {
    "id": "1537",
@@ -52,7 +52,7 @@
     "3943",
     "3944"
    ],
-   "revisado": "2026-10-19 08:17"
+   "revisado": "2026-10-20 08:17"
   },
   "3ªDIV. CADETE FEMENINA": {
    "id": "1557",
@@ -446,7 +446,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-19 11:17",
+   "consultado": "2026-10-20 08:17",
    "terminado": false,
    "firma": "750fb03a696845f4",
    "firma_clasificacion": "750fb03a696845f4",
@@ -750,7 +750,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-10-19 09:17",
+   "consultado": "2026-10-20 08:17",
    "terminado": false,
    "firma": "0580a20656c93126",
    "firma_clasificacion": "0580a20656c93126",
@@ -996,7 +996,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-10-19 08:17",
+   "consultado": "2026-10-20 08:17",
    "terminado": false,
    "firma": "4bfdb83ea867a3ab",
    "firma_clasificacion": "4bfdb83ea867a3ab",
@@ -1226,10 +1226,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-19 08:17",
+   "consultado": "2026-10-20 08:17",
    "terminado": false,
-   "firma": "977a19090b48a57d",
-   "firma_clasificacion": "977a19090b48a57d",
+   "firma": "f38c0b8bc901f376",
+   "firma_clasificacion": "f38c0b8bc901f376",
    "partidos": [
     {
      "local": "DOMPAVOLEI XF1",
@@ -1514,10 +1514,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-19 11:17",
+   "consultado": "2026-10-20 08:17",
    "terminado": false,
-   "firma": "9bcbc032e9c8a4ee",
-   "firma_clasificacion": "9bcbc032e9c8a4ee",
+   "firma": "1d37411247478caf",
+   "firma_clasificacion": "1d37411247478caf",
    "partidos": [
     {
      "local": "DOMPAVOLEI IF1",
