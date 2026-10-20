@@ -47,6 +47,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-09"
     },
+    "A SOLAINA - PISTA 2": {
+        "id_campo": "49",
+        "municipio": "NARÓN",
+        "direccion": "RÚA FINCA FEDERICO, 33, 15570 NARÓN, A CORUÑA",
+        "lat": 43.5002601,
+        "lon": -8.2009507,
+        "km": 191.4,
+        "minutos_coche": 127,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-10-20"
+    },
     "ALONSO RODRIGUEZ - PISTA 1": {
         "id_campo": "6",
         "municipio": "NOIA",
