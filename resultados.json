@@ -12,7 +12,7 @@
     "3857",
     "3858"
    ],
-   "revisado": "2026-10-20 08:17"
+   "revisado": "2026-10-21 08:17"
   },
   "2ªDIV. INFANTIL FEMENINA": {
    "id": "1541",
@@ -22,7 +22,7 @@
     "3959",
     "3960"
    ],
-   "revisado": "2026-10-20 08:17"
+   "revisado": "2026-10-21 08:17"
   },
   "2ªDIV. SENIOR FEMENINA": {
    "id": "1532",
@@ -32,7 +32,7 @@
     "3923",
     "3924"
    ],
-   "revisado": "2026-10-20 08:17"
+   "revisado": "2026-10-21 08:17"
   },
   "2ªDIV. SENIOR MASCULINA": {
    "id": "1531",
@@ -42,7 +42,7 @@
     "3919",
     "3920"
    ],
-   "revisado": "2026-10-20 08:17"
+   "revisado": "2026-10-21 08:17"
   },
   "2ªDIV. XUVENIL FEMENINA": {
    "id": "1537",
@@ -52,7 +52,7 @@
     "3943",
     "3944"
    ],
-   "revisado": "2026-10-20 08:17"
+   "revisado": "2026-10-21 08:17"
   },
   "3ªDIV. CADETE FEMENINA": {
    "id": "1557",
@@ -62,7 +62,7 @@
     "4023",
     "4024"
    ],
-   "revisado": "2026-10-20 11:17"
+   "revisado": "2026-10-21 08:17"
   },
   "TORNEO APERTURA CADETE F": {
    "id": "1509",
@@ -446,10 +446,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-10-20 08:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "750fb03a696845f4",
-   "firma_clasificacion": "750fb03a696845f4",
+   "firma": "3aacac7cfc415be7",
+   "firma_clasificacion": "3aacac7cfc415be7",
    "partidos": [
     {
      "local": "DOMPAVOLEI SM1",
@@ -480,7 +480,7 @@
      "local": "CALVO XIRIA VOLEI",
      "visitante": "DOMPAVOLEI SM1",
      "dia": "2026-10-24",
-     "hora": "",
+     "hora": "20:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -750,10 +750,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-10-20 08:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "0580a20656c93126",
-   "firma_clasificacion": "0580a20656c93126",
+   "firma": "635c6a3f35945b28",
+   "firma_clasificacion": "635c6a3f35945b28",
    "partidos": [
     {
      "local": "DOMPAVOLEI SM O BARCO",
@@ -784,7 +784,7 @@
      "local": "CLUB VOLEIBOL PONTEVEDRA SM2",
      "visitante": "DOMPAVOLEI SM O BARCO",
      "dia": "2026-10-24",
-     "hora": "",
+     "hora": "18:30",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -996,16 +996,16 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-10-20 08:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "4bfdb83ea867a3ab",
-   "firma_clasificacion": "4bfdb83ea867a3ab",
+   "firma": "e16f0ef753650cfd",
+   "firma_clasificacion": "e16f0ef753650cfd",
    "partidos": [
     {
      "local": "C.V. NARON VOLEA C",
      "visitante": "DOMPAVOLEI SF1",
      "dia": "2026-10-24",
-     "hora": "",
+     "hora": "14:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1014,7 +1014,7 @@
      "local": "C.V. NARON VOLEA B",
      "visitante": "DOMPAVOLEI SF1",
      "dia": "2026-10-24",
-     "hora": "",
+     "hora": "16:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1226,10 +1226,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-10-20 08:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "f38c0b8bc901f376",
-   "firma_clasificacion": "f38c0b8bc901f376",
+   "firma": "01bb9730f2d435f8",
+   "firma_clasificacion": "01bb9730f2d435f8",
    "partidos": [
     {
      "local": "DOMPAVOLEI XF1",
@@ -1243,8 +1243,8 @@
     {
      "local": "CLUB VIGO VOLEIBOL",
      "visitante": "DOMPAVOLEI XF1",
-     "dia": "2026-10-24",
-     "hora": "",
+     "dia": "2026-10-25",
+     "hora": "10:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1514,10 +1514,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-10-20 08:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "1d37411247478caf",
-   "firma_clasificacion": "1d37411247478caf",
+   "firma": "ea698614c4b3d620",
+   "firma_clasificacion": "ea698614c4b3d620",
    "partidos": [
     {
      "local": "DOMPAVOLEI IF1",
@@ -1551,8 +1551,8 @@
     {
      "local": "CLUB VIGO VOLEIBOL",
      "visitante": "DOMPAVOLEI IF1",
-     "dia": "2026-10-24",
-     "hora": "",
+     "dia": "2026-10-25",
+     "hora": "10:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
@@ -1822,10 +1822,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-10-20 11:17",
+   "consultado": "2026-10-21 08:17",
    "terminado": false,
-   "firma": "9c3fce969894c5f6",
-   "firma_clasificacion": "9c3fce969894c5f6",
+   "firma": "0fb1627298732451",
+   "firma_clasificacion": "0fb1627298732451",
    "partidos": [
     {
      "local": "DOMPAVOLEI CF1",
@@ -1864,7 +1864,7 @@
      "local": "C.V. NARON VOLEA B",
      "visitante": "DOMPAVOLEI CF1",
      "dia": "2026-10-24",
-     "hora": "",
+     "hora": "16:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": []
