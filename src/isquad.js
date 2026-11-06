@@ -57,6 +57,20 @@ export async function peticion(ruta, datos, { base = URL_BASE, esperas = ESPERAS
   }
 }
 
+// Desde el 28/10/2026 la federación ya no manda id_club_local ni id_club_visitante: el ID del club solo
+// viene en la dirección del escudo, dentro del nombre del equipo (.../afiliacion_clubs/206572580/...).
+// Si la fila trae el ID, vale ese; si no trae ni ID ni escudo, queda vacío (no es de ningún club).
+const ESCUDO_CLUB = /afiliacion_clubs\/(\d+)\//;
+
+function conIdsClub(fila) {
+  const completa = { ...fila };
+  for (const lado of ['local', 'visitante']) {
+    const campo = `id_club_${lado}`;
+    if (!Object.hasOwn(completa, campo)) completa[campo] = ESCUDO_CLUB.exec(txt(fila[`nombre_${lado}`]))?.[1] ?? '';
+  }
+  return completa;
+}
+
 export async function partidosApi(desde) {
   // Misma consulta que hace la "Agenda calendario": todos los partidos desde una fecha.
   const json = await peticion('json/partidos_equipos_consultas.php', {
@@ -75,7 +89,9 @@ export async function partidosApi(desde) {
   if (!esObjeto(obj) || !Object.hasOwn(obj, 'data') || obj.data === null) {
     throw new Error('La web de la federación devolvió una respuesta inesperada (falta la lista de partidos). Inténtalo más tarde.');
   }
-  return comoLista(obj.data).filter((r) => esObjeto(r) && Object.hasOwn(r, 'id_club_local'));
+  return comoLista(obj.data)
+    .filter((r) => esObjeto(r) && (Object.hasOwn(r, 'id_club_local') || Object.hasOwn(r, 'nombre_local')))
+    .map(conIdsClub);
 }
 
 export function fechaCruda(fila) {
