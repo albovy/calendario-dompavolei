@@ -1,6 +1,7 @@
-// Descarga de la plataforma iSquad de la Federación Galega de Voleibol (la "Agenda calendario" de
-// https://volei.gal/competiciones/) y catálogo de clubs. Traducción de la parte "Descarga" y
-// "Elegir club" de calendario-voley.ps1.
+// Descarga de la plataforma iSquad de la Federación Galega de Voleibol (peticion) y catálogo de clubs.
+// Traducción de la parte "Descarga" y "Elegir club" de calendario-voley.ps1. Desde el 06/11/2026 la
+// "Agenda calendario" de https://volei.gal/competiciones/ no deja descargar a los programas: los partidos
+// salen de las páginas de los grupos (federacion.js).
 
 import {
   BOM, aviso, clave, comoLista, compararTexto, esObjeto, esperar, fmt, leerJson, ordenarUnicos, prefijoComun, txt,
@@ -28,27 +29,45 @@ function motivo(error) {
 // reintenta con esperas cada vez más largas, unos 3 minutos en total, antes de rendirse.
 export const ESPERAS_SEGUNDOS = [15, 30, 60, 90];
 
+// Respuestas con las que reintentar no sirve: una redirección (3xx: no se sigue, podría llevar a /json/ o a otra
+// web), la federación no deja descargarlo (401, 403; desde el 06/11/2026 da 403 a la agenda), no existe (404), pide
+// que se pare (429) o cualquier otro 4xx (el fallo es de la petición, no de la red). Insistir solo cargaría su web.
+function sinReintento(estado) { return estado >= 300 && estado < 500; }
+
 // opciones: base (otra web de iSquad; por defecto la de resultados) y esperas (segundos entre
-// intentos; por defecto ESPERAS_SEGUNDOS).
+// intentos; por defecto ESPERAS_SEGUNDOS). Si falla, el Error lleva además motivo (p. ej. «respuesta 403
+// Forbidden») y estado (el código HTTP; 0 si no llegó a responder).
+// Solo se pone el User-Agent; fetch (el de Node) añade las suyas de siempre (accept, accept-language,
+// sec-fetch-mode y accept-encoding), las de cualquier programa que lo use: no se hace pasar por un navegador.
 export async function peticion(ruta, datos, { base = URL_BASE, esperas = ESPERAS_SEGUNDOS } = {}) {
   const url = `${base}/${ruta}`;
   const intentos = esperas.length + 1;
   for (let i = 1; i <= intentos; i++) {
+    let estado = 0;
     try {
       const r = await fetch(url, {
         method: datos ? 'POST' : 'GET',
         body: datos ? new URLSearchParams(datos) : undefined,
         headers: { 'User-Agent': AGENTE },
+        redirect: 'manual',
         signal: AbortSignal.timeout(45000),
       });
-      if (!r.ok) throw new Error(`respuesta ${r.status} ${r.statusText}`.trim());
+      if (!r.ok) {
+        estado = r.status;
+        const destino = estado >= 300 && estado < 400 ? txt(r.headers.get('location')) : '';
+        throw new Error(`${`respuesta ${r.status} ${r.statusText}`.trim()}${destino ? `, que lleva a ${destino}` : ''}`);
+      }
       // Se decodifica a mano como UTF-8, sin fiarse de lo que diga la cabecera del servidor.
       let texto = Buffer.from(await r.arrayBuffer()).toString('utf8');
       while (texto.startsWith(BOM)) texto = texto.slice(1);
       return texto;
     } catch (e) {
-      if (i === intentos) {
-        throw new Error(`No se pudo descargar ${url}\n    (${motivo(e)})\n    Comprueba la conexión a Internet y vuelve a intentarlo.`);
+      const rechazada = sinReintento(estado);
+      if (rechazada || i === intentos) {
+        const consejo = rechazada
+          ? 'La federación no deja descargarlo; no se vuelve a intentar.'
+          : 'Comprueba la conexión a Internet y vuelve a intentarlo.';
+        throw Object.assign(new Error(`No se pudo descargar ${url}\n    (${motivo(e)})\n    ${consejo}`), { motivo: motivo(e), estado });
       }
       const segundos = esperas[i - 1];
       aviso(`La web de la federación no responde; se vuelve a intentar en ${segundos} s (intento ${i + 1} de ${intentos})...`);
@@ -71,6 +90,8 @@ function conIdsClub(fila) {
   return completa;
 }
 
+// Sin uso desde el 06/11/2026: la federación da 403 a los programas en su agenda (y en todo lo que está bajo
+// /json/). Se deja por si vuelve a dar acceso; mientras tanto, no se llama.
 export async function partidosApi(desde) {
   // Misma consulta que hace la "Agenda calendario": todos los partidos desde una fecha.
   const json = await peticion('json/partidos_equipos_consultas.php', {
@@ -124,10 +145,10 @@ function idClub(fila, lado) {
   return id === 'None' ? '' : id;
 }
 
-export async function catalogoClubs(crudosTemporada, crudosTodos) {
-  // Clubs que se pueden elegir: los del listado oficial más los que aparecen en los partidos.
-  // Se puede buscar por el nombre del club o por el de cualquiera de sus equipos.
-  const oficiales = await clubsFederacion();
+export function catalogoClubs(crudosTemporada, crudosTodos, oficiales = new Map()) {
+  // Clubs que se pueden elegir: los que aparecen en los partidos más los del listado oficial, si se pasa
+  // (clubsFederacion: solo lo descarga --listar-clubs). Se puede buscar por el nombre del club o por el de
+  // cualquiera de sus equipos.
   const cuenta = new Map();
   const equipos = new Map();
   for (const r of crudosTemporada) {

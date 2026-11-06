@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <!-- Recorte de competicion_completa.php?seleccion=0&id=3941&id_ambito=6&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1537
+       guardada el 06/11/2026: sin scripts, sin la etiqueta del token de cliente, sin actas ni previos y con solo 7 partidos. -->
+  <meta charset="utf-8">
+  <title>Resultados Voleibol</title>
+</head><body>
+    <!-- PRIMERA FILA -->
+    <div class='div_primera_fila_competicion'>
+        <div class='div_select_territorial' style='float:left; '>
+            <select id='territorial' class="menu-select" style='width: 100%'>
+                                    <option value='17' >
+                        FEDERACIÓ CATALANA DE VOLEIBOL                    </option>
+                                    <option value='27' >
+                        FEDERACION ARAGONESA DE VOLEIBOL                    </option>
+                                    <option value='20' selected>
+                        FEDERACION GALEGA DE VOLEIBOL                    </option>
+                            </select>
+        </div>
+
+        <div class='div_select_provincial' style='float:left; display:none;'>
+            <select id='provincial' class="menu-select" style='width: 100%'>
+                <option value='0' ><i-t>MOSTRAR TODO</i-t></option>
+                            </select>
+        </div>
+
+        <div class='div_select_temporada' style='float:left; '>
+            <select id='temporadas' class="menu-select" style='width: 100%'>
+                                    <option value='2627' selected>
+                        <i-t>Temporada 2026/2027</i-t>
+                    </option>
+                                    <option value='2526' >
+                        <i-t>Temporada 2025/2026</i-t>
+                    </option>
+                                    <option value='2425' >
+                        <i-t>Temporada 2024/2025</i-t>
+                    </option>
+                                    <option value='2324' >
+                        <i-t>Temporada 2023/2024</i-t>
+                    </option>
+                                    <option value='2223' >
+                        <i-t>Temporada 2022/2023</i-t>
+                    </option>
+                                    <option value='2122' >
+                        <i-t>Temporada 2021/2022</i-t>
+                    </option>
+                            </select>
+        </div>
+
+                <div class='div_select_categoria' style='float:left;'>
+                        <button type="button" class="btn-fork-categories" onclick="showModalTree()">
+                <svg fill="#000000" viewBox="0 0 256 256" id="Flat" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M168,108h48a12.01343,12.01343,0,0,0,12-12V48a12.01343,12.01343,0,0,0-12-12H168a12.01343,12.01343,0,0,0-12,12V68H144a28.03146,28.03146,0,0,0-28,28v28H84V108A12.01343,12.01343,0,0,0,72,96H32a12.01343,12.01343,0,0,0-12,12v40a12.01343,12.01343,0,0,0,12,12H72a12.01343,12.01343,0,0,0,12-12V132h32v28a28.03146,28.03146,0,0,0,28,28h12v20a12.01343,12.01343,0,0,0,12,12h48a12.01343,12.01343,0,0,0,12-12V160a12.01343,12.01343,0,0,0-12-12H168a12.01343,12.01343,0,0,0-12,12v20H144a20.02229,20.02229,0,0,1-20-20V96a20.02229,20.02229,0,0,1,20-20h12V96A12.01343,12.01343,0,0,0,168,108ZM76,148a4.00427,4.00427,0,0,1-4,4H32a4.00427,4.00427,0,0,1-4-4V108a4.00427,4.00427,0,0,1,4-4H72a4.00427,4.00427,0,0,1,4,4Zm88,12a4.00427,4.00427,0,0,1,4-4h48a4.00427,4.00427,0,0,1,4,4v48a4.00427,4.00427,0,0,1-4,4H168a4.00427,4.00427,0,0,1-4-4Zm0-112a4.00427,4.00427,0,0,1,4-4h48a4.00427,4.00427,0,0,1,4,4V96a4.00427,4.00427,0,0,1-4,4H168a4.00427,4.00427,0,0,1-4-4Z" />
+                </svg>
+            </button>
+                    <select id='categorias' class="primera-linea-select menu-select">
+                                    <option value='388' >
+                        1ª DIVISION AUTONOMICA                    </option>
+                                    <option value='389' selected>
+                        2ª DIVISION AUTONOMICA                    </option>
+                                    <option value='391' >
+                        3ª DIVISION AUTONOMICA                    </option>
+                                    <option value='392' >
+                        4ª DIVISION AUTONOMICA                    </option>
+                                    <option value='381' >
+                        T2026 COMPETICION NACIONAL                    </option>
+                                    <option value='387' >
+                        TORNEO APERTURA 2026                    </option>
+                                    <option value='386' >
+                        COPA FEDERACION 2026                    </option>
+                            </select>
+        </div>
+                <div class='div_select_competicion'>
+                        <select id='competiciones' class="primera-linea-select menu-select">
+                                    <option value='1543' >
+                        2ªDIV. ALEVIN FEMENINA                    </option>
+                                    <option value='1539' >
+                        2ªDIV. CADETE FEMENINA                    </option>
+                                    <option value='1538' >
+                        2ªDIV. CADETE MASCULINA                    </option>
+                                    <option value='1541' >
+                        2ªDIV. INFANTIL FEMENINA                    </option>
+                                    <option value='1532' >
+                        2ªDIV. SENIOR FEMENINA                    </option>
+                                    <option value='1531' >
+                        2ªDIV. SENIOR MASCULINA                    </option>
+                                    <option value='1537' selected>
+                        2ªDIV. XUVENIL FEMENINA                    </option>
+                            </select>
+        </div>
+                <div class='div_select_fase_grupo'>
+            <select id='torneos' class="primera-linea-select menu-select">
+                                    <option value='3941' selected>
+                        PRIMERA FASE - LIGA REGULAR                    </option>
+                                    <option value='3942' >
+                        SEGUNDA FASE - GRUPO C                    </option>
+                                    <option value='3943' >
+                        SEGUNDA FASE - GRUPO E                    </option>
+                                    <option value='3944' >
+                        SEGUNDA FASE - GRUPO D                    </option>
+                            </select>
+        </div>
+    </div>
+
+    <div class="content page-content">
+        <div class="titulo">
+            <div class="titulos pull-left" style="width: 97%; margin-bottom: 30px;">
+                <h2><i-t page='common' type='uppercase'>GRUPOS DE LA COMPETICIÓN</i-t></h2>
+            </div>
+        </div>
+        <div class="row" style="background: #eee;padding: 20px;">
+                            <div class="col-lg-3 col-md-3" style="height: 300px; overflow: auto; border-right: 2px solid white;">
+                    <h4 style="font-weight: bold; margin-left: 10px; margin-bottom: 15px;">
+                        PRIMERA FASE - LIGA REGULAR                    </h4>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=4173&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572608/square_6b656d3467326c68346f.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=4173&id=3941&id_superficie=1">A TABERNA VOLEIBOL RIVEIRA</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=6759&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572597/square_7765696d6e7433636c6e.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=6759&id=3941&id_superficie=1">ACEITES ABRIL CVO JUV. AZUL FEM</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=4211&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572607/square_6678346f693962737672.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=4211&id=3941&id_superficie=1">BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=4127&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572606/square_38636966316a75666938.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=4127&id=3941&id_superficie=1">CLUB VIGO VOLEIBOL</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=6586&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572589/square_3975317576336233666a.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=6586&id=3941&id_superficie=1">CLUB VOLEIBOL SANTIAGO</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=4199&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572593/square_69776537396c6a647132.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=4199&id=3941&id_superficie=1">COLEGIO LICEO LA PAZ</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=6455&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572587/square_72337833786775766e36.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=6455&id=3941&id_superficie=1">COSVAMA - MANIOTAS XF</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=6544&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572595/square_266166b2948ac2b9.jpeg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=6544&id=3941&id_superficie=1">CV CIUDAD DE A CORUÑA JF B</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=4087&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=4087&id=3941&id_superficie=1">DOMPAVOLEI XF1</a>
+                        </div>
+                                            <div style="margin-top: 10px; margin-left: 20px;">
+                            <a href="equipo.php?seleccion=0&id_equipo=6608&id=3941&id_superficie=1">
+                                <img src="https://voleibol.isquad.es/images/afiliacion_clubs/206572588/square_366f636630686a32376d.jpg" class="escudo_tabla" style="margin-right: 15px;" />
+                            </a>
+                            <a href="equipo.php?seleccion=0&id_equipo=6608&id=3941&id_superficie=1">XAV CAMBADOS AZUL</a>
+                        </div>
+                                    </div>
+                    </div>
+    </div>
+    <div class="limpio"></div>
+
+    <div class="content page-content">
+        <div class="titulo">
+            <div class="titulos pull-left">
+                <h2><i-t page='common' type='uppercase'>RESULTADOS DE LA COMPETICIÓN</i-t></h2>
+                <h4>2ªDIV. XUVENIL FEMENINA</h4>
+                            </div>
+        </div>
+        <div class="content-body">
+            <div class="limpio"></div>
+
+            <div class="field" style="margin-top: 15px; margin-left: 30px;">
+                <label for="buscador"><i-t page='common' type='ucfirst'>Buscador</i-t>:</label>
+                <input type="text" id="buscador">
+            </div>
+
+            <div class="pull-right titulo_jornadas">
+                <h4>
+                                                        </h4>
+            </div>
+            <div class="limpio"></div>
+
+            <div class="table-responsive" id="partidos_tabla">
+                        <input type='hidden' value='0' id='partido_en_progreso'>
+        <div class='table-responsive' id='reloadTable'>
+            <table class='table table-striped total-table'>
+                        <thead>
+            <tr>
+                                                            <th scope="col"><i-t type="uppercase" page="common">Equipos</i-t></th>
+                                                                                <th scope="col"><i-t type="uppercase" page="common">Marcador</i-t></th>
+                                                                                                            <th scope="col"><i-t type="uppercase" page="common">1º Set</i-t></th>
+                                                    <th scope="col"><i-t type="uppercase" page="common">2º Set</i-t></th>
+                                                    <th scope="col"><i-t type="uppercase" page="common">3º Set</i-t></th>
+                                                    <th scope="col"><i-t type="uppercase" page="common">4º Set</i-t></th>
+                                                    <th scope="col"><i-t type="uppercase" page="common">5º Set</i-t></th>
+                                                                                                        <th scope="col"><i-t type="uppercase" page="common">Fecha</i-t></th>
+                                                                                <th scope="col" class="col-lugar"><i-t type="uppercase" page="common">Lugar</i-t></th>
+                                                                                <th scope="col"><i-t type="uppercase" page="common">Estado</i-t></th>
+                                                                                <th scope="col"><i-t type="uppercase" page="common">Previo</i-t></th>
+                                                                                <th scope="col"><i-t type="uppercase" page="common">Acta</i-t></th>
+                                                </tr>
+        </thead>
+                <tbody>
+            <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 2 (24-10-2026)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98186" data-estado="Finalizado">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=4199&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572593/square_69776537396c6a647132.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=6586&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572589/square_3975317576336233666a.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='negrita' href='equipo.php?id_equipo=4199&id=3941&id_superficie=1'>
+                        COLEGIO LICEO LA PAZ                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=6586&id=3941&id_superficie=1'>
+                        CLUB VOLEIBOL SANTIAGO                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class='negrita local'>
+                    3 </span>-<span class=' visitante'> 2</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    25 </span>-<span class=''> 19</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                    10 </span>-<span class='negrita'> 25</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                    22 </span>-<span class='negrita'> 25</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    25 </span>-<span class=''> 17</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    16 </span>-<span class=''> 14</span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>25/10/2026 </div>
+            <div>11:30</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                    <a
+                href='#'
+                onclick='mostrarLugar(...[&quot;https://www.google.com/maps/?q=43.3417503,-8.4018856&amp;output=embed&quot;,&quot;LICEO LA PAZ - PISTA 2&quot;,&quot;RúA SEBASTIáN MARTíNEZ RISCO, 12, 15009 A CORUñA, ESPAñA, 15009&quot;]); return false;'>
+                <span>
+                   LICEO LA PAZ - PISTA 2                </span>
+            </a>
+                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#3DF59E" />
+        </svg>
+            <i-t page='common'>Finalizado</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                                            
+                    </div>
+                        </td>
+                                    </tr>
+            <tr  class="partido" data-id="98188" data-estado="Finalizado">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=4127&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572606/square_38636966316a75666938.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=4087&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='negrita' href='equipo.php?id_equipo=4127&id=3941&id_superficie=1'>
+                        CLUB VIGO VOLEIBOL                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=4087&id=3941&id_superficie=1'>
+                        DOMPAVOLEI XF1                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class='negrita local'>
+                    3 </span>-<span class=' visitante'> 0</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    25 </span>-<span class=''> 20</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    25 </span>-<span class=''> 20</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class='negrita'>
+                    25 </span>-<span class=''> 10</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>25/10/2026 </div>
+            <div>10:00</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                    <a
+                href='#'
+                onclick='mostrarLugar(...[&quot;https://www.google.com/maps/?q=42.2180651,-8.7503969&amp;output=embed&quot;,&quot;PABELLÓN MUNICIPAL DE COIA - PISTA 2&quot;,&quot;AV. DE CASTELAO, 66, COIA, 36209 VIGO, PONTEVEDRA, ESPAñA, 36209&quot;]); return false;'>
+                <span>
+                   PABELLÓN MUNICIPAL DE COIA - PISTA 2                </span>
+            </a>
+                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#3DF59E" />
+        </svg>
+            <i-t page='common'>Finalizado</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                                            
+                    </div>
+                        </td>
+                                    </tr>
+            <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 3 (31-10-2026)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98193" data-estado="Finalizado">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=4087&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=4211&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572607/square_6678346f693962737672.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='' href='equipo.php?id_equipo=4087&id=3941&id_superficie=1'>
+                        DOMPAVOLEI XF1                    </a>
+                    -
+                    <a class='negrita' href='equipo.php?id_equipo=4211&id=3941&id_superficie=1'>
+                        BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class=' local'>
+                    0 </span>-<span class='negrita visitante'> 3</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class=''>
+                    9 </span>-<span class='negrita'> 25</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                    24 </span>-<span class='negrita'> 26</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                    23 </span>-<span class='negrita'> 25</span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>31/10/2026 </div>
+            <div>12:30</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                    <a
+                href='#'
+                onclick='mostrarLugar(...[&quot;https://www.google.com/maps/?q=42.3442759,-7.871394800000001&amp;output=embed&quot;,&quot;ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 2&quot;,&quot;RúA PARDO DE CELA, 2, 32002 OURENSE, ESPAñA, 32003&quot;]); return false;'>
+                <span>
+                   ANEXO PM OS REMEDIOS<br>ANEXO OS REMEDIOS - PISTA 2                </span>
+            </a>
+                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#3DF59E" />
+        </svg>
+            <i-t page='common'>Finalizado</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                                            
+                    </div>
+                        </td>
+                                    </tr>
+                                    <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 4 (07-11-2026)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98199" data-estado="Pendiente">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=6608&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572588/square_366f636630686a32376d.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=4087&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='' href='equipo.php?id_equipo=6608&id=3941&id_superficie=1'>
+                        XAV CAMBADOS AZUL                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=4087&id=3941&id_superficie=1'>
+                        DOMPAVOLEI XF1                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class=' local'>
+                    0 </span>-<span class=' visitante'> 0</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>08/11/2026 </div>
+            <div>11:30</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                    <a
+                href='#'
+                onclick='mostrarLugar(...[&quot;https://www.google.com/maps/?q=42.5196857,-8.810736499999999&amp;output=embed&quot;,&quot;RAMON CABANILLAS - PISTA 2&quot;,&quot;AV. ROSALíA DE CASTRO, 18, 36630 CAMBADOS, PONTEVEDRA, ESPAñA, 36630&quot;]); return false;'>
+                <span>
+                   RAMON CABANILLAS - PISTA 2                </span>
+            </a>
+                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#F53D3D" />
+        </svg>
+            <i-t page='common'>Pendiente</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                            <div class="custom-col-circle disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M6 7.5L12 7.5M6 13.5L12 13.5M6 9L9 9M12 1.5V4.05C12 4.29853 12.2015 4.5 12.45 4.5H15M3 1.95V16.05C3 16.2985 3.20147 16.5 3.45 16.5H14.55C14.7985 16.5 15 16.2985 15 16.05V4.3114C15 4.19205 14.9526 4.07759 14.8682 3.9932L12.5068 1.6318C12.4224 1.54741 12.308 1.5 12.1886 1.5H3.45C3.20147 1.5 3 1.70147 3 1.95Z" stroke="#666666" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                    </div>
+                        </td>
+                                    </tr>
+            <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 5 (14-11-2026)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98202" data-estado="Pendiente">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=4087&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=6544&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572595/square_266166b2948ac2b9.jpeg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='' href='equipo.php?id_equipo=4087&id=3941&id_superficie=1'>
+                        DOMPAVOLEI XF1                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=6544&id=3941&id_superficie=1'>
+                        CV CIUDAD DE A CORUÑA JF B                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class=' local'>
+                    0 </span>-<span class=' visitante'> 0</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>14/11/2026 </div>
+            <div>0:00</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                    <a
+                href='#'
+                onclick='mostrarLugar(...[&quot;https://www.google.com/maps/?q=42.332355,-7.8742318&amp;output=embed&quot;,&quot;A CARBALLEIRA&quot;,&quot;RúA DO CASTELO RAMIRO, 28, 32002 OURENSE, ESPAñA, 32002&quot;]); return false;'>
+                <span>
+                   A CARBALLEIRA                </span>
+            </a>
+                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#F53D3D" />
+        </svg>
+            <i-t page='common'>Pendiente</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                            <div class="custom-col-circle disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M6 7.5L12 7.5M6 13.5L12 13.5M6 9L9 9M12 1.5V4.05C12 4.29853 12.2015 4.5 12.45 4.5H15M3 1.95V16.05C3 16.2985 3.20147 16.5 3.45 16.5H14.55C14.7985 16.5 15 16.2985 15 16.05V4.3114C15 4.19205 14.9526 4.07759 14.8682 3.9932L12.5068 1.6318C12.4224 1.54741 12.308 1.5 12.1886 1.5H3.45C3.20147 1.5 3 1.70147 3 1.95Z" stroke="#666666" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                    </div>
+                        </td>
+                                    </tr>
+            <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 6 (21-11-2026)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98209" data-estado="Pendiente">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=6544&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572595/square_266166b2948ac2b9.jpeg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=4173&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572608/square_6b656d3467326c68346f.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='' href='equipo.php?id_equipo=6544&id=3941&id_superficie=1'>
+                        CV CIUDAD DE A CORUÑA JF B                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=4173&id=3941&id_superficie=1'>
+                        A TABERNA VOLEIBOL RIVEIRA                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class=' local'>
+                    0 </span>-<span class=' visitante'> 0</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>21/11/2026 </div>
+            <div>0:00</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#F53D3D" />
+        </svg>
+            <i-t page='common'>Pendiente</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                            <div class="custom-col-circle disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M6 7.5L12 7.5M6 13.5L12 13.5M6 9L9 9M12 1.5V4.05C12 4.29853 12.2015 4.5 12.45 4.5H15M3 1.95V16.05C3 16.2985 3.20147 16.5 3.45 16.5H14.55C14.7985 16.5 15 16.2985 15 16.05V4.3114C15 4.19205 14.9526 4.07759 14.8682 3.9932L12.5068 1.6318C12.4224 1.54741 12.308 1.5 12.1886 1.5H3.45C3.20147 1.5 3 1.70147 3 1.95Z" stroke="#666666" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                    </div>
+                        </td>
+                                    </tr>
+            <tr class="second-table-info">
+                                    <td colspan="12">
+                                        <div class="total_jornada">
+                                            <div>
+                                                <i-t page='common' type='ucfirst'>Jornada</i-t> 14 (13-02-2027)
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    <tr  class="partido" data-id="98247" data-estado="Pendiente">
+                                                <td>
+                                <div class="equipos-col">
+            <div class="escudos-partido">
+                <a href='equipo.php?id_equipo=6544&id=3941&id_superficie=1' class="escudo-local-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572595/square_266166b2948ac2b9.jpeg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+                <div class="enf-vs">
+                    VS
+                </div>
+                <a href='equipo.php?id_equipo=4087&id=3941&id_superficie=1' class="escudo-visitante-wrap">
+                    <img src='https://voleibol.isquad.es/images/afiliacion_clubs/206572580/square_39306a6461646e313272.jpg' alt="" class='escudo_tabla' onerror="this.onerror=null;this.src='https://voleibol.isquad.es/images/escudos/sinescudo.jpg';this.parentElement.classList.add('sin-escudo');" />
+                </a>
+            </div>
+                            <div class="nombres-equipos">
+                    <a class='' href='equipo.php?id_equipo=6544&id=3941&id_superficie=1'>
+                        CV CIUDAD DE A CORUÑA JF B                    </a>
+                    -
+                    <a class='' href='equipo.php?id_equipo=4087&id=3941&id_superficie=1'>
+                        DOMPAVOLEI XF1                    </a>
+                </div>
+                    </div>
+                        </td>
+                                                                <td class="col-marcador">
+                                <div class="custom-col">
+                            <span class=' local'>
+                    0 </span>-<span class=' visitante'> 0</span>
+                    </div>
+                            </td>
+                                                                                        <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                            <td>        <div class="custom-col">
+                            <span class=''>
+                     </span>-<span class=''> </span>
+                    </div>
+    </td>
+                                                                                    <td>
+                                    <div class='negrita'>13/02/2027 </div>
+            <div>0:00</div>
+                            </td>
+                                                                <td class="col-lugar">
+                                            </td>
+                                                                <td>
+                                <span class='custom-col'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="6" fill="#F53D3D" />
+        </svg>
+            <i-t page='common'>Pendiente</i-t>
+        </span>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+            
+        </div>
+                        </td>
+                                                                <td>
+                                <div class="center-col">
+                            <div class="custom-col-circle disabled">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M6 7.5L12 7.5M6 13.5L12 13.5M6 9L9 9M12 1.5V4.05C12 4.29853 12.2015 4.5 12.45 4.5H15M3 1.95V16.05C3 16.2985 3.20147 16.5 3.45 16.5H14.55C14.7985 16.5 15 16.2985 15 16.05V4.3114C15 4.19205 14.9526 4.07759 14.8682 3.9932L12.5068 1.6318C12.4224 1.54741 12.308 1.5 12.1886 1.5H3.45C3.20147 1.5 3 1.70147 3 1.95Z" stroke="#666666" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                    </div>
+                        </td>
+                                    </tr>
+            </tbody>
+            </table>
+
+        </div>
+                </div>
+        </div>
+    </div>
+</body>
+</html>

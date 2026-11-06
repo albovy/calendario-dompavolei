@@ -1,8 +1,8 @@
 // Genera el calendario de partidos de un club de voleibol gallego (todas sus categorías).
 //
-// Descarga los partidos de la "Agenda calendario" de https://volei.gal/competiciones/ (plataforma
-// iSquad de la Federación Galega de Voleibol), se queda solo con los equipos del club y genera, en la
-// carpeta de salida:
+// Lee los partidos de las páginas de los grupos de la Federación Galega de Voleibol en los que juega el
+// club (plataforma iSquad, las mismas que enseña volei.gal; se apuntan en config.json › federacion.grupos,
+// ver federacion.js), se queda solo con los equipos del club y genera, en la carpeta de salida:
 //
 //   - <nombre>.ics   Calendario para Google Calendar, Outlook, iPhone o Android.
 //   - <nombre>.html  Página con los partidos (lista, vista mensual y clasificaciones), imprimible.
@@ -20,17 +20,22 @@
 //                    [--historial ruta] [--sin-equipos] [--listar-clubs] [--config ruta]
 //
 //   --club              Club a usar en lugar del de config.json: el ID de iSquad (p. ej. 206572577),
-//                       parte del nombre (p. ej. "pontevedra") o varios separados por comas.
-//   --temporada         Temporada, p. ej. "2026-27". Por defecto, la temporada en curso (del 1 de
-//                       agosto al 31 de julio); si aún no hay partidos del club en ella, la anterior.
-//   --desde, --hasta    Fechas (aaaa-mm-dd) dentro de la temporada. Por defecto, 1/8 y 31/7.
+//                       parte del nombre (p. ej. "pontevedra") o varios separados por comas. Por el
+//                       nombre solo se encuentran los clubs que juegan con el de config.json, y de
+//                       cualquier club solo salen sus partidos de los grupos de config.json.
+//   --temporada         Temporada, p. ej. "2026-27": solo vale la temporada en curso (del 1 de agosto al
+//                       31 de julio), que es la de por defecto; si aún no hay partidos del club en ella,
+//                       antes de octubre se genera la anterior. La federación ya no deja descargar su
+//                       agenda: las páginas de los grupos son las de la temporada en curso.
+//   --desde, --hasta    Fechas (aaaa-mm-dd) dentro de la temporada en curso. Por defecto, 1/8 y 31/7.
 //   --salida            Carpeta de los archivos. Por defecto, "calendario" en la carpeta actual.
 //   --nombre-base       Nombre de los archivos (sin extensión). Por defecto, el club y la temporada.
 //   --duracion-minutos  Duración de cada partido en el calendario (por defecto, la de config.json o 120).
 //   --historial         Archivo de texto donde guardar la lista de partidos sin fecha de generación,
 //                       para detectar cambios (lo usa la publicación automática en GitHub).
 //   --sin-equipos       No genera los calendarios por equipo.
-//   --listar-clubs      Muestra los clubs disponibles con su ID y termina.
+//   --listar-clubs      Muestra con su ID los clubs que juegan con el de config.json en sus grupos (y los
+//                       del listado oficial de la federación) y termina.
 //   --config            config.json a usar (o su carpeta); pabellones.json y resultados.json se guardan
 //                       junto a él, y el escudo del club (escudo.png, para la página) se busca ahí.
 //                       Por defecto, los de la carpeta actual.
@@ -45,17 +50,18 @@ import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { partidosDemo } from './demo.js';
+import { PAUSA_MS, actualizarFederacion } from './federacion.js';
 import { crearHistorial } from './historial.js';
 import { crearHtml } from './html.js';
 import { crearIcs } from './ics.js';
 import { prepararInstagram } from './instagram.js';
-import { buscarClubs, catalogoClubs, fechaCruda, partidosApi } from './isquad.js';
+import { buscarClubs, catalogoClubs, clubsFederacion, fechaCruda } from './isquad.js';
 import { aplicarManuales, configEdicion, leerManuales } from './manuales.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
-import { actualizarResultados, anadirResultados, clasificaciones } from './resultados.js';
+import { anadirResultados, clasificaciones } from './resultados.js';
 import { anadirSalidas, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
 import {
-  ahoraMadrid, anioTemporada, aviso, comoLista, esObjeto, fechaCorta, fechaPared, fechaValida, fmt, leerJson,
+  ahoraMadrid, anioTemporada, aviso, comoLista, esObjeto, esperar, fechaCorta, fechaPared, fechaValida, fmt, leerJson,
   minusculas, ordenarUnicos, paso, prefijoComun, slug, soloDia, txt,
 } from './util.js';
 import { crearXlsx } from './xlsx.js';
@@ -285,6 +291,17 @@ export function rangoTemporada(opciones, hoy) {
   return rango;
 }
 
+// Desde el 06/11/2026 la federación no deja descargar su agenda: los partidos salen de las páginas de los grupos
+// de config.json, que son los de la temporada en curso. Otra temporada (--temporada, --desde, --hasta) no se
+// puede generar. hoy: Date de pared.
+function soloTemporadaEnCurso(rango, hoy) {
+  const actual = anioTemporada(hoy);
+  if (rango.anio === actual) return;
+  throw new Error(`La temporada ${rango.etiqueta} no se puede generar: la federación ya no deja descargar su agenda y los `
+    + `partidos salen de las páginas de los grupos de la temporada en curso (${nuevoRango(actual).etiqueta}). --temporada, `
+    + '--desde y --hasta solo valen dentro de ella.');
+}
+
 // --- Clubs -------------------------------------------------------------------------------------
 
 export function mostrarCatalogo(lista, temporada) {
@@ -294,25 +311,42 @@ export function mostrarCatalogo(lista, temporada) {
     const n = c.partidos > 0 ? String(c.partidos) : '-';
     console.log(`  ${String(i + 1).padStart(3)}  ${c.nombre.padEnd(34)} ${n.padStart(8)}  ${c.id.padEnd(10)} ${c.oficial}`);
   });
-  console.log(`  (Partidos = partidos publicados en la temporada ${temporada})`);
+  console.log(`  (Partidos = partidos de la temporada ${temporada} en los grupos de config.json en los que juega su club)`);
   console.log('');
 }
 
-export async function resolverClubs(textoClub, crudosTemporada, crudosTodos, cfg) {
-  // Devuelve los clubs ({ id, nombre[, corto] }) a usar: los de --club o, si no, los de config.json.
+// Los clubs de config.json: [{ id, nombre[, corto] }] (sin ID no cuentan).
+function clubsConfig(cfg) {
+  return comoLista(cfg?.clubs ?? [])
+    .filter((c) => c?.id)
+    .map((c) => ({
+      id: txt(c.id), nombre: c.nombre ? txt(c.nombre) : `Club ${c.id}`,
+      ...(txt(c.nombre_corto).trim() ? { corto: txt(c.nombre_corto).trim() } : {}),
+    }));
+}
+
+// Los trozos de --club (separados por comas o puntos y coma) y si uno es un ID de club de iSquad.
+function trozosClub(textoClub) { return txt(textoClub).split(/[,;]/).map((t) => t.trim()).filter((t) => t); }
+function esIdClub(trozo) { return /^\d{5,}$/.test(trozo); }
+
+function mismosClubs(a, b) { return a.size === b.size && [...a].every((id) => b.has(id)); }
+
+// Devuelve los clubs ({ id, nombre[, corto] }) a usar: los de --club o, si no, los de config.json. En --club, un ID
+// vale tal cual y un nombre se busca entre los clubs de «filas» (las de los grupos de config.json: la federación ya
+// no deja descargar su agenda, que tenía todos los de Galicia). Un ID que sale en filas lleva el nombre de sus equipos.
+export function resolverClubs(textoClub, filas, cfg) {
   if (textoClub) {
-    const catalogo = await catalogoClubs(crudosTemporada, crudosTodos);
+    const catalogo = catalogoClubs(filas, filas);
     const elegidos = [];
-    for (const trozo of textoClub.split(/[,;]/)) {
-      const t = trozo.trim();
-      if (!t) continue;
-      if (/^\d{5,}$/.test(t)) {
+    for (const t of trozosClub(textoClub)) {
+      if (esIdClub(t)) {
         elegidos.push(catalogo.find((c) => c.id === t) ?? { id: t, nombre: `Club ${t}` });
         continue;
       }
       const encontrados = buscarClubs(catalogo, t);
       if (encontrados.length === 0) {
-        throw new Error(`Ningún club ni equipo coincide con «${t}». Usa --listar-clubs para ver los disponibles.`);
+        throw new Error(`Ningún club ni equipo de los grupos de config.json coincide con «${t}». Usa --listar-clubs para ver `
+          + 'los clubs que salen en ellos, o indica el ID del club.');
       }
       if (encontrados.length > 1) {
         const nombres = encontrados.map((c) => `    ${c.id}  ${c.nombre}`).join('\n');
@@ -324,22 +358,18 @@ export async function resolverClubs(textoClub, crudosTemporada, crudosTodos, cfg
     return ordenarUnicos(elegidos, (c) => c.id);
   }
 
-  const lista = comoLista(cfg?.clubs ?? [])
-    .filter((c) => c?.id)
-    .map((c) => ({
-      id: txt(c.id), nombre: c.nombre ? txt(c.nombre) : `Club ${c.id}`,
-      ...(txt(c.nombre_corto).trim() ? { corto: txt(c.nombre_corto).trim() } : {}),
-    }));
+  const lista = clubsConfig(cfg);
   if (lista.length) return lista;
-  throw new Error('No hay ningún club configurado en config.json. Indica el club con --club.');
+  throw new Error('No hay ningún club configurado en config.json. Indica el club con --club y su ID.');
 }
 
 // --- Temporada anterior ------------------------------------------------------------------------
 //
 // De la temporada anterior solo hacen falta los partidos del club: para que cada equipo tenga su
 // calendario aunque todavía no juegue y para no quedarse vacío en agosto. Ya no cambian, así que se
-// descargan una sola vez y se guardan en temporada-anterior.json; cada hora solo se pide la temporada
-// en curso (antes, la anterior era el 90 % de lo que se bajaba).
+// guardan una sola vez en temporada-anterior.json, al cambiar de temporada: son los que tenía
+// resultados.json (la federación ya no deja descargar su agenda, y las páginas de los grupos de
+// config.json son las de la temporada en curso).
 
 const CAMPOS_GUARDADOS = ['id_club_local', 'id_club_visitante', 'nombre_local', 'nombre_visitante', 'nombre_competicion',
   'campo', 'categoria', 'fecha', 'fecha_confirmada', 'fecha_calendario'];
@@ -354,11 +384,14 @@ function filaGuardada(r) {
   return fila;
 }
 
-// Filas crudas de los partidos del club en la temporada anterior a la de "rango".
-// guardar: false en las consultas de otra temporada (--temporada/--desde/--hasta), para no pisar la copia
-// que usa la actualización de cada hora. descargar: se puede cambiar en las pruebas.
-export async function temporadaAnterior({ rango, ids, ruta, guardar, descargar = partidosApi }) {
+// Filas crudas de los partidos del club en la temporada anterior a la de "rango", sin red: las de
+// temporada-anterior.json si es de esa temporada y de estos clubs; si no, las de «anterior» (las que tenía
+// resultados.json cuando aún era de esa temporada, ver actualizarFederacion), que se guardan en
+// temporada-anterior.json si guardar (false con otro club en --club: la copia es la del de config.json).
+// Si no hay ninguna, aviso y se sigue sin ella.
+export function temporadaAnterior({ rango, ids, ruta, guardar, anterior = [] }) {
   const anio = rango.anio - 1;
+  const etiqueta = nuevoRango(anio).etiqueta;
   const clubs = [...ids].sort().join(',');
   if (existsSync(ruta)) {
     try {
@@ -367,28 +400,25 @@ export async function temporadaAnterior({ rango, ids, ruta, guardar, descargar =
         return copia.partidos;
       }
     } catch (e) {
-      aviso(`${basename(ruta)} no se puede leer (${e.message}); se vuelve a descargar.`);
+      aviso(`${basename(ruta)} no se puede leer (${e.message}); se ignora.`);
     }
   }
 
-  paso(`Descargando una sola vez la temporada ${nuevoRango(anio).etiqueta} (se guarda en ${basename(ruta)})...`);
-  let crudos;
-  try {
-    crudos = await descargar(fechaPared(anio, 8, 1));
-  } catch (e) {
-    aviso(`No se pudo descargar la temporada anterior (${e.message}); se sigue sin ella.`);
-    return [];
-  }
   const ini = fmt(fechaPared(anio, 8, 1), 'yyyy-MM-dd');
   const fin = fmt(fechaPared(anio + 1, 7, 31), 'yyyy-MM-dd');
-  const partidos = crudos
+  const partidos = anterior
     .filter((r) => {
       const f = fechaCruda(r);
       return f && f >= ini && f <= fin && (ids.has(txt(r.id_club_local)) || ids.has(txt(r.id_club_visitante)));
     })
     .map(filaGuardada);
+  if (!partidos.length) {
+    aviso(`No hay partidos guardados del club de la temporada ${etiqueta} (${basename(ruta)}): se sigue sin ella.`);
+    return [];
+  }
   if (guardar) {
-    const copia = { temporada: nuevoRango(anio).etiqueta, anio, clubs: [...ids].sort(), partidos };
+    paso(`Se guardan los partidos de la temporada ${etiqueta} en ${basename(ruta)}.`);
+    const copia = { temporada: etiqueta, anio, clubs: [...ids].sort(), partidos };
     writeFileSync(ruta, `${JSON.stringify(copia, null, 1)}\n`, 'utf8');
   }
   return partidos;
@@ -408,49 +438,90 @@ function lineaProximo(p, salidas) {
   return `  ${fechaCorta(p.fecha).padEnd(10)} ${hora.padEnd(6)} ${sal.padEnd(13)} ${p.categoria.padEnd(12)} ${p.local} - ${p.visitante}`;
 }
 
+// ¿Es de la temporada de "rango" esta fila (como las de la agenda)?
+function deLaTemporada(fila, rango) {
+  const f = fechaCruda(fila);
+  return Boolean(f) && f >= fmt(fechaPared(rango.anio, 8, 1), 'yyyy-MM-dd') && f <= fmt(fechaPared(rango.anio + 1, 7, 31), 'yyyy-MM-dd');
+}
+
 export async function principal(args, ahora = new Date()) {
   const opciones = leerOpciones(args);
   // "pared" (hora de Galicia) para los textos y la temporada; "utc" para las marcas del .ics.
   const generado = { pared: ahoraMadrid(ahora), utc: ahora };
   let rango = rangoTemporada(opciones, generado.pared);
+  soloTemporadaEnCurso(rango, generado.pared);
   const rutas = rutasConfig(opciones.config);
   const cfg = leerConfig(rutas.config);
 
   console.log('');
   console.log(`  CALENDARIO DE VOLEIBOL · temporada ${rango.etiqueta}`);
-  paso('Descargando partidos de volei.gal...');
-  // Solo la temporada en curso; la anterior sale de temporada-anterior.json (más abajo).
-  const actuales = await partidosApi(fechaPared(rango.anio, 8, 1));
-  // Al empezar la temporada puede no haber nada publicado todavía; ya avanzada, 0 partidos en toda
-  // Galicia es un fallo de la federación y no se toca nada.
-  if (actuales.length === 0 && generado.pared >= fechaPared(rango.anio, 10, 1)) {
-    throw new Error('La federación no ha devuelto ningún partido de esta temporada. Puede ser un fallo temporal de su web: inténtalo más tarde. No se ha cambiado ningún archivo.');
-  }
-  const iniTxt = fmt(fechaPared(rango.anio, 8, 1), 'yyyy-MM-dd');
-  const finTxt = fmt(fechaPared(rango.anio + 1, 7, 31), 'yyyy-MM-dd');
-  const deTemporada = actuales.filter((r) => {
-    const f = fechaCruda(r);
-    return f && f >= iniTxt && f <= finTxt;
+  paso('Descargando los partidos de las páginas de los grupos de la federación...');
+  // Los partidos salen de las páginas de los grupos de config.json, y de ellas se guardan solo los del club que se
+  // pida (resultados.json es la copia de los del club de config.json). Un nombre de --club (y --listar-clubs) se busca
+  // entre los clubs que juegan con el de config.json, así que antes hacen falta sus partidos: esa descarga no guarda
+  // nada (las copias las pone al día la ejecución normal; así tampoco se pierde un cambio de temporada). Si en ella
+  // falla la federación, no se le pide nada más en esta ejecución.
+  const clubsCfg = clubsConfig(cfg);
+  const idsCfg = new Set(clubsCfg.map((c) => c.id));
+  const actualizar = (idsClubs, guardar) => actualizarFederacion({
+    cfg, ids: idsClubs, ruta: rutas.resultados, anio: rango.anio, ahora: generado.pared, guardar,
   });
-  paso(`${deTemporada.length} partidos publicados en Galicia en la temporada ${rango.etiqueta}.`);
 
   if (opciones.listarClubs) {
-    mostrarCatalogo(await catalogoClubs(deTemporada, deTemporada), rango.etiqueta);
+    let filasCfg = [];
+    let fallo = null;
+    if (idsCfg.size) ({ filas: filasCfg, fallo } = await actualizar(idsCfg, false));
+    let oficiales = new Map();
+    if (fallo) {
+      aviso('No se descarga el listado oficial de clubs: la federación ha fallado en esta ejecución.');
+    } else {
+      if (idsCfg.size) await esperar(PAUSA_MS);   // al menos 1,5 s entre dos peticiones a la federación
+      oficiales = await clubsFederacion();
+    }
+    mostrarCatalogo(catalogoClubs(filasCfg.filter((r) => deLaTemporada(r, rango)), filasCfg, oficiales), rango.etiqueta);
+    aviso('Solo salen los partidos y los equipos de los grupos de config.json (federacion.grupos) en los que juega su club: '
+      + 'la federación ya no deja descargar su agenda. Los demás clubs, sin partidos, son los del listado oficial.');
     return;
   }
 
-  const clubs = await resolverClubs(opciones.club, deTemporada, deTemporada, cfg);
+  const porNombre = trozosClub(opciones.club).some((t) => !esIdClub(t));
+  let datos = null;
+  if (porNombre) {
+    if (!idsCfg.size) {
+      throw new Error('No hay ningún club configurado en config.json: --club tiene que ser el ID del club (un número, p. ej. '
+        + '206572580). Por el nombre solo se encuentran los clubs que juegan con el de config.json en sus grupos.');
+    }
+    datos = await actualizar(idsCfg, false);
+  }
+  let clubs = resolverClubs(opciones.club, datos?.filas ?? [], cfg);
   if (!clubs.length) throw new Error('No se ha elegido ningún club.');
   const ids = new Set(clubs.map((c) => txt(c.id)));
+  // resultados.json y temporada-anterior.json son del club de config.json: con otro (--club), no se tocan.
+  const guardar = mismosClubs(ids, idsCfg) || !idsCfg.size;
+  if (!datos || !mismosClubs(ids, idsCfg)) {
+    if (datos?.fallo) {
+      throw new Error(`No se puede generar el calendario de ${clubs.map((c) => c.nombre).join(' + ')}: la federación ha fallado en `
+        + `esta ejecución (${datos.fallo.motivo}) y de otro club no hay copia. Vuelve a intentarlo más tarde. No se ha cambiado ningún archivo.`);
+    }
+    if (datos) await esperar(PAUSA_MS);   // al menos 1,5 s entre dos peticiones a la federación
+    datos = await actualizar(ids, guardar);
+    // Con --club por ID, el nombre de cada club, el de sus equipos.
+    if (opciones.club && !porNombre) clubs = resolverClubs(opciones.club, datos.filas, cfg);
+  }
+  const { cache, filas, lugares, anterior } = datos;
+  const grupos = Object.keys(cache.grupos).length;
+  paso(`${filas.filter((r) => deLaTemporada(r, rango)).length} partidos del club en ${grupos} ${grupos === 1 ? 'grupo' : 'grupos'} `
+    + `de la federación (temporada ${rango.etiqueta}).`);
   const nombreClub = clubs.map((c) => c.nombre).join(' + ');
   // «DOMPA INFANTIL» en la página: el nombre corto de config.json o, si no hay, el del club. Con varios clubs
   // no hay uno que valga para todos: los equipos salen como los publica la federación.
   const nombreCorto = clubs.length === 1 ? txt(clubs[0].corto || clubs[0].nombre) : '';
 
-  const anteriorCrudos = await temporadaAnterior({
-    rango, ids, ruta: rutas.temporadaAnterior, guardar: !rango.explicito,
-  });
-  const crudos = [...deTemporada, ...anteriorCrudos];
+  // Antes de cualquier error: si resultados.json acaba de pasar a la temporada nueva, la anterior se guarda ya.
+  const anteriorCrudos = temporadaAnterior({ rango, ids, ruta: rutas.temporadaAnterior, guardar, anterior });
+  // De las páginas, solo los de la temporada: en agosto, los grupos de config.json aún pueden ser los de la anterior,
+  // cuyos partidos ya vienen de temporada-anterior.json (si la federación cambia un nombre, saldrían dos veces).
+  const crudos = [...filas.filter((r) => deLaTemporada(r, rango)), ...anteriorCrudos];
 
   const idsConPartidos = new Set(crudos.flatMap((r) => [txt(r.id_club_local), txt(r.id_club_visitante)]));
   for (const c of clubs) {
@@ -463,6 +534,13 @@ export async function principal(args, ahora = new Date()) {
   const urlPublicada = cfg?.calendario_publicado ? txt(cfg.calendario_publicado) : '';
 
   const todos = convertirPartidos(crudos, ids);
+  // Desde octubre la temporada ya está en marcha: un club sin ningún partido en ella es un fallo (los grupos de
+  // config.json, la federación...) y no se publica nada, tampoco la temporada anterior en su lugar.
+  if (!todos.some((p) => p.temporada === rango.anio) && generado.pared >= fechaPared(rango.anio, 10, 1)) {
+    throw new Error(`${nombreClub} no tiene ningún partido de la temporada ${rango.etiqueta} en los grupos de config.json `
+      + '(federacion.grupos). Revisa que estén los de esta temporada: hay que apuntarlos al empezar cada una (ver README). '
+      + 'No se publica nada.');
+  }
   let partidos = todos.filter((p) => soloDia(p.fecha) >= rango.inicio && soloDia(p.fecha) <= rango.fin);
   let anteriores = todos.filter((p) => p.temporada === rango.anio - 1);
   if (!rango.explicito && partidos.length === 0 && anteriores.length > 0) {
@@ -479,8 +557,8 @@ export async function principal(args, ahora = new Date()) {
   let pabellones = null;
   if (salidas && partidos.length) {
     paso(`Calculando horas de salida desde ${salidas.origen}...`);
-    pabellones = await resolverPabellones(partidos, salidas, fechaPared(rango.anio - 1, 8, 1), rutas.pabellones,
-      generado.pared);
+    // Los pabellones nuevos, con el sitio que dan las páginas de los grupos (lugares).
+    pabellones = await resolverPabellones(partidos, salidas, rutas.pabellones, generado.pared, { lugares });
     anadirSalidas(partidos, pabellones, salidas);
     // Las horas puestas a mano desde la web (salidas-manuales.json, ver manuales.js) mandan sobre las calculadas.
     const manuales = aplicarManuales(partidos, leerManuales(rutas.manuales));
@@ -498,12 +576,10 @@ export async function principal(args, ahora = new Date()) {
     }
   }
 
-  // Resultados y clasificaciones: solo de la temporada en curso (no con --temporada, --desde o --hasta,
-  // ni en agosto mientras se enseña la anterior).
+  // Resultados y clasificaciones: de las mismas páginas, ya en resultados.json (cache), sin más descargas; no en agosto
+  // mientras se enseña la temporada anterior.
   let tablas = [];
-  if (!rango.explicito && rango.anio === anioTemporada(generado.pared) && partidos.length) {
-    paso('Buscando resultados y clasificaciones...');
-    const cache = await actualizarResultados({ partidos, ids, ruta: rutas.resultados, anio: rango.anio, ahora: generado.pared });
+  if (rango.anio === cache.temporada && partidos.length) {
     anadirResultados(partidos, cache);
     tablas = clasificaciones(equipos, cache, ids, generado.pared);
   }

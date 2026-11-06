@@ -2,14 +2,18 @@
 # Este archivo va en el repositorio como: .github/workflows/calendario.yml
 # Versión en JavaScript (src/main.js, Node.js): sustituye a calendario-voley.ps1.
 #
+# Los partidos salen de las páginas públicas de los grupos del club en la web de resultados de la federación
+# (config.json › federacion.grupos): desde el 06/11/2026 la federación da 403 a los programas en su agenda.
+#
 # Lo lanza cada hora cron-job.org (llamando a workflow_dispatch; la programación de GitHub llegaba con mucho
 # retraso), el botón «Run workflow» y cada cambio que se sube.
 #
 # Va en macOS: el servidor de la federación (51.178.170.113) descarta en silencio las conexiones de parte de
 # las máquinas Linux de GitHub, que están en Azure (~40 % de las ejecuciones fallaban; el diagnóstico del
 # 28/09/2026 lo confirmó: esas máquinas llegan a otros servidores, incluso de iSquad, pero no a ese). Las macOS
-# salen por direcciones propias de GitHub y llegaban todas. Si alguna no llega, no se hace nada (sin error y
-# con un aviso) y lo vuelve a intentar la ejecución de la hora siguiente.
+# salen por direcciones propias de GitHub y llegaban todas (también a las páginas de los grupos, comprobado el
+# 06/11/2026). Si alguna no llega, no se hace nada (sin error y con un aviso) y lo vuelve a intentar la
+# ejecución de la hora siguiente.
 
 name: Calendario Dompavolei
 
@@ -33,7 +37,7 @@ concurrency:
 jobs:
   publicar:
     runs-on: macos-latest
-    timeout-minutes: 15           # normalmente 1-2 min
+    timeout-minutes: 15           # normalmente 1-2 min; las páginas de los grupos dejan de pedirse a los 5 min
     environment:
       name: github-pages
       url: ${{ steps.despliegue.outputs.page_url }}
@@ -43,11 +47,13 @@ jobs:
       - uses: actions/checkout@v7
 
       # ¿Llega esta máquina a la federación? (8 s). Si no, no se hace nada más: no es un fallo nuestro, así
-      # que la ejecución acaba bien, con un aviso; la de la hora siguiente irá en otra máquina.
+      # que la ejecución acaba bien, con un aviso; la de la hora siguiente irá en otra máquina. Se pide
+      # robots.txt (la web no lo tiene: una página 404 de 1 KB, en vez de los 874 KB de la portada) con el
+      # mismo User-Agent que el programa (src/isquad.js); solo cuenta si conecta.
       - name: ¿Llega a la federación?
         id: sonda
         run: |
-          t=$(curl -s -o /dev/null --connect-timeout 8 -m 20 -w '%{time_connect}' https://resultadosvoleibol.isquad.es/ || true)
+          t=$(curl -s -o /dev/null --connect-timeout 8 -m 20 -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendario-voley/1.0' -w '%{time_connect}' https://resultadosvoleibol.isquad.es/robots.txt || true)
           if [ -n "$t" ] && [ "$t" != "0.000000" ]; then
             echo "Conecta con la federación en $t s."
             echo "llega=true" >> "$GITHUB_OUTPUT"
@@ -70,7 +76,8 @@ jobs:
         if: steps.sonda.outputs.llega == 'true'
         run: node src/main.js --salida web --nombre-base calendario --historial historial/partidos.txt
 
-      # Si la federación devolviera 0 partidos por un fallo, no se borra el calendario de los suscritos.
+      # Si la federación devolviera 0 partidos por un fallo, no se borra el calendario de los suscritos (el
+      # programa ya da error si, desde octubre, el club no tiene partidos; esto es por si acaso).
       - name: Comprobar que no se publica un calendario vacío
         if: steps.sonda.outputs.llega == 'true'
         run: |
@@ -108,8 +115,9 @@ jobs:
         if: steps.sonda.outputs.llega == 'true'
         uses: actions/deploy-pages@v5
 
-      # Guarda la lista de partidos (y los tiempos de viaje, la copia de la temporada anterior y los
-      # resultados) solo cuando cambian: deja un historial de cambios y las cachés para la próxima vez.
+      # Guarda la lista de partidos (y los tiempos de viaje, la copia de la temporada anterior y
+      # resultados.json, la copia de los grupos de la federación: si una hora falla la federación, se usa
+      # durante 48 horas) solo cuando cambian: deja un historial de cambios y las cachés para la próxima vez.
       - name: Guardar historial de cambios
         if: steps.sonda.outputs.llega == 'true'
         continue-on-error: true

@@ -1,7 +1,7 @@
 # Calendario de partidos de Dompavolei
 
-Partidos de todos los equipos de **DOMPAVOLEI** (voleibol, Galicia), sacados de la
-[agenda de la Federación Galega de Voleibol](https://volei.gal/competiciones/) y
+Partidos de todos los equipos de **DOMPAVOLEI** (voleibol, Galicia), sacados de las páginas de sus grupos
+en la web de resultados de la [Federación Galega de Voleibol](https://volei.gal/competiciones/) y
 actualizados automáticamente cada hora (de 8:00 a 23:00).
 
 - **Página con los partidos:** https://albovy.github.io/calendario-dompavolei/
@@ -11,20 +11,72 @@ actualizados automáticamente cada hora (de 8:00 a 23:00).
 
 ## Cómo funciona
 
-`src/main.js` (Node.js 20 o posterior, sin dependencias) descarga los partidos publicados en
-la federación, se queda con los del club indicado en `config.json` (ID 206572580) y genera la
+`src/main.js` (Node.js 20 o posterior, sin dependencias) lee los partidos de los grupos de la
+federación apuntados en `config.json`, se queda con los del club indicado allí (ID 206572580) y genera la
 página (plantilla `src/plantilla.html`, con el escudo del club, `escudo.png`, dentro), el `.ics`, un Excel y un `.ics` por equipo. La tarea `.github/workflows/calendario.yml`
 lo ejecuta y publica el resultado en GitHub Pages. La carpeta `historial` guarda la lista de partidos cada vez que la federación cambia algo (su historial de cambios muestra qué cambió y cuándo).
 
-Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje en bus: los km por carretera a 100 km/h, al alza; la salida, siempre a la hora en punto o a la media) o, en casa, a la hora de calentamiento. La hora del partido nunca se mueve: fuera, el calentamiento empieza al llegar (salida + viaje), así que lo que se gana al redondear la salida es calentamiento (y lo que se pierde si la salida es más tarde). Los partidos que aún no tienen hora ya salen «en casa» si se juegan en el pabellón del club. Los tiempos de viaje se guardan en `pabellones.json` y se pueden fijar a mano en `config.json`. Cada hora solo se descarga la temporada en curso; los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez en `temporada-anterior.json`.
+Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje en bus: los km por carretera a 100 km/h, al alza; la salida, siempre a la hora en punto o a la media) o, en casa, a la hora de calentamiento. La hora del partido nunca se mueve: fuera, el calentamiento empieza al llegar (salida + viaje), así que lo que se gana al redondear la salida es calentamiento (y lo que se pierde si la salida es más tarde). Los partidos que aún no tienen hora ya salen «en casa» si se juegan en el pabellón del club. Los tiempos de viaje se guardan en `pabellones.json` (el sitio de un pabellón nuevo sale de la página de su grupo; lo ya guardado no se toca y se puede corregir a mano) y se pueden fijar a mano en `config.json`. Los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez, al cambiar de temporada, en `temporada-anterior.json`.
 
 En los partidos ya jugados salen el **resultado** y los sets, y la pestaña **Clasificación** enseña la tabla
-del grupo de cada equipo. Salen de la web de resultados de la federación (la misma que enseña volei.gal):
-solo se consultan los grupos del club y solo cuando hace falta (un partido que acaba de jugarse, un repaso
-diario), y se guardan en `resultados.json`. Nunca se descargan actas ni plantillas.
+del grupo de cada equipo. Salen de las mismas páginas de los grupos, sin más descargas; la clasificación
+solo se pide cuando cambian los partidos del grupo (después de todas las páginas: si falla, se enseña la
+guardada y se vuelve a pedir en la próxima ejecución). Todo se guarda en `resultados.json`. Nunca se
+descargan actas ni plantillas.
 
 En los partidos por jugar, los botones **Copiar** y **WhatsApp** preparan un mensaje para el grupo de las
 familias: día, salida y lugar, pabellón con mapa, calentamiento, partidos y vuelta aproximada.
+
+### De dónde salen los partidos: los grupos de la federación
+
+Desde el 06/11/2026 la federación no deja a los programas descargar su agenda (la «Agenda calendario» de
+volei.gal, que tenía todos los partidos de Galicia: da 403). Los partidos salen de la página pública de cada
+grupo en su web de resultados, la misma que enseña volei.gal: equipos y club, día y hora, pabellón con su
+dirección y su mapa, estado, resultado y sets. Cada hora se leen las de los grupos sin terminar (los
+terminados no se vuelven a pedir, salvo el repaso de las fases que se explica abajo), con al menos 1,5 s entre
+una y otra y con el User-Agent de siempre del programa (`calendario-voley/1.0`); nunca actas, previos,
+plantillas ni nada bajo `/json/`, y sin seguir redirecciones. Si la federación falla o dice que no, se sigue con lo guardado en `resultados.json`
+durante 48 horas, con un aviso; después, la publicación da error y no cambia nada hasta que vuelva.
+`resultados.json` solo se reescribe (y el workflow solo lo sube) cuando cambia algo de la federación; si
+solo cambia la hora de consulta, como mucho cada 12 horas, así que esas 48 horas pueden quedarse en 36.
+
+**Al empezar cada temporada hay que apuntar los grupos** de los equipos del club en `config.json`:
+
+```json
+"federacion": { "grupos": [{ "equipo": "DOMPAVOLEI SM1", "grupo": "3857", "competicion": "1516" }] }
+```
+
+`grupo` y `competicion` son el `id=` y el `id_competicion=` de la dirección de la página del grupo
+(`.../competicion_completa.php?...&id=3857&...&id_competicion=1516`, la de los resultados de su
+competición); `equipo` solo sale en los mensajes. Se pueden apuntar antes de que la federación publique su
+calendario: mientras un grupo no tenga partidos, sale un aviso. Desde octubre, si el club no tiene ningún
+partido en los grupos apuntados, la publicación da error (no se publica la temporada anterior en su lugar).
+
+Las fases siguientes de esas competiciones (la segunda fase, por ejemplo) se encuentran solas: la página de un
+grupo lista los demás con sus equipos, y los grupos nuevos del club se piden en la misma ejecución. Como la
+federación los reparte cuando ya ha acabado la fase anterior, cuando el club ha terminado todos sus grupos de
+una competición se vuelve a mirar la página del último una vez al día, durante 60 días desde su último partido.
+
+Para quitar una competición (o un grupo apuntado por error), se quitan de `config.json` todos sus grupos: en la
+ejecución siguiente se olvidan sus partidos y los de las fases que encontró el programa. Mientras quede en
+`config.json` algún grupo de esa competición, sus otros grupos con el club se siguen leyendo, como fases suyas.
+Si la federación quita una de esas fases, al cabo de 48 horas la publicación da error y dice cuál es: se borra
+a mano su entrada de `grupos` en `resultados.json`.
+
+Lo que se pierde respecto a la agenda:
+
+- **El aviso de horario provisional.** La página no dice si una hora está confirmada: con hora (o ya jugado)
+  se da por confirmada, y sin hora sale «Fecha y hora por confirmar». Un partido aplazado o suspendido sale
+  también así, en su día, hasta que la federación le pone la fecha nueva; si le quita la fecha, no sale (con
+  un aviso) hasta que la tenga, como con la agenda.
+- **`--club`, `--listar-clubs` y `--temporada` se limitan a lo apuntado.** Por el nombre, `--club` solo
+  encuentra los clubs que juegan con el de `config.json`, y de cualquier club solo salen sus partidos en los
+  grupos de `config.json`; `--listar-clubs` enseña esos clubs (y el listado oficial, sin partidos). `--club`
+  por el nombre y `--listar-clubs` no guardan `resultados.json` ni, si la federación falla, le vuelven a pedir
+  nada en esa ejecución.
+  `--temporada`, `--desde` y `--hasta` solo valen dentro de la temporada en curso.
+- **Los equipos o las competiciones nuevas** (un equipo nuevo del club, una copa) no aparecen solos: hay que
+  apuntar su grupo en `config.json`.
 
 ### Instalar como app
 
@@ -135,7 +187,7 @@ Para hacer cambios (desde la carpeta del repositorio, con [Node.js](https://node
 
 - **Probar:** `npm test` (no necesita conexión a internet).
 - **Generar en local:** `node src/main.js` (deja los archivos en la carpeta `calendario`). Las
-  opciones, como `--temporada 2025-26` o `--club`, están explicadas al principio de `src/main.js`.
+  opciones, como `--desde 2026-11-01` o `--club`, están explicadas al principio de `src/main.js`.
 
 `calendario-voley.ps1` es la versión anterior, en PowerShell: ya no se usa y se guarda solo como
-referencia. `node test/paridad/comparar.mjs` compara lo que generan las dos versiones (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo). Desde que el título y el detalle de los eventos del `.ics` se acortaron (septiembre de 2026), esa comparación marca diferencias en los `.ics`. De la página solo compara los datos (sin lo que el `.ps1` no tiene: nombre corto, escudo, resultados, clasificaciones y mensaje de WhatsApp): la plantilla es otra desde septiembre de 2026. El Excel debe salir igual, salvo el municipio de los partidos que aún no tienen hora: desde que también se sabe si esos son en casa (septiembre de 2026), la versión en JavaScript busca sus pabellones (y los guarda en `pabellones.json`) y el .ps1 no. Y desde octubre de 2026 el calentamiento de los partidos de fuera empieza al llegar (salida + viaje) y se pueden poner horas a mano: el calentamiento (en la página y en el Excel) ya no coincide con el del .ps1, que es siempre 1 h antes del partido, y la comparación de la página no lo mira.
+referencia. `node test/paridad/comparar.mjs` compara lo que generan las dos versiones (necesita PowerShell y descarga de la federación; las opciones, como `--temporada 2025-26`, están explicadas al principio del archivo; desde el 06/11/2026 no se puede usar: el .ps1 descarga la agenda, que da 403). Desde que el título y el detalle de los eventos del `.ics` se acortaron (septiembre de 2026), esa comparación marca diferencias en los `.ics`. De la página solo compara los datos (sin lo que el `.ps1` no tiene: nombre corto, escudo, resultados, clasificaciones y mensaje de WhatsApp): la plantilla es otra desde septiembre de 2026. El Excel debe salir igual, salvo el municipio de los partidos que aún no tienen hora: desde que también se sabe si esos son en casa (septiembre de 2026), la versión en JavaScript busca sus pabellones (y los guarda en `pabellones.json`) y el .ps1 no. Y desde octubre de 2026 el calentamiento de los partidos de fuera empieza al llegar (salida + viaje) y se pueden poner horas a mano: el calentamiento (en la página y en el Excel) ya no coincide con el del .ps1, que es siempre 1 h antes del partido, y la comparación de la página no lo mira.

@@ -3,20 +3,16 @@
 //
 // Con "salidas" en config.json, cada partido con hora lleva también la hora de salida en bus desde el
 // pabellón del club: salida = partido - calentamiento - viaje en bus. En casa, el evento empieza a la
-// hora de calentamiento. El pabellón de cada partido se localiza con las coordenadas que publica la
-// federación y el tiempo por carretera se calcula con OSRM (OpenStreetMap). Los resultados se guardan
-// en pabellones.json para no repetir consultas.
+// hora de calentamiento. El pabellón de cada partido se localiza con las coordenadas que trae la página de
+// su grupo en la federación (lugares, ver federacion.js) y el tiempo por carretera se calcula con OSRM
+// (OpenStreetMap). Los resultados se guardan en pabellones.json para no repetir consultas.
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { AMBITO, peticion } from './isquad.js';
 import { conHora } from './partidos.js';
 import {
   aEntero, ahoraMadrid, aviso, clave, claveSinCaja, comoLista, compararTexto, esObjeto, esperar, fmt, formatDuracion,
   hora, leerJson, mayusculas, ordenarUnicos, repararTexto, sumarMinutos, txt, unaLinea,
 } from './util.js';
-
-const PALABRAS_GENERICAS = ['PISTA', 'PABELLON', 'PAVILLON', 'POLIDEPORTIVO', 'MUNICIPAL', 'CAMPO', 'CAMPO1', 'CENTRAL', 'ANEXO',
-  'PM', 'DE', 'DO', 'DA', 'DOS', 'DAS', 'DEL', 'LOS', 'LAS', 'LA', 'EL', 'O', 'A', 'OS', 'AS', 'E', 'Y'];
 
 const OSRM = 'https://router.project-osrm.org';
 
@@ -124,77 +120,37 @@ export function guardarCachePabellones(cache, ruta) {
   writeFileSync(ruta, JSON.stringify(ordenado, null, 4), 'utf8');
 }
 
-// --- Pabellones de la federación ----------------------------------------------------------------
-
-export async function camposFederacion(desde) {
-  // Lista de pabellones de la federación (id, nombre, municipio).
-  const campos = [];
-  try {
-    const json = await peticion('json/pabellones_consultas.php', {
-      accion: 'obtener_pabellones', id_ambito: AMBITO, fecha_actual: fmt(desde, 'yyyy-MM-dd'),
-    });
-    for (const c of comoLista(leerJson(json)?.data)) {
-      if (!c || !c.id_campo) continue;
-      const nombre = unaLinea(c.nombre);
-      campos.push({ id: txt(c.id_campo), nombre, municipio: unaLinea(c.municipio), clave: clave(nombre) });
-    }
-  } catch {
-    aviso('No se pudo descargar la lista de pabellones de la federación; algunas horas de salida quedarán sin calcular.');
-  }
-  return campos;
-}
-
-// Palabras que distinguen un pabellón (sin "PISTA", "PABELLÓN", números...).
-function significativas(claveNombre) {
-  return claveNombre.split(' ').filter((w) => w && !/^\d+$/.test(w) && !PALABRAS_GENERICAS.includes(w));
-}
-
-export function buscarCampos(nombre, campos) {
-  // Pabellones de la federación que corresponden al nombre que aparece en el partido, del más probable al menos.
-  const buscada = clave(nombre);
-  if (!buscada) return [];
-  const exactos = campos.filter((c) => c.clave === buscada);
-  if (exactos.length) return exactos;
-  const prefijos = campos
-    .filter((c) => buscada.startsWith(`${c.clave} `) || c.clave.startsWith(`${buscada} `))
-    .sort((a, b) => b.clave.length - a.clave.length);
-  if (prefijos.length) return prefijos;
-  // Por palabras significativas: comparten al menos el 60 % de las palabras.
-  const mias = significativas(buscada);
-  if (!mias.length) return [];
-  const puntuados = [];
-  for (const c of campos) {
-    const suyas = significativas(c.clave);
-    if (!suyas.length) continue;
-    const comunes = mias.filter((w) => suyas.includes(w)).length;
-    const p = comunes / Math.max(mias.length, suyas.length);
-    if (p >= 0.6) puntuados.push({ campo: c, p });
-  }
-  return puntuados.sort((a, b) => b.p - a.p).map((x) => x.campo);
-}
+// --- Dirección de los pabellones ---------------------------------------------------------------
+//
+// Desde el 06/11/2026 la federación no deja leer su lista de pabellones (json/pabellones_consultas.php da 403): el
+// sitio de cada uno sale de la página de su grupo (mostrarLugar), con la dirección escrita a su manera.
 
 export function direccionCampo(direccion) {
-  // iSquad guarda algunas direcciones con las tildes mal codificadas y todas acaban en ", ESPAÑA".
-  return mayusculas(repararTexto(unaLinea(direccion))).replace(/,\s*ESPA(Ñ|N)A\s*$/i, '').trim();
+  // iSquad guarda algunas direcciones con las tildes mal codificadas y todas acaban en ", ESPAÑA"; las páginas de los
+  // grupos, además, ponen las letras con tilde en minúscula («RúA») y repiten el código postal («, ESPAñA, 32003»).
+  return mayusculas(repararTexto(unaLinea(direccion))).replace(/,\s*ESPA(Ñ|N)A(?:\s*,\s*\d{5})?\s*$/i, '').trim();
 }
 
-export async function coordenadasCampo(id) {
-  // Coordenadas y dirección de un pabellón según la ficha de la federación.
-  try {
-    const obj = leerJson(await peticion('json/pabellones_consultas.php', { accion: 'obtener_info_campo', id }));
-    let filas = obj?.data;
-    if (typeof filas === 'string') filas = leerJson(filas);
-    for (const f of comoLista(filas)) {
-      const lat = aNumero(f?.latitud, null);
-      const lon = aNumero(f?.longitud, null);
-      if (lat !== null && lon !== null && (lat !== 0 || lon !== 0)) {
-        return { lat, lon, direccion: direccionCampo(f.direccion) };
-      }
-    }
-  } catch {
-    // Sin ficha: el pabellón queda sin coordenadas.
-  }
-  return null;
+// El municipio de una dirección ya limpia: lo que sigue al código postal, hasta la coma («..., 32002 OURENSE» ->
+// «OURENSE»). Si no hay nada detrás del código (la federación también las da con el código al final), el que lleve
+// al final el nombre del pabellón, entre paréntesis («IES MONTENEME (CARBALLO)»; no una pista ni un número); si no,
+// ''. A veces sale la parroquia (INSUELA por PALMEIRA): se puede corregir a mano en pabellones.json, donde lo
+// guardado ya no se vuelve a tocar.
+export function municipioDe(direccion, pabellon = '') {
+  const despues = /(?:^|[\s,])\d{5}\s+([^,]+)/.exec(txt(direccion))?.[1].trim();
+  if (despues) return despues;
+  const entre = /\(([^()]+)\)\s*$/.exec(txt(pabellon))?.[1].trim() ?? '';
+  return /\d|\bPISTA\b/i.test(entre) ? '' : entre;
+}
+
+// La entrada de pabellones.json (la del pabellón «nombre») con la dirección de la página, en el orden de siempre (lo
+// que falte, como null, igual que en el .ps1: JSON.stringify quitaría la propiedad). El municipio, si no lo tenía, de
+// la dirección.
+function conDireccion(e, direccionPagina, nombre) {
+  const direccion = direccionCampo(direccionPagina);
+  const nueva = { id_campo: txt(e.id_campo), municipio: txt(e.municipio) || municipioDe(direccion, nombre), direccion };
+  for (const campo of ['lat', 'lon', 'km', 'minutos_coche', 'fuente', 'origen', 'fecha']) nueva[campo] = e[campo] ?? null;
+  return nueva;
 }
 
 export async function rutaCoche(lat1, lon1, lat2, lon2) {
@@ -218,48 +174,51 @@ export async function rutaCoche(lat1, lon1, lat2, lon2) {
   return { km: redondear(km, 1), minutos: Math.ceil(km / 70 * 60), fuente: 'estimado' };
 }
 
-// hoy: Date de pared con la fecha de hoy (la de la generación).
+// hoy: Date de pared con la fecha de hoy (la de la generación). lugares: Map pabellón -> { lat, lon, direccion }
+// de las páginas de los grupos (actualizarFederacion); la dirección, tal cual la escribe la federación.
 // Como en el .ps1 (un @{}), la caché no distingue mayúsculas: el pabellón "Lejos - Pista 1" usa la
 // entrada "LEJOS - PISTA 1" (claveSinCaja), y si se actualiza, conserva su nombre.
 // A diferencia del .ps1, también se buscan los pabellones de los partidos que aún no tienen hora: así
 // se sabe desde el principio si son en casa (los del pabellón del club salen «en casa» y con municipio).
-export async function resolverPabellones(partidos, cfgSalidas, desdeCampos, rutaCache, hoy = ahoraMadrid()) {
+export async function resolverPabellones(partidos, cfgSalidas, rutaCache, hoy = ahoraMadrid(), { lugares = new Map() } = {}) {
   // Coordenadas y tiempo en coche desde el origen para cada pabellón de los partidos (con caché).
   const cfg = cfgSalidas;
   const cache = leerCachePabellones(rutaCache);
   const origen = `${cfg.lat},${cfg.lon}`;
   const hoyTxt = fmt(hoy, 'yyyy-MM-dd');
-  let campos = null;
   let cambios = false;
   const nombres = ordenarUnicos(partidos.filter((p) => p.pabellon).map((p) => p.pabellon));
   for (const n of nombres) {
     const k = claveSinCaja(cache, n);
-    const e = cache[k];
-    if (e && e.origen === origen && (e.fuente === 'osrm' || e.fecha === hoyTxt)) continue;   // al día (o ya reintentado hoy)
+    let e = cache[k];
+    const sitio = lugares.get(claveSinCaja(lugares, n));
+    // Lo guardado manda sobre la página (sus coordenadas pueden ser otras, corregidas a mano); solo se le pone la
+    // dirección si no la tenía, sin red.
+    if (e && e.lat != null && !txt(e.direccion) && txt(sitio?.direccion)) {
+      e = conDireccion(e, sitio.direccion, n);
+      cache[k] = e;
+      cambios = true;
+    }
+    const conCoordenadas = Boolean(e && e.lat != null);
+    // Al día (o, sin coordenadas en ningún sitio, ya mirado hoy). Un «sin-datos» se calcula en cuanto la página trae
+    // dónde está.
+    if (e && e.origen === origen && (e.fuente === 'osrm' || e.fecha === hoyTxt) && (conCoordenadas || !sitio)) continue;
     let lat = null;
     let lon = null;
     let idCampo = '';
     let municipio = '';
     let direccion = '';
-    if (e && e.lat != null) {
+    if (conCoordenadas) {
       lat = Number(e.lat);
       lon = Number(e.lon);
       idCampo = txt(e.id_campo);
       municipio = txt(e.municipio);
       direccion = txt(e.direccion);
-    } else {
-      campos ??= await camposFederacion(desdeCampos);
-      for (const c of buscarCampos(n, campos)) {
-        const coord = await coordenadasCampo(c.id);
-        if (coord) {
-          lat = coord.lat;
-          lon = coord.lon;
-          direccion = coord.direccion;
-          idCampo = c.id;
-          municipio = c.municipio;
-          break;
-        }
-      }
+    } else if (sitio) {
+      // Pabellón nuevo: el sitio de la página. Sin número de pabellón de la federación (id_campo), que ya no se puede leer.
+      ({ lat, lon } = sitio);
+      direccion = direccionCampo(sitio.direccion);
+      municipio = municipioDe(direccion, n);
     }
     if (lat === null) {
       cache[k] = { fuente: 'sin-datos', origen, fecha: hoyTxt };
@@ -270,18 +229,6 @@ export async function resolverPabellones(partidos, cfgSalidas, desdeCampos, ruta
         km: ruta.km, minutos_coche: ruta.minutos, fuente: ruta.fuente, origen, fecha: hoyTxt,
       };
     }
-    cambios = true;
-  }
-  // Pabellones guardados antes de que se apuntara la dirección: se completa una sola vez.
-  for (const n of nombres) {
-    const k = claveSinCaja(cache, n);
-    const e = cache[k];
-    if (!e || e.lat == null || !e.id_campo || Object.hasOwn(e, 'direccion')) continue;
-    const info = await coordenadasCampo(txt(e.id_campo));
-    const nuevo = { id_campo: txt(e.id_campo), municipio: txt(e.municipio), direccion: info ? info.direccion : '' };
-    // Lo que falte sale como null, igual que en el .ps1 (JSON.stringify quitaría la propiedad).
-    for (const campo of ['lat', 'lon', 'km', 'minutos_coche', 'fuente', 'origen', 'fecha']) nuevo[campo] = e[campo] ?? null;
-    cache[k] = nuevo;
     cambios = true;
   }
   if (cambios) {

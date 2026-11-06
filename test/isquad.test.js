@@ -57,6 +57,27 @@ test('peticion: POST con el formulario o GET, y sin los BOM del principio', asyn
   const get = await simular(t, () => new Response('<html>'), 'listado_clubs.php?id_territorial=20', null);
   assert.equal(get.resultado, '<html>');
   assert.deepEqual([get.llamadas[0].opciones.method, get.llamadas[0].opciones.body], ['GET', undefined]);
+  // Sin seguir redirecciones: una podría llevar a /json/ o a otra web sin que el programa se enterara.
+  assert.equal(get.llamadas[0].opciones.redirect, 'manual');
+});
+
+test('peticion: una redirección no se sigue ni se reintenta: dice a dónde lleva', async (t) => {
+  const r = await simular(t, () => new Response('', { status: 302, statusText: 'Found', headers: { Location: '/json/pabellones_consultas.php' } }),
+    'competicion_completa.php?id=3941', null);
+  assert.equal(r.llamadas.length, 1);
+  assert.deepEqual(r.avisos, []);
+  assert.equal(r.error.message, 'No se pudo descargar https://resultadosvoleibol.isquad.es/competicion_completa.php?id=3941\n'
+    + '    (respuesta 302 Found, que lleva a /json/pabellones_consultas.php)\n    La federación no deja descargarlo; no se vuelve a intentar.');
+  assert.deepEqual([r.error.motivo, r.error.estado], ['respuesta 302 Found, que lleva a /json/pabellones_consultas.php', 302]);
+});
+
+test('peticion: ningún otro 4xx (400, 410...) se reintenta: es la petición, no la red', async (t) => {
+  for (const [estado, texto] of [[400, 'Bad Request'], [410, 'Gone'], [451, 'Unavailable For Legal Reasons']]) {
+    const r = await simular(t, () => new Response('', { status: estado, statusText: texto }));
+    assert.equal(r.llamadas.length, 1, `${estado}: un solo intento`);
+    assert.deepEqual([r.error.motivo, r.error.estado], [`respuesta ${estado} ${texto}`, estado]);
+    assert.match(r.error.message, /La federación no deja descargarlo; no se vuelve a intentar\.$/);
+  }
 });
 
 test('peticion: si falla, avisa y lo vuelve a intentar con esperas crecientes (5 veces en total)', async (t) => {
@@ -78,6 +99,24 @@ test('peticion: si falla, avisa y lo vuelve a intentar con esperas crecientes (5
   assert.equal(mal.llamadas.length, 5);
   assert.deepEqual(mal.avisos, AVISOS);
   assert.equal(mal.error.message, mensajeError('respuesta 500 Internal Server Error'));
+  // El motivo y el código, aparte, para quien tenga que explicar el fallo (0 si no llegó a responder).
+  assert.deepEqual([mal.error.motivo, mal.error.estado], ['respuesta 500 Internal Server Error', 500]);
+  assert.equal(tarde.error, null);
+});
+
+test('peticion: con 401, 403, 404 o 429 no se reintenta y dice que la federación no deja descargarlo', async (t) => {
+  for (const [estado, texto] of [[401, 'Unauthorized'], [403, 'Forbidden'], [404, 'Not Found'], [429, 'Too Many Requests']]) {
+    const r = await simular(t, () => new Response('', { status: estado, statusText: texto }));
+    assert.equal(r.llamadas.length, 1, `${estado}: un solo intento`);
+    assert.deepEqual(r.avisos, []);
+    assert.equal(r.error.message, `No se pudo descargar ${URL_PARTIDOS}\n    (respuesta ${estado} ${texto})\n`
+      + '    La federación no deja descargarlo; no se vuelve a intentar.');
+    assert.deepEqual([r.error.motivo, r.error.estado], [`respuesta ${estado} ${texto}`, estado]);
+  }
+  // Sin conexión sí se reintenta, y el código queda en 0.
+  const red = await simular(t, () => { throw new TypeError('fetch failed', { cause: new Error('Connect Timeout Error') }); });
+  assert.equal(red.llamadas.length, 5);
+  assert.deepEqual([red.error.motivo, red.error.estado], ['Connect Timeout Error', 0]);
 });
 
 test('peticion: espera de verdad entre intentos (15 s antes del segundo)', async (t) => {
