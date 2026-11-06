@@ -3,8 +3,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESPERAS_SEGUNDOS, peticion } from '../src/isquad.js';
-import { BOM } from '../src/util.js';
+import { ESPERAS_SEGUNDOS, partidosApi, peticion } from '../src/isquad.js';
+import { BOM, fechaPared } from '../src/util.js';
 
 const URL_PARTIDOS = 'https://resultadosvoleibol.isquad.es/json/partidos_equipos_consultas.php';
 const aviso = (segundos, n) => `  ! La web de la federación no responde; se vuelve a intentar en ${segundos} s (intento ${n} de 5)...`;
@@ -137,4 +137,53 @@ test('peticion: otra web de iSquad y otras esperas', async (t) => {
   const dos = await simular(t, (n) => (n === 1 ? new Response('', { status: 503 }) : new Response('ok')), 'json/x.php', null, { esperas: [15] });
   assert.equal(dos.resultado, 'ok');
   assert.deepEqual(dos.avisos, ['  ! La web de la federación no responde; se vuelve a intentar en 15 s (intento 2 de 2)...']);
+});
+
+// partidosApi con fetch simulado: la federación responde { data: filas }, con las "/" escapadas como "\/",
+// igual que su PHP.
+async function partidosCon(filas) {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ data: filas }).replaceAll('/', '\\/'));
+  try {
+    return await partidosApi(fechaPared(2026, 8, 1));
+  } finally {
+    globalThis.fetch = original;
+  }
+}
+
+// El nombre de un equipo tal como lo da la federación: HTML con el escudo del club delante.
+function nombreConEscudo(idClub, nombre) {
+  return "<div class='nombres-equipos'><div class='image-background'>\n                                            "
+    + "<div class='image-container'>\n                                                <div class='image-content'>\n"
+    + "                                                <img width='50'\n                                                "
+    + `style='mix-blend-mode: multiply;' src='https://voleibol.isquad.es/images/afiliacion_clubs/${idClub}/square_6b656d3467326c68346f.jpg'>`
+    + `</div></div></div> ${nombre}</div>`;
+}
+
+// Un partido como los que da la federación desde el 28/10/2026: sin id_club_local ni id_club_visitante.
+const PARTIDO_SIN_IDS = {
+  nombre_local: nombreConEscudo('206572608', 'AUTOS CADISTA VOLEIBOL RIVEIRA'),
+  nombre_visitante: nombreConEscudo('206572580', 'DOMPAVOLEI SM1'),
+  campo: 'TORRES COLOMER',
+  nombre_competicion: '1ªDIV. SENIOR MASCULINA',
+  categoria: 'SENIOR',
+  fecha: '2026-11-07 17:00:00',
+  fecha_confirmada: '1',
+  fecha_final: '07/11/2026<br>17:00:00',
+  fecha_calendario: '2026-11-07',
+};
+
+test('partidosApi: sin id_club_local/visitante (desde el 28/10/2026), el ID del club sale del escudo', async () => {
+  const filas = await partidosCon([PARTIDO_SIN_IDS]);
+  assert.equal(filas.length, 1);
+  assert.deepEqual(filas[0], { ...PARTIDO_SIN_IDS, id_club_local: '206572608', id_club_visitante: '206572580' });
+});
+
+test('partidosApi: el ID que da la federación manda; sin ID ni escudo queda vacío; lo que no es un partido se quita', async () => {
+  const conIds = { ...PARTIDO_SIN_IDS, id_club_local: '1', id_club_visitante: 'None' };
+  const sinEscudo = { ...PARTIDO_SIN_IDS, nombre_local: "<div class='nombres-equipos'> EQUIPO SIN ESCUDO</div>" };
+  const filas = await partidosCon([conIds, sinEscudo, { otra: 'cosa' }, 'texto', null]);
+  assert.equal(filas.length, 2);
+  assert.deepEqual([filas[0].id_club_local, filas[0].id_club_visitante], ['1', 'None']);
+  assert.deepEqual([filas[1].id_club_local, filas[1].id_club_visitante], ['', '206572580']);
 });
