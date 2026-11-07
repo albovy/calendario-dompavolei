@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
    "firma": "d8f3d2565d950208",
    "firma_clasificacion": "d8f3d2565d950208",
@@ -1024,10 +1024,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
-   "firma": "5e5df591d99ec726",
-   "firma_clasificacion": "5e5df591d99ec726",
+   "firma": "61f11b3afb4a4768",
+   "firma_clasificacion": "61f11b3afb4a4768",
    "partidos": [
     {
      "id": "97409",
@@ -1324,24 +1324,24 @@
     },
     {
      "pos": 2,
-     "equipo": "-1 CV MEGATOXOS",
-     "club": "206573095",
-     "pt": 6,
-     "pj": 2,
-     "pg": 2,
-     "pp": 0,
-     "sf": 6,
-     "sc": 1
-    },
-    {
-     "pos": 3,
-     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM2",
+     "equipo": "1 CLUB VOLEIBOL PONTEVEDRA SM2",
      "club": "206572577",
      "pt": 6,
      "pj": 3,
      "pg": 2,
      "pp": 1,
      "sf": 7,
+     "sc": 4
+    },
+    {
+     "pos": 3,
+     "equipo": "-2 CV MEGATOXOS",
+     "club": "206573095",
+     "pt": 6,
+     "pj": 3,
+     "pg": 2,
+     "pp": 1,
+     "sf": 6,
      "sc": 4
     },
     {
@@ -1357,7 +1357,18 @@
     },
     {
      "pos": 5,
-     "equipo": "-1 ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "equipo": "1 C.V. NARON VOLEA",
+     "club": "206572598",
+     "pt": 5,
+     "pj": 3,
+     "pg": 2,
+     "pp": 1,
+     "sf": 7,
+     "sc": 5
+    },
+    {
+     "pos": 6,
+     "equipo": "-2 ACEITES ABRIL CVO JUNIOR MASCULINO",
      "club": "206572597",
      "pt": 4,
      "pj": 2,
@@ -1365,17 +1376,6 @@
      "pp": 1,
      "sf": 5,
      "sc": 4
-    },
-    {
-     "pos": 6,
-     "equipo": "C.V. NARON VOLEA",
-     "club": "206572598",
-     "pt": 2,
-     "pj": 2,
-     "pg": 1,
-     "pp": 1,
-     "sf": 4,
-     "sc": 5
     },
     {
      "pos": 7,
@@ -1408,7 +1408,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
    "firma": "19cf40993382d906",
    "firma_clasificacion": "19cf40993382d906",
@@ -1816,7 +1816,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
    "firma": "cfa7069c1aa3e394",
    "firma_clasificacion": "cfa7069c1aa3e394",
@@ -2294,7 +2294,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2800,7 +2800,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-07 14:17",
+   "consultado": "2026-11-07 15:17",
    "terminado": false,
    "firma": "5d562d88efe34bc4",
    "firma_clasificacion": "5d562d88efe34bc4",
