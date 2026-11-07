@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
-   "firma": "427cd6cb5ae0af6b",
-   "firma_clasificacion": "427cd6cb5ae0af6b",
+   "firma": "18899f895cbbebe5",
+   "firma_clasificacion": "18899f895cbbebe5",
    "partidos": [
     {
      "id": "97104",
@@ -641,9 +641,29 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-07",
      "hora": "17:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      1
+     ],
+     "sets": [
+      [
+       25,
+       22
+      ],
+      [
+       24,
+       26
+      ],
+      [
+       25,
+       17
+      ],
+      [
+       25,
+       10
+      ]
+     ],
      "campo": "TORRES COLOMER",
      "lugar": {
       "lat": 42.58178969999999,
@@ -909,12 +929,12 @@
      "pos": 1,
      "equipo": "1 AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
-     "pt": 8,
-     "pj": 3,
-     "pg": 3,
+     "pt": 11,
+     "pj": 4,
+     "pg": 4,
      "pp": 0,
-     "sf": 9,
-     "sc": 2
+     "sf": 12,
+     "sc": 3
     },
     {
      "pos": 2,
@@ -998,11 +1018,11 @@
      "equipo": "DOMPAVOLEI SM1",
      "club": "206572580",
      "pt": 0,
-     "pj": 3,
+     "pj": 4,
      "pg": 0,
-     "pp": 3,
-     "sf": 2,
-     "sc": 9
+     "pp": 4,
+     "sf": 3,
+     "sc": 12
     },
     {
      "pos": 10,
@@ -1024,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
    "firma": "61f11b3afb4a4768",
    "firma_clasificacion": "61f11b3afb4a4768",
@@ -1408,10 +1428,10 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
-   "firma": "a07c66c33c2e745c",
-   "firma_clasificacion": "a07c66c33c2e745c",
+   "firma": "8114643dac2caabf",
+   "firma_clasificacion": "8114643dac2caabf",
    "partidos": [
     {
      "id": "97354",
@@ -1767,16 +1787,27 @@
      "pos": 5,
      "equipo": "CV MEGATOXOS",
      "club": "206573095",
-     "pt": 3,
-     "pj": 2,
+     "pt": 4,
+     "pj": 3,
      "pg": 1,
-     "pp": 1,
-     "sf": 3,
-     "sc": 3
+     "pp": 2,
+     "sf": 5,
+     "sc": 6
     },
     {
      "pos": 6,
-     "equipo": "ASESORIA CERVANTES XIRIA VOLEI",
+     "equipo": "1 C.V. NARON VOLEA B",
+     "club": "206572598",
+     "pt": 2,
+     "pj": 3,
+     "pg": 1,
+     "pp": 2,
+     "sf": 3,
+     "sc": 8
+    },
+    {
+     "pos": 7,
+     "equipo": "-1 ASESORIA CERVANTES XIRIA VOLEI",
      "club": "206572607",
      "pt": 0,
      "pj": 1,
@@ -1784,17 +1815,6 @@
      "pp": 1,
      "sf": 0,
      "sc": 3
-    },
-    {
-     "pos": 7,
-     "equipo": "C.V. NARON VOLEA B",
-     "club": "206572598",
-     "pt": 0,
-     "pj": 2,
-     "pg": 0,
-     "pp": 2,
-     "sf": 0,
-     "sc": 6
     },
     {
      "pos": 8,
@@ -1816,10 +1836,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
-   "firma": "ad81cc998fbe29be",
-   "firma_clasificacion": "ad81cc998fbe29be",
+   "firma": "ce26400b5500fc30",
+   "firma_clasificacion": "ce26400b5500fc30",
    "partidos": [
     {
      "id": "98184",
@@ -2243,7 +2263,18 @@
     },
     {
      "pos": 7,
-     "equipo": "ACEITES ABRIL CVO JUV. AZUL FEM",
+     "equipo": "1 CV CIUDAD DE A CORUÑA JF B",
+     "club": "206572595",
+     "pt": 4,
+     "pj": 4,
+     "pg": 1,
+     "pp": 3,
+     "sf": 5,
+     "sc": 9
+    },
+    {
+     "pos": 8,
+     "equipo": "-1 ACEITES ABRIL CVO JUV. AZUL FEM",
      "club": "206572597",
      "pt": 2,
      "pj": 2,
@@ -2253,26 +2284,15 @@
      "sc": 5
     },
     {
-     "pos": 8,
-     "equipo": "CV CIUDAD DE A CORUÑA JF B",
-     "club": "206572595",
-     "pt": 1,
-     "pj": 3,
-     "pg": 0,
-     "pp": 3,
-     "sf": 2,
-     "sc": 9
-    },
-    {
      "pos": 9,
      "equipo": "COSVAMA - MANIOTAS XF",
      "club": "206572587",
      "pt": 0,
-     "pj": 3,
+     "pj": 4,
      "pg": 0,
-     "pp": 3,
+     "pp": 4,
      "sf": 1,
-     "sc": 9
+     "sc": 12
     },
     {
      "pos": 10,
@@ -2294,7 +2314,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2800,7 +2820,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-07 18:17",
+   "consultado": "2026-11-07 19:17",
    "terminado": false,
    "firma": "c000186c80eaee18",
    "firma_clasificacion": "c000186c80eaee18",
