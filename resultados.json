@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
-   "firma": "022c007614151ef8",
-   "firma_clasificacion": "022c007614151ef8",
+   "firma": "93689fc420b45391",
+   "firma_clasificacion": "93689fc420b45391",
    "partidos": [
     {
      "id": "97104",
@@ -973,12 +973,12 @@
      "pos": 5,
      "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
-     "pt": 7,
-     "pj": 3,
+     "pt": 8,
+     "pj": 4,
      "pg": 2,
-     "pp": 1,
-     "sf": 8,
-     "sc": 4
+     "pp": 2,
+     "sf": 10,
+     "sc": 7
     },
     {
      "pos": 6,
@@ -1006,12 +1006,12 @@
      "pos": 8,
      "equipo": "XABARINS CAIXA RURAL GALEGA LUGO",
      "club": "206572584",
-     "pt": 1,
-     "pj": 3,
-     "pg": 0,
+     "pt": 3,
+     "pj": 4,
+     "pg": 1,
      "pp": 3,
-     "sf": 3,
-     "sc": 9
+     "sf": 6,
+     "sc": 11
     },
     {
      "pos": 9,
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
    "firma": "61f11b3afb4a4768",
    "firma_clasificacion": "61f11b3afb4a4768",
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
    "firma": "8114643dac2caabf",
    "firma_clasificacion": "8114643dac2caabf",
@@ -1836,7 +1836,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
    "firma": "ce26400b5500fc30",
    "firma_clasificacion": "ce26400b5500fc30",
@@ -2314,7 +2314,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2820,7 +2820,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-07 20:17",
+   "consultado": "2026-11-08 00:17",
    "terminado": false,
    "firma": "c000186c80eaee18",
    "firma_clasificacion": "c000186c80eaee18",
