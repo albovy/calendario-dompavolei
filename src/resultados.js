@@ -1,29 +1,20 @@
-// Resultados y clasificaciones de los equipos del club en la temporada en curso.
+// Lectura de las páginas públicas de los grupos en la web de resultados de la federación (iSquad, las mismas
+// que enseña volei.gal), y resultados y clasificaciones de los equipos del club.
 //
-// La "Agenda calendario" no trae resultados ni grupos. Se sacan de las páginas de resultados de iSquad,
-// las mismas que enseña volei.gal: el árbol de competiciones da el número de cada competición y de sus
-// grupos ("torneos"); la página de un grupo trae la lista de grupos de la competición (con sus equipos)
-// y los partidos del grupo con el marcador y los sets; la de clasificación, la tabla.
-//
-// Para no cargar la web de la federación solo se consultan los grupos en los que juega el club y solo
-// cuando hace falta (gruposAConsultar); todo se guarda en resultados.json. Nunca se descargan actas,
+// La página de un grupo trae la lista de grupos de la competición (con sus equipos) y los partidos del grupo:
+// equipos y su club, día y hora, pabellón con su sitio, estado, marcador y sets; la de clasificación, la tabla.
+// Las descarga federacion.js (solo los grupos del club; la clasificación, solo si cambian sus partidos) y todo
+// se guarda en resultados.json, de donde salen también los partidos del calendario. Nunca se descargan actas,
 // previos ni plantillas: solo nombres de equipos y marcadores (en los equipos hay menores).
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { URL_BASE, peticion } from './isquad.js';
-import { conHora } from './partidos.js';
+import { writeFileSync } from 'node:fs';
+import { URL_BASE } from './isquad.js';
 import {
-  aviso, clave, compararTexto, comoLista, esObjeto, fechaValida, fmt, leerJson, sha1, soloDia, sumarDias,
-  sumarMinutos, txt, unaLinea,
+  clave, compararTexto, comoLista, fechaValida, fmt, pabellon, sha1, textoPlano, txt, unaLinea,
 } from './util.js';
 
-// El árbol de competiciones está en la otra web de iSquad.
-export const URL_ARBOL = 'https://voleibol.isquad.es';
 const TERRITORIAL = '20';        // Federación Galega de Voleibol
 const AMBITO = '6';              // así la llaman las páginas de resultados (la agenda usa el 20)
-const HORAS_REPASO = 20;         // cada cuánto se repasan un grupo sin terminar y la lista de grupos
-const DIAS_ESPERA = 14;          // días que se insiste cada hora en un resultado que no llega
-const ESPERAS_RESULTADOS = [15]; // un solo reintento: los resultados no son imprescindibles
 
 // --- Lectura de las páginas de iSquad ------------------------------------------------------------
 
@@ -36,8 +27,8 @@ const CP1252 = String.fromCharCode(
 );
 const SUSTITUTO = String.fromCharCode(0xFFFD);
 
-// La lista de grupos y el árbol traen a veces los nombres mal codificados ("EMEVÃ‰" por "EMEVÉ": UTF-8
-// leído como Windows-1252). Se recuperan los bytes y se leen como UTF-8; si no sale bien, se deja igual.
+// La lista de grupos trae a veces los nombres mal codificados ("EMEVÃ‰" por "EMEVÉ": UTF-8 leído como
+// Windows-1252). Se recuperan los bytes y se leen como UTF-8; si no sale bien, se deja igual.
 export function repararNombre(texto) {
   const t = txt(texto);
   if (!/[ÃÂ]/.test(t)) return t;
@@ -50,25 +41,6 @@ export function repararNombre(texto) {
   }
   const r = Buffer.from(bytes).toString('utf8');
   return r.includes(SUSTITUTO) ? t : r;
-}
-
-// Código de acceso que llevan dentro las páginas de iSquad (token = "…"); '' si no está.
-export function leerToken(html) {
-  const m = /\btoken\s*=\s*["']([0-9a-f]{16,})["']/i.exec(txt(html));
-  return m ? m[1] : '';
-}
-
-// Árbol de competiciones (JSON): clave del nombre -> { id, torneos: [números de sus grupos] }.
-export function leerArbol(json) {
-  const mapa = new Map();
-  for (const campeonato of comoLista(leerJson(json) ?? [])) {
-    for (const c of comoLista(campeonato?.competiciones ?? [])) {
-      if (!esObjeto(c) || !c.id) continue;
-      const torneos = comoLista(c.torneos ?? []).map((t) => txt(t?.id)).filter((id) => id);
-      mapa.set(clave(repararNombre(c.nombre)), { id: txt(c.id), torneos });
-    }
-  }
-  return mapa;
 }
 
 // Trozo de la página desde "marca" hasta "hasta" (o el final); null si no está la marca.
@@ -128,9 +100,43 @@ function clubDe(celda, clase) {
   return a ? (RE_CLUB.exec(a[0])?.[1] ?? '') : '';
 }
 
-// Partidos del grupo (sección "RESULTADOS DE LA COMPETICIÓN"): [{ local, visitante, clubLocal,
-// clubVisitante, dia: 'aaaa-mm-dd', hora: 'HH:mm' o '', estado, marcador: [l, v] o null,
-// sets: [[l, v], ...] }]. null si la página no la tiene.
+// Día y hora de la celda Fecha: { dia: 'aaaa-mm-dd', hora: 'HH:mm' }. En noviembre de 2026 la federación
+// pasó de «10:00 19/09/2026» a «07/11/2026 17:00»: se busca cada dato esté donde esté. «0:00» es que el
+// partido aún no tiene hora; una fecha que no existe (31/02) se queda vacía, como si no hubiera.
+function fechaDe(celda) {
+  const texto = unaLinea(celda);
+  const d = /(?:^|\s)(\d{1,2})\/(\d{1,2})\/(\d{4})(?=\s|$)/.exec(texto);
+  if (!d || !fechaValida(Number(d[3]), Number(d[2]), Number(d[1]))) return { dia: '', hora: '' };
+  const h = /(?:^|\s)(\d{1,2}):(\d{2})(?=\s|$)/.exec(texto);
+  const conHora = h && (Number(h[1]) > 0 || h[2] !== '00') && fechaValida(2000, 1, 1, Number(h[1]), Number(h[2]));
+  return { dia: `${d[3]}-${d[2].padStart(2, '0')}-${d[1].padStart(2, '0')}`, hora: conHora ? `${h[1].padStart(2, '0')}:${h[2]}` : '' };
+}
+
+// Pabellón de la celda Lugar: { campo, lugar }. campo es el nombre como lo deja pabellon() (el <span> del
+// enlace; en el formato de septiembre, el texto del enlace al mapa). lugar = { lat, lon, direccion }: las
+// coordenadas, del enlace al mapa (q=lat,lon), y la dirección, del 3.er dato de mostrarLugar([mapa, nombre,
+// dirección]), tal cual. Sin pabellón la celda viene vacía: '' y null; sin coordenadas, lugar es null.
+function lugarDe(celda) {
+  const nombre = /<span\b[^>]*>([\s\S]*?)<\/span>/i.exec(celda) ?? /<a\b[^>]*>([\s\S]*?)<\/a>/i.exec(celda);
+  const campo = nombre ? pabellon(nombre[1]) : '';
+  const q = /[?&]q=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(celda);
+  const [lat, lon] = q ? [Number(q[1]), Number(q[2])] : [0, 0];
+  if (!campo || (lat === 0 && lon === 0)) return { campo, lugar: null };
+  let direccion = '';
+  const datos = /mostrarLugar\(\.\.\.(\[[\s\S]*?\])\)/.exec(celda);
+  // El onclick lleva un JSON con las comillas como &quot;: textoPlano las decodifica (dentro no hay etiquetas).
+  try {
+    direccion = datos ? txt(JSON.parse(textoPlano(datos[1]))?.[2]).trim() : '';
+  } catch {
+    direccion = '';
+  }
+  return { campo, lugar: { lat, lon, direccion } };
+}
+
+// Partidos del grupo (sección "RESULTADOS DE LA COMPETICIÓN"): [{ id, local, visitante, clubLocal,
+// clubVisitante, dia: 'aaaa-mm-dd' o '', hora: 'HH:mm' o '', estado, marcador: [l, v] o null, sets: [[l, v], ...],
+// campo, lugar: { lat, lon, direccion } o null }]. id es el data-id de la fila ('' en el formato de septiembre).
+// null si la página no tiene la sección.
 export function leerResultados(html) {
   const s = desde(txt(html), 'RESULTADOS DE LA COMPETICI');
   if (s === null) return null;
@@ -141,19 +147,23 @@ export function leerResultados(html) {
     if (c.length < 10) continue;
     const nombres = [...c[0].slice(c[0].indexOf('nombres-equipos')).matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)]
       .map((m) => repararNombre(unaLinea(m[1])));
-    const f = /(\d{1,2}):(\d{2})\s+(\d{2})\/(\d{2})\/(\d{4})/.exec(unaLinea(c[7]));
-    // "0:00" es que el partido aún no tiene hora.
-    const hora = f && (Number(f[1]) > 0 || f[2] !== '00') ? `${f[1].padStart(2, '0')}:${f[2]}` : '';
+    const { dia, hora } = fechaDe(c[7]);
+    const estado = unaLinea(c[9]);
+    const { campo, lugar } = lugarDe(c[8]);
     filas.push({
+      id: /^[^>]*\bdata-id=["']?(\d+)/i.exec(tr)?.[1] ?? '',
       local: nombres[0] ?? '',
       visitante: nombres[1] ?? '',
       clubLocal: clubDe(c[0], 'escudo-local-wrap'),
       clubVisitante: clubDe(c[0], 'escudo-visitante-wrap'),
-      dia: f ? `${f[5]}-${f[4]}-${f[3]}` : '',
+      dia,
       hora,
-      estado: unaLinea(c[9]),
-      marcador: tanteo(c[1]),
+      estado,
+      // Los que aún no se han jugado salen como «0 - 0»: solo hay marcador si está Finalizado.
+      marcador: /^finalizado$/i.test(estado) ? tanteo(c[1]) : null,
       sets: c.slice(2, 7).map(tanteo).filter((x) => x),
+      campo,
+      lugar,
     });
   }
   return filas;
@@ -188,10 +198,10 @@ export function leerClasificacion(html) {
   return filas;
 }
 
-// --- Emparejado y qué consultar ------------------------------------------------------------------
+// --- Caché y emparejado --------------------------------------------------------------------------
 
 // Marcas de tiempo de resultados.json: "aaaa-mm-dd HH:mm", hora de Galicia.
-function marca(d) { return fmt(d, 'yyyy-MM-dd HH:mm'); }
+export function marca(d) { return fmt(d, 'yyyy-MM-dd HH:mm'); }
 
 function leerMarca(texto) {
   const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(txt(texto));
@@ -199,19 +209,13 @@ function leerMarca(texto) {
 }
 
 // Horas desde una marca (Infinity si no hay).
-function horasDesde(texto, ahora) {
+export function horasDesde(texto, ahora) {
   const d = leerMarca(texto);
   return d ? (ahora - d) / 3600000 : Infinity;
 }
 
 export function finalizado(fila) {
   return /^finalizado$/i.test(txt(fila?.estado).trim()) && Array.isArray(fila.marcador);
-}
-
-// Grupos de la caché de una competición: [[torneo, grupo], ...].
-function gruposDe(cache, competicion) {
-  const k = clave(competicion);
-  return Object.entries(cache.grupos).filter(([, g]) => clave(g.competicion) === k);
 }
 
 // Apunta los grupos en los que juega el club (lista de leerGrupos). esNuestro(nombre, club).
@@ -228,15 +232,21 @@ export function anotarGrupos(cache, competicion, idCompeticion, lista, esNuestro
   }
 }
 
-// Apunta los partidos del grupo (filas de leerResultados): los del club, si ya se ha jugado todo y una
-// firma de todos (si cambia, cambia la clasificación).
+// Apunta los partidos del grupo (filas de leerResultados): los del club, con todo lo que trae la página (de
+// ellos salen también las filas del calendario, ver federacion.js), si ya se ha jugado todo y una firma de
+// todos (si cambia, cambia la clasificación). Un grupo sin partidos (aún sin calendario) no tiene firma: no hay
+// clasificación que pedir.
 export function anotarResultados(g, filas, esNuestro, ahora) {
   g.consultado = marca(ahora);
   g.terminado = filas.length > 0 && filas.every(finalizado);
-  g.firma = sha1(filas.map((f) => [f.local, f.visitante, f.dia, f.estado, f.marcador ? f.marcador.join('-') : ''].join('|')).join('\n')).slice(0, 16);
+  g.firma = filas.length
+    ? sha1(filas.map((f) => [f.local, f.visitante, f.dia, f.estado, f.marcador ? f.marcador.join('-') : ''].join('|')).join('\n')).slice(0, 16)
+    : '';
   g.partidos = filas
     .filter((f) => esNuestro(f.local, f.clubLocal) || esNuestro(f.visitante, f.clubVisitante))
-    .map(({ local, visitante, dia, hora, estado, marcador, sets }) => ({ local, visitante, dia, hora, estado, marcador, sets }));
+    .map(({ id, local, visitante, clubLocal, clubVisitante, dia, hora, estado, marcador, sets, campo, lugar }) => ({
+      id, local, visitante, clubLocal, clubVisitante, dia, hora, estado, marcador, sets, campo, lugar,
+    }));
 }
 
 // Fila de la federación de un partido de la agenda: mismo local, mismo visitante y mismo día en un grupo
@@ -260,79 +270,17 @@ export function buscarFila(p, grupos) {
   return cruce.length === 1 ? cruce[0] : null;
 }
 
-// ¿Tendría que tener ya resultado? Empezó hace más de 2 horas (sin hora: desde el día siguiente) y
-// hace como mucho 14 días.
-export function esperaResultado(p, ahora) {
-  const fin = conHora(p) ? sumarMinutos(p.fecha, 120) : sumarDias(soloDia(p.fecha), 1);
-  return fin <= ahora && sumarDias(soloDia(p.fecha), DIAS_ESPERA + 1) > ahora;
-}
+// --- resultados.json y direcciones -------------------------------------------------------------------
 
-// Competiciones de los partidos que aún no tienen número (o que no estaban en el árbol hace un día).
-export function competicionesSinNumero(cache, partidos, ahora) {
-  return [...new Set(partidos.map((p) => p.competicion))].filter((nombre) => {
-    const c = cache.competiciones[nombre];
-    return !c || (!c.id && horasDesde(c.revisado, ahora) >= HORAS_REPASO);
-  });
-}
-
-// Qué hay que consultar: { descubrir: competiciones cuya lista de grupos hay que mirar, grupos: torneos }.
-export function gruposAConsultar(cache, partidos, ahora) {
-  const descubrir = new Set();
-  const grupos = new Set();
-  for (const p of partidos) {
-    const c = cache.competiciones[p.competicion];
-    if (!c?.id) continue;
-    const e = buscarFila(p, cache.grupos);
-    // Partido que no está en ningún grupo conocido (p. ej. empieza la segunda fase): se mira la lista
-    // de grupos de su competición, como mucho una vez cada 20 horas.
-    if (!e && horasDesde(c.revisado, ahora) >= HORAS_REPASO) descubrir.add(p.competicion);
-    if (esperaResultado(p, ahora) && !(e && finalizado(e.fila))) {
-      if (e) grupos.add(e.torneo);
-      else for (const [t, g] of gruposDe(cache, p.competicion)) if (!g.terminado) grupos.add(t);
-    }
-  }
-  // Grupos nunca consultados y repaso diario de los que tienen partidos por jugar (la clasificación
-  // también cambia con los partidos de los rivales).
-  const competiciones = new Set(partidos.map((p) => clave(p.competicion)));
-  for (const [t, g] of Object.entries(cache.grupos)) {
-    if (!competiciones.has(clave(g.competicion))) continue;
-    if (!g.consultado || (!g.terminado && horasDesde(g.consultado, ahora) >= HORAS_REPASO)) grupos.add(t);
-  }
-  return { descubrir, grupos };
-}
-
-// --- resultados.json ------------------------------------------------------------------------------
-
-function cacheVacia(anio, ids) {
-  return { temporada: anio, clubs: [...ids].sort(), competiciones: {}, grupos: {} };
-}
-
-// resultados.json de la temporada anio y de estos clubs; si es de otra o no se puede leer, vacía.
-export function leerCacheResultados(ruta, anio, ids) {
-  if (existsSync(ruta)) {
-    try {
-      const c = leerJson(readFileSync(ruta, 'utf8'));
-      if (c?.temporada === anio && comoLista(c.clubs).map(txt).sort().join(',') === [...ids].sort().join(',')
-        && esObjeto(c.competiciones) && esObjeto(c.grupos)) {
-        return { ...cacheVacia(anio, ids), competiciones: c.competiciones, grupos: c.grupos };
-      }
-    } catch (e) {
-      aviso(`resultados.json no se puede leer (${e.message}); se vuelven a buscar los resultados.`);
-    }
-  }
-  return cacheVacia(anio, ids);
-}
-
-function guardarCacheResultados(cache, ruta) {
+export function guardarCacheResultados(cache, ruta) {
   // Competiciones por orden alfabético (los grupos, por número): cambios fáciles de leer en Git.
   const competiciones = Object.fromEntries(Object.keys(cache.competiciones).sort(compararTexto)
     .map((k) => [k, cache.competiciones[k]]));
   writeFileSync(ruta, `${JSON.stringify({ ...cache, competiciones }, null, 1)}\n`, 'utf8');
 }
 
-// --- Descarga --------------------------------------------------------------------------------------
-
-function pagina(archivo, torneo, competicion) {
+// Dirección (sin la web) de la página de un grupo: archivo es competicion_completa.php o clasificacion.php.
+export function pagina(archivo, torneo, competicion) {
   return `${archivo}?seleccion=0&id=${torneo}&id_ambito=${AMBITO}&id_territorial=${TERRITORIAL}`
     + `&id_superficie=1&iframe=0&id_competicion=${competicion}`;
 }
@@ -340,83 +288,6 @@ function pagina(archivo, torneo, competicion) {
 // Dirección de la clasificación de un grupo en la web de la federación.
 export function urlClasificacion(torneo, competicion) {
   return `${URL_BASE}/${pagina('clasificacion.php', torneo, competicion)}`;
-}
-
-// Árbol de competiciones de la temporada (hace falta el código de acceso de una página cualquiera).
-async function arbolCompeticiones(anio, pedir) {
-  const token = leerToken(await pedir(`competicion.php?seleccion=0&id_territorial=${TERRITORIAL}&id_ambito=${AMBITO}&id_superficie=1`));
-  if (!token) throw new Error('la web de resultados ha cambiado: no se encuentra su código de acceso');
-  const temporada = `${String(anio % 100).padStart(2, '0')}${String((anio + 1) % 100).padStart(2, '0')}`;
-  const json = await pedir(`json/api/call.php/resultados/campeonato/tree?token=${token}`,
-    { ambitos: AMBITO, seleccion: '0', id_superficie: '1', id_temporada: temporada }, URL_ARBOL);
-  return leerArbol(json);
-}
-
-// Descarga lo que haga falta y devuelve la caché (resultados.json) al día. Si la federación falla,
-// avisa y devuelve lo que hubiera. partidos: los del club (de convertirPartidos); solo cuentan los de
-// la temporada anio. ahora: Date de pared. guardar: false para no escribir resultados.json.
-export async function actualizarResultados({ partidos, ids, ruta, anio, ahora, guardar = true, esperas = ESPERAS_RESULTADOS }) {
-  const cache = leerCacheResultados(ruta, anio, ids);
-  const propios = partidos.filter((p) => p.temporada === anio);
-  if (!propios.length) return cache;
-  const antes = JSON.stringify(cache);
-  const nombres = new Set(propios.flatMap((p) => p.nuestros).map(clave));
-  const esNuestro = (nombre, club) => ids.has(txt(club)) || nombres.has(clave(nombre));
-  const pedir = (ruta2, datos = null, base = URL_BASE) => peticion(ruta2, datos, { base, esperas });
-  try {
-    const sinNumero = competicionesSinNumero(cache, propios, ahora);
-    if (sinNumero.length) {
-      const arbol = await arbolCompeticiones(anio, pedir);
-      for (const nombre of sinNumero) {
-        const e = arbol.get(clave(nombre));
-        if (!e) aviso(`La competición «${nombre}» no está en la web de resultados de la federación; se vuelve a mirar mañana.`);
-        cache.competiciones[nombre] = e ? { id: e.id, torneos: e.torneos, revisado: '' } : { id: '', torneos: [], revisado: marca(ahora) };
-      }
-    }
-    const { descubrir, grupos } = gruposAConsultar(cache, propios, ahora);
-    // Páginas de grupo que hay que descargar: [torneo, competición]. Para la lista de grupos vale una
-    // cualquiera de la competición; mejor una del club.
-    const cola = [];
-    for (const nombre of descubrir) {
-      const nuestros = gruposDe(cache, nombre).map(([t]) => t);
-      const torneo = nuestros.find((t) => grupos.has(t)) ?? nuestros[0] ?? cache.competiciones[nombre].torneos[0];
-      if (torneo) cola.push([torneo, nombre]);
-    }
-    for (const t of grupos) cola.push([t, cache.grupos[t].competicion]);
-    const hechos = [];
-    while (cola.length) {
-      const [torneo, nombre] = cola.shift();
-      if (hechos.includes(torneo)) continue;
-      hechos.push(torneo);
-      const c = cache.competiciones[nombre];
-      const html = await pedir(pagina('competicion_completa.php', torneo, c.id));
-      const lista = leerGrupos(html);
-      const filas = leerResultados(html);
-      if (!lista || !filas) throw new Error('la página de un grupo no tiene el formato de siempre');
-      anotarGrupos(cache, nombre, c.id, lista, esNuestro);
-      c.revisado = marca(ahora);
-      if (cache.grupos[torneo]) anotarResultados(cache.grupos[torneo], filas, esNuestro, ahora);
-      // Grupos del club que acaban de aparecer (p. ej. los de la segunda fase).
-      for (const [t, g] of gruposDe(cache, nombre)) if (!g.consultado && !hechos.includes(t)) cola.push([t, nombre]);
-    }
-    // La clasificación solo cambia si cambian los partidos del grupo.
-    for (const t of hechos) {
-      const g = cache.grupos[t];
-      if (!g || g.firma_clasificacion === g.firma) continue;
-      g.clasificacion = leerClasificacion(await pedir(pagina('clasificacion.php', t, g.id_competicion)));
-      g.firma_clasificacion = g.firma;
-    }
-  } catch (e) {
-    aviso(`No se pudieron actualizar los resultados (${txt(e.message).split('\n')[0]}); se usan los que había.`);
-  }
-  if (guardar && JSON.stringify(cache) !== antes) {
-    try {
-      guardarCacheResultados(cache, ruta);
-    } catch (e) {
-      aviso(`No se pudo guardar resultados.json: ${e.message}`);
-    }
-  }
-  return cache;
 }
 
 // --- Para el calendario y la página ------------------------------------------------------------------
@@ -442,9 +313,11 @@ function mejorGrupo(a, b) {
 
 // Clasificación del grupo actual de cada equipo del club (en el orden de equipos):
 // [{ equipo, competicion, grupo, url, actualizado (Date de pared o null), filas: [{ ...fila, nuestro }] }].
-// Los equipos sin clasificación no salen. hoy: Date de pared.
+// Los equipos sin clasificación no salen. hoy: Date de pared. Un grupo con todos sus partidos de antes de la
+// temporada de la caché (en agosto, el de la temporada pasada, aún en config.json) no es el actual de nadie.
 export function clasificaciones(equipos, cache, ids, hoy) {
   const dia = fmt(hoy, 'yyyy-MM-dd');
+  const inicio = `${cache.temporada}-08-01`;
   const lista = [];
   for (const e of equipos) {
     const k = clave(e.nombre);
@@ -453,6 +326,7 @@ export function clasificaciones(equipos, cache, ids, hoy) {
       if (!Array.isArray(g.clasificacion) || !g.clasificacion.length) continue;
       if (!comoLista(g.equipos).some((n) => clave(n) === k)) continue;
       const suyos = comoLista(g.partidos).filter((f) => clave(f.local) === k || clave(f.visitante) === k);
+      if (suyos.length && suyos.every((f) => txt(f.dia) < inicio)) continue;
       const proximo = suyos.filter((f) => !finalizado(f) && f.dia >= dia).map((f) => f.dia).sort()[0] ?? '';
       const ultimo = suyos.map((f) => f.dia).sort().pop() ?? '';
       const candidato = { torneo, g, proximo, ultimo };

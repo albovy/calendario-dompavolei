@@ -6,6 +6,21 @@
             "nombre_corto": "Dompa"
         }
     ],
+    "federacion": {
+        "grupos": [
+            { "equipo": "DOMPAVOLEI SM1", "grupo": "3857", "competicion": "1516" },
+            { "equipo": "DOMPAVOLEI SM O BARCO", "grupo": "3917", "competicion": "1531" },
+            { "equipo": "DOMPAVOLEI SF1", "grupo": "3921", "competicion": "1532" },
+            { "equipo": "DOMPAVOLEI XF1", "grupo": "3941", "competicion": "1537" },
+            { "equipo": "DOMPAVOLEI IF1", "grupo": "3957", "competicion": "1541" },
+            { "equipo": "DOMPAVOLEI CF1", "grupo": "4021", "competicion": "1557" },
+            { "equipo": "DOMPAVOLEI XF1", "grupo": "3788", "competicion": "1507" },
+            { "equipo": "DOMPAVOLEI IF1", "grupo": "3818", "competicion": "1511" },
+            { "equipo": "DOMPAVOLEI IF1", "grupo": "4064", "competicion": "1511" },
+            { "equipo": "DOMPAVOLEI CF1", "grupo": "4056", "competicion": "1509" },
+            { "equipo": "DOMPAVOLEI CF1", "grupo": "4311", "competicion": "1509" }
+        ]
+    },
     "duracion_minutos": 120,
     "demo": true,
     "calendario_publicado": "https://albovy.github.io/calendario-dompavolei/calendario.ics",

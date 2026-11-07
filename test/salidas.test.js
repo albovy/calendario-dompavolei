@@ -7,8 +7,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  aNumero, anadirSalidas, buscarCampos, configPedirBus, configSalidas, direccionCampo, distanciaKm,
-  guardarCachePabellones, leerCachePabellones, lineasSalida, resolverPabellones, rutaCoche, textoSalida,
+  aNumero, anadirSalidas, configPedirBus, configSalidas, direccionCampo, distanciaKm, guardarCachePabellones,
+  leerCachePabellones, lineasSalida, municipioDe, resolverPabellones, rutaCoche, textoSalida,
 } from '../src/salidas.js';
 import { fechaPared } from '../src/util.js';
 
@@ -212,26 +212,34 @@ test('distancia en línea recta', () => {
   assert.equal(distanciaKm(42, -7, 42, -7), 0);
 });
 
-test('buscarCampos: exacto, por principio y por palabras significativas', () => {
-  const campo = (id, nombre) => ({ id, nombre, municipio: 'M', clave: nombre });
-  const campos = [
-    campo('1', 'A PINGUELA'), campo('2', 'A PINGUELA PISTA 1'), campo('3', 'PAZO DOS DEPORTES'),
-    campo('4', 'PAZO DOS DEPORTES PISTA 2'), campo('5', 'POLIDEPORTIVO MUNICIPAL DE TEIS'), campo('6', 'PISTA 1'),
-  ];
-  const ids = (n) => buscarCampos(n, campos).map((c) => c.id).join(',');
-  assert.equal(ids('Pazo dos Deportes'), '3');                   // exacto (sin tildes ni mayúsculas)
-  assert.equal(ids('PAZO DOS DEPORTES - PISTA 3'), '3');         // el de la federación es el principio
-  assert.equal(ids('A PINGUELA'), '1');
-  assert.equal(ids('PAZO'), '4,3');                              // el del partido es el principio (el más largo antes)
-  assert.equal(ids('PABELLÓN DE TEIS - PISTA 2'), '5');          // palabras significativas: TEIS
-  assert.equal(ids('ANEXO - PISTA 1'), '');                      // sin palabras significativas
-  assert.equal(ids(''), '');
-});
-
-test('dirección del pabellón: tildes reparadas, en mayúsculas y sin ", ESPAÑA"', () => {
+test('dirección del pabellón: tildes reparadas, en mayúsculas y sin ", ESPAÑA" ni el código postal repetido', () => {
   assert.equal(direccionCampo('RÃºA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO, ESPAÃ±A'), 'RÚA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO');
   assert.equal(direccionCampo('Rúa do Pino, 3<br>Lugo, España '), 'RÚA DO PINO, 3 LUGO');
   assert.equal(direccionCampo(null), '');
+  // Como la escribe la página del grupo (mostrarLugar): las letras con tilde en minúscula y el código postal otra vez.
+  assert.equal(direccionCampo('RúA PARDO DE CELA, 2, 32002 OURENSE, ESPAñA, 32003'), 'RÚA PARDO DE CELA, 2, 32002 OURENSE');
+  assert.equal(direccionCampo('RúA BARREIRO, 23, 15959 INSUELA, A CORUñA, ESPAñA, 15959'), 'RÚA BARREIRO, 23, 15959 INSUELA, A CORUÑA');
+  // «ESPAÑA» dentro de la dirección se queda.
+  assert.equal(direccionCampo('O PAVILLóN VELLO, CALLE ESPAñA, O BARCO, OURENSE, GALICIA, 32300, ESPAñA, 32300'),
+    'O PAVILLÓN VELLO, CALLE ESPAÑA, O BARCO, OURENSE, GALICIA, 32300');
+});
+
+test('municipioDe: lo que sigue al código postal, hasta la coma', () => {
+  assert.equal(municipioDe('RÚA PARDO DE CELA, 2, 32002 OURENSE'), 'OURENSE');
+  assert.equal(municipioDe('RÚA BARREIRO, 23, 15959 INSUELA, A CORUÑA'), 'INSUELA');
+  assert.equal(municipioDe('AV. DE CASTELAO, 66, COIA, 36209 VIGO, PONTEVEDRA'), 'VIGO');
+  assert.equal(municipioDe('RÚA DE EMILIO E MANUEL, 3, 15702 SANTIAGO DE COMPOSTELA, A CORUÑA'), 'SANTIAGO DE COMPOSTELA');
+  // Sin nada detrás del código postal, o sin código: sin municipio (se puede poner a mano en pabellones.json).
+  assert.equal(municipioDe('O PAVILLÓN VELLO, CALLE ESPAÑA, O BARCO, OURENSE, GALICIA, 32300'), '');
+  assert.equal(municipioDe('RÚA DO PINO, 3 LUGO'), '');
+  assert.equal(municipioDe(''), '');
+  // ... salvo que el nombre del pabellón lo lleve al final, entre paréntesis (no una pista).
+  const monteNeme = 'INSTITUTO DE EDUCACIÓN SECUNDARIA MONTE NEME, 29, RÚA ROMEU, FONTE DA CRISTINA, A CRISTINA, CARBALLO, BERGANTIÑOS, '
+    + 'LA CORUÑA, GALICIA, 15106';
+  assert.equal(municipioDe(monteNeme, 'IES MONTENEME (CARBALLO)'), 'CARBALLO');
+  assert.equal(municipioDe(monteNeme, 'PABELLON X (PISTA CENTRAL)'), '');
+  assert.equal(municipioDe(monteNeme, 'PABELLON X (2)'), '');
+  assert.equal(municipioDe('RÚA PARDO DE CELA, 2, 32002 OURENSE', 'ANEXO (OTRO SITIO)'), 'OURENSE');
 });
 
 // --- pabellones.json y consultas (fetch simulado) ------------------------------------------------
@@ -257,6 +265,27 @@ async function conFetch(responder, f) {
 
 function carpetaTemporal() { return mkdtempSync(join(tmpdir(), 'salidas-')); }
 
+// Respuesta fija de OSRM (46,1 km y 42 min en coche).
+const OSRM_LUGO = JSON.stringify({ code: 'Ok', routes: [{ distance: 46149.3, duration: 2501.2 }] });
+// Solo responde OSRM: cualquier otra consulta (la federación) es un error de la prueba.
+function soloOsrm(respuesta) {
+  return (url) => {
+    if (url.startsWith('https://router.project-osrm.org/')) return respuesta;
+    throw new Error(`no previsto: ${url}`);
+  };
+}
+// El sitio de cada pabellón según las páginas de los grupos (lugaresDeCache de federacion.js): la dirección, tal cual.
+const LUGARES = new Map([
+  ['NUEVO PABELLON - PISTA 1', { lat: 42.51356, lon: -7.52425, direccion: 'RúA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO, ESPAñA, 27420' }],
+  ['VIEJO', { lat: 43.0, lon: -8.0, direccion: 'RúA CARBALLO CALERO, 15, 15100 CARBALLO, A CORUñA, ESPAñA, 15100' }],
+  ['A PINGUELA - PISTA 1', { lat: 42.6, lon: -7.6, direccion: 'OTRA DIRECCIÓN, 1, 27420 MONFORTE DE LEMOS, ESPAñA, 27420' }],
+  ['ANEXO OS REMEDIOS - PISTA 1', { lat: 42.3438638, lon: -7.8701618, direccion: 'RúA PARDO DE CELA, 2, 32002 OURENSE, ESPAñA, 32003' }],
+  // Como la da la federación para el SF1 del 08/11/2026: el código postal, al final.
+  ['IES MONTENEME (CARBALLO)', { lat: 43.21241694345236, lon: -8.703918498991985,
+    direccion: 'INSTITUTO DE EDUCACIóN SECUNDARIA MONTE NEME, 29, RúA ROMEU, FONTE DA CRISTINA, A CRISTINA, CARBALLO, BERGANTIñOS, '
+      + 'LA CORUñA, GALICIA, 15106, ESPAñA, 15106' }],
+]);
+
 test('resolverPabellones: con la caché al día no se consulta nada ni se reescribe', async () => {
   const dir = carpetaTemporal();
   try {
@@ -269,8 +298,9 @@ test('resolverPabellones: con la caché al día no se consulta nada ni se reescr
     writeFileSync(ruta, JSON.stringify(cache));
     const antes = readFileSync(ruta, 'utf8');
     const ps = [partido('2026-10-04 11:30', 'A PINGUELA - PISTA 1', 'CF1'), partido('2026-10-05 00:00', 'OTRO', 'CF1', 'pendiente')];
+    // La página da otro sitio para A PINGUELA: lo guardado manda (no se toca).
     const [r, pedidas] = await conFetch(() => { throw new Error('no debería consultar'); },
-      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta, fechaPared(2026, 9, 25)));
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 9, 25), { lugares: LUGARES }));
     assert.deepEqual(pedidas, []);
     assert.deepEqual(r['A PINGUELA - PISTA 1'], cache['A PINGUELA - PISTA 1']);
     assert.equal(readFileSync(ruta, 'utf8'), antes);
@@ -279,39 +309,66 @@ test('resolverPabellones: con la caché al día no se consulta nada ni se reescr
   }
 });
 
-test('resolverPabellones: pabellón nuevo, sin datos y dirección que faltaba', async (t) => {
+test('resolverPabellones: un pabellón nuevo sale de la página del grupo: ninguna consulta a la federación y una a OSRM', async (t) => {
   const dir = carpetaTemporal();
   try {
     const ruta = join(dir, 'pabellones.json');
-    // Guardado antes de que se apuntara la dirección: se completa una vez.
-    writeFileSync(ruta, JSON.stringify({ 'VIEJO': { id_campo: '30', municipio: 'CARBALLO', lat: 43.2, lon: -8.7, km: 151.1, minutos_coche: 120, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-01-01' } }));
+    // VIEJO se guardó sin dirección: se completa con la de la página, sin red y sin tocar lo demás.
+    const viejo = { id_campo: '30', municipio: 'CARBALLO', lat: 43.2, lon: -8.7, km: 151.1, minutos_coche: 120, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-01-01' };
+    writeFileSync(ruta, JSON.stringify({ VIEJO: viejo }));
     const ps = ['VIEJO', 'NUEVO PABELLON - PISTA 1', 'NINGUNO'].map((n) => partido('2026-10-04 11:30', n, n));
-    const responder = (url, datos) => {
-      if (url.includes('router.project-osrm.org')) return JSON.stringify({ code: 'Ok', routes: [{ distance: 46149.3, duration: 2501.2 }] });
-      if (datos.accion === 'obtener_pabellones') return JSON.stringify({ data: [{ id_campo: '68', nombre: 'NUEVO PABELLON', municipio: 'MONFORTE DE LEMOS' }] });
-      if (datos.accion === 'obtener_info_campo') {
-        const direccion = datos.id === '68' ? 'RÃºA SOBER, 6, ESPAÃ±A' : 'RÃºA CARBALLO CALERO, 15, ESPAÃ±A';
-        return JSON.stringify({ data: [{ direccion, latitud: '42.51356', longitud: '-7.52425' }] });
-      }
-      throw new Error(`no previsto: ${url}`);
-    };
-    const [cache, pedidas] = await sinEsperas(t, () => conFetch(responder,
-      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta)));
-    assert.deepEqual(pedidas, ['obtener_pabellones', 'obtener_info_campo', pedidas[2], 'obtener_info_campo']);
-    assert.match(pedidas[2], /^https:\/\/router\.project-osrm\.org\/route\/v1\/driving\/-7\.8713948,42\.3442759;-7\.52425,42\.51356\?overview=false$/);
-    const hoy = cache.NINGUNO.fecha;
-    assert.match(hoy, /^\d{4}-\d{2}-\d{2}$/);
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(soloOsrm(OSRM_LUGO),
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 6), { lugares: LUGARES })));
+    assert.equal(pedidas.length, 1);
+    assert.match(pedidas[0], /^https:\/\/router\.project-osrm\.org\/route\/v1\/driving\/-7\.8713948,42\.3442759;-7\.52425,42\.51356\?overview=false$/);
+    // El nuevo: sin número de la federación, con el municipio y la dirección limpia de la página.
     assert.deepEqual(cache['NUEVO PABELLON - PISTA 1'], {
-      id_campo: '68', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER, 6', lat: 42.51356, lon: -7.52425,
-      km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: hoy,
+      id_campo: '', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO', lat: 42.51356, lon: -7.52425,
+      km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-11-06',
     });
-    assert.deepEqual(cache.NINGUNO, { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: hoy });
+    // Sin sitio en la página: sin datos (se vuelve a mirar mañana).
+    assert.deepEqual(cache.NINGUNO, { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-06' });
+    assert.deepEqual(cache.VIEJO, { ...viejo, direccion: 'RÚA CARBALLO CALERO, 15, 15100 CARBALLO, A CORUÑA' });
     assert.deepEqual(Object.keys(cache.VIEJO), ['id_campo', 'municipio', 'direccion', 'lat', 'lon', 'km', 'minutos_coche', 'fuente', 'origen', 'fecha']);
-    assert.equal(cache.VIEJO.direccion, 'RÚA CARBALLO CALERO, 15');
     // Se guarda en orden alfabético, con cuatro espacios.
     const guardado = readFileSync(ruta, 'utf8');
     assert.deepEqual(Object.keys(JSON.parse(guardado)), ['NINGUNO', 'NUEVO PABELLON - PISTA 1', 'VIEJO']);
     assert.ok(guardado.startsWith('{\n    "NINGUNO": {\n        "fuente": "sin-datos",'));
+    // Sin lugares (ni federación): el nuevo, sin datos.
+    rmSync(ruta);
+    const [sin, ninguna] = await conFetch(() => { throw new Error('no debería consultar'); },
+      () => resolverPabellones(ps.slice(1, 2), CFG, ruta, fechaPared(2026, 11, 6)));
+    assert.deepEqual(ninguna, []);
+    assert.deepEqual(sin['NUEVO PABELLON - PISTA 1'], { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-06' });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resolverPabellones: un pabellón «sin-datos» se calcula en cuanto la página trae su sitio, aunque ya se mirara hoy', async (t) => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    writeFileSync(ruta, JSON.stringify({ 'NUEVO PABELLON - PISTA 1': { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-06' } }));
+    const ps = [partido('2026-11-08 11:30', 'NUEVO PABELLON - PISTA 1', 'XF1')];
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(soloOsrm(OSRM_LUGO),
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 6), { lugares: LUGARES })));
+    assert.equal(pedidas.length, 1);
+    assert.deepEqual([cache['NUEVO PABELLON - PISTA 1'].fuente, cache['NUEVO PABELLON - PISTA 1'].km], ['osrm', 46.1]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resolverPabellones: sin municipio tras el código postal, el que lleva el nombre del pabellón entre paréntesis', async (t) => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    const ps = [partido('2026-11-08 12:00', 'IES MONTENEME (CARBALLO)', 'SF1')];
+    const [cache] = await sinEsperas(t, () => conFetch(soloOsrm(OSRM_LUGO),
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 6), { lugares: LUGARES })));
+    assert.deepEqual([cache['IES MONTENEME (CARBALLO)'].municipio, cache['IES MONTENEME (CARBALLO)'].direccion], ['CARBALLO',
+      'INSTITUTO DE EDUCACIÓN SECUNDARIA MONTE NEME, 29, RÚA ROMEU, FONTE DA CRISTINA, A CRISTINA, CARBALLO, BERGANTIÑOS, LA CORUÑA, GALICIA, 15106']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -326,16 +383,10 @@ test('resolverPabellones: también busca los pabellones de los partidos sin hora
       partido('2026-10-11 00:00', 'ANEXO OS REMEDIOS - PISTA 1', 'XF1', 'pendiente'),
       partido('2026-10-11 00:00', '', 'IF1', 'pendiente'),
     ];
-    const responder = (url, datos) => {
-      if (url.includes('router.project-osrm.org')) return JSON.stringify({ code: 'Ok', routes: [{ distance: 700, duration: 60 }] });
-      if (datos.accion === 'obtener_pabellones') return JSON.stringify({ data: [{ id_campo: '7', nombre: 'ANEXO OS REMEDIOS', municipio: 'OURENSE' }] });
-      if (datos.accion === 'obtener_info_campo') return JSON.stringify({ data: [{ direccion: 'RÚA PARDO DE CELA, 2', latitud: '42.3438638', longitud: '-7.8701618' }] });
-      throw new Error(`no previsto: ${url}`);
-    };
-    const [cache, pedidas] = await sinEsperas(t, () => conFetch(responder,
-      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta, fechaPared(2026, 9, 25))));
-    assert.deepEqual(pedidas.slice(0, 2), ['obtener_pabellones', 'obtener_info_campo']);
-    assert.equal(pedidas.length, 3);
+    const osrm = JSON.stringify({ code: 'Ok', routes: [{ distance: 700, duration: 60 }] });
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(soloOsrm(osrm),
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 9, 25), { lugares: LUGARES })));
+    assert.equal(pedidas.length, 1);
     assert.deepEqual(Object.keys(JSON.parse(readFileSync(ruta, 'utf8'))), ['ANEXO OS REMEDIOS - PISTA 1']);
     assert.deepEqual([cache['ANEXO OS REMEDIOS - PISTA 1'].municipio, cache['ANEXO OS REMEDIOS - PISTA 1'].km], ['OURENSE', 0.7]);
     anadirSalidas(ps, cache, CFG);
@@ -355,21 +406,22 @@ test('resolverPabellones: un pabellón con otras mayúsculas usa la entrada que 
     // La federación escribe el nombre con otras mayúsculas: ni consultas ni pabellones.json nuevo.
     const ps = [partido('2026-10-04 11:30', 'A Pinguela - Pista 1', 'CF1'), partido('2026-10-11 11:30', 'A PINGUELA - PISTA 1', 'IF1')];
     const [cache, pedidas] = await conFetch(() => { throw new Error('no debería consultar'); },
-      () => resolverPabellones(ps, CFG, fechaPared(2025, 8, 1), ruta));
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 9, 25), { lugares: LUGARES }));
     assert.deepEqual(pedidas, []);
     assert.equal(readFileSync(ruta, 'utf8'), antes);
     anadirSalidas(ps, cache, CFG);
     assert.deepEqual(ps.map((p) => hm(p.salida)), ['09:30', '09:30']);
 
-    // Si hay que volver a calcular la ruta (era una estimación de otro día), la entrada conserva su nombre.
+    // Si hay que volver a calcular la ruta (era una estimación de otro día), la entrada conserva su nombre y su sitio.
     writeFileSync(ruta, JSON.stringify({ 'A PINGUELA - PISTA 1': { ...entrada, fuente: 'estimado', fecha: '2026-01-01' } }));
-    const osrm = () => JSON.stringify({ code: 'Ok', routes: [{ distance: 46149.3, duration: 2501.2 }] });
-    const [nueva, consultas] = await sinEsperas(t, () => conFetch(osrm,
-      () => resolverPabellones([ps[0]], CFG, fechaPared(2025, 8, 1), ruta, fechaPared(2026, 9, 25))));
+    const [nueva, consultas] = await sinEsperas(t, () => conFetch(soloOsrm(OSRM_LUGO),
+      () => resolverPabellones([ps[0]], CFG, ruta, fechaPared(2026, 9, 25), { lugares: LUGARES })));
     assert.equal(consultas.length, 1);
+    assert.match(consultas[0], /;-7\.52425,42\.51356\?/);
     assert.deepEqual(Object.keys(nueva), ['A PINGUELA - PISTA 1']);
     assert.deepEqual(Object.keys(JSON.parse(readFileSync(ruta, 'utf8'))), ['A PINGUELA - PISTA 1']);
-    assert.deepEqual([nueva['A PINGUELA - PISTA 1'].fuente, nueva['A PINGUELA - PISTA 1'].fecha], ['osrm', '2026-09-25']);
+    assert.deepEqual([nueva['A PINGUELA - PISTA 1'].fuente, nueva['A PINGUELA - PISTA 1'].fecha, nueva['A PINGUELA - PISTA 1'].direccion],
+      ['osrm', '2026-09-25', 'RÚA SOBER']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
