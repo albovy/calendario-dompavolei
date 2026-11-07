@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
-   "firma": "18899f895cbbebe5",
-   "firma_clasificacion": "18899f895cbbebe5",
+   "firma": "022c007614151ef8",
+   "firma_clasificacion": "022c007614151ef8",
    "partidos": [
     {
      "id": "97104",
@@ -938,7 +938,18 @@
     },
     {
      "pos": 2,
-     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
+     "equipo": "2 CALVO XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 10,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 11,
+     "sc": 5
+    },
+    {
+     "pos": 3,
+     "equipo": "-2 CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 8,
      "pj": 4,
@@ -948,8 +959,8 @@
      "sc": 5
     },
     {
-     "pos": 3,
-     "equipo": "3 CLUB VIGO VOLEIBOL",
+     "pos": 4,
+     "equipo": "2 CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 8,
      "pj": 4,
@@ -959,8 +970,8 @@
      "sc": 7
     },
     {
-     "pos": 4,
-     "equipo": "-1 CLUB VOLEIBOL PONTEVEDRA SM1",
+     "pos": 5,
+     "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 7,
      "pj": 3,
@@ -968,17 +979,6 @@
      "pp": 1,
      "sf": 8,
      "sc": 4
-    },
-    {
-     "pos": 5,
-     "equipo": "-1 CALVO XIRIA VOLEI",
-     "club": "206572607",
-     "pt": 7,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 8,
-     "sc": 5
     },
     {
      "pos": 6,
@@ -1029,11 +1029,11 @@
      "equipo": "MANIOTAS SM",
      "club": "206572587",
      "pt": 0,
-     "pj": 3,
+     "pj": 4,
      "pg": 0,
-     "pp": 3,
+     "pp": 4,
      "sf": 0,
-     "sc": 9
+     "sc": 12
     }
    ]
   },
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
    "firma": "61f11b3afb4a4768",
    "firma_clasificacion": "61f11b3afb4a4768",
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
    "firma": "8114643dac2caabf",
    "firma_clasificacion": "8114643dac2caabf",
@@ -1836,7 +1836,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
    "firma": "ce26400b5500fc30",
    "firma_clasificacion": "ce26400b5500fc30",
@@ -2314,7 +2314,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2820,7 +2820,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-07 19:17",
+   "consultado": "2026-11-07 20:17",
    "terminado": false,
    "firma": "c000186c80eaee18",
    "firma_clasificacion": "c000186c80eaee18",
