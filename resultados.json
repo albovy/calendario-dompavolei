@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
-   "firma": "d8f3d2565d950208",
-   "firma_clasificacion": "d8f3d2565d950208",
+   "firma": "427cd6cb5ae0af6b",
+   "firma_clasificacion": "427cd6cb5ae0af6b",
    "partidos": [
     {
      "id": "97104",
@@ -907,18 +907,7 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "CLUB VOLEIBOL SANTIAGO",
-     "club": "206572589",
-     "pt": 8,
-     "pj": 3,
-     "pg": 3,
-     "pp": 0,
-     "sf": 9,
-     "sc": 2
-    },
-    {
-     "pos": 2,
-     "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "equipo": "1 AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 8,
      "pj": 3,
@@ -928,8 +917,30 @@
      "sc": 2
     },
     {
+     "pos": 2,
+     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 8,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 10,
+     "sc": 5
+    },
+    {
      "pos": 3,
-     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
+     "equipo": "3 CLUB VIGO VOLEIBOL",
+     "club": "206572606",
+     "pt": 8,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 9,
+     "sc": 7
+    },
+    {
+     "pos": 4,
+     "equipo": "-1 CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 7,
      "pj": 3,
@@ -939,8 +950,8 @@
      "sc": 4
     },
     {
-     "pos": 4,
-     "equipo": "CALVO XIRIA VOLEI",
+     "pos": 5,
+     "equipo": "-1 CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 7,
      "pj": 3,
@@ -950,8 +961,8 @@
      "sc": 5
     },
     {
-     "pos": 5,
-     "equipo": "CLUB VOLEIBOL NOIA",
+     "pos": 6,
+     "equipo": "-1 CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 6,
      "pj": 3,
@@ -959,17 +970,6 @@
      "pp": 1,
      "sf": 8,
      "sc": 5
-    },
-    {
-     "pos": 6,
-     "equipo": "CLUB VIGO VOLEIBOL",
-     "club": "206572606",
-     "pt": 5,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 6,
-     "sc": 6
     },
     {
      "pos": 7,
@@ -1024,7 +1024,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
    "firma": "61f11b3afb4a4768",
    "firma_clasificacion": "61f11b3afb4a4768",
@@ -1408,7 +1408,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
    "firma": "19cf40993382d906",
    "firma_clasificacion": "19cf40993382d906",
@@ -1816,10 +1816,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
-   "firma": "cfa7069c1aa3e394",
-   "firma_clasificacion": "cfa7069c1aa3e394",
+   "firma": "ad81cc998fbe29be",
+   "firma_clasificacion": "ad81cc998fbe29be",
    "partidos": [
     {
      "id": "98184",
@@ -2179,12 +2179,12 @@
      "pos": 1,
      "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
      "club": "206572607",
-     "pt": 9,
-     "pj": 3,
-     "pg": 3,
+     "pt": 11,
+     "pj": 4,
+     "pg": 4,
      "pp": 0,
-     "sf": 9,
-     "sc": 0
+     "sf": 12,
+     "sc": 2
     },
     {
      "pos": 2,
@@ -2201,12 +2201,12 @@
      "pos": 3,
      "equipo": "A TABERNA VOLEIBOL RIVEIRA",
      "club": "206572608",
-     "pt": 7,
-     "pj": 3,
+     "pt": 8,
+     "pj": 4,
      "pg": 2,
-     "pp": 1,
-     "sf": 8,
-     "sc": 4
+     "pp": 2,
+     "sf": 10,
+     "sc": 7
     },
     {
      "pos": 4,
@@ -2294,7 +2294,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2800,7 +2800,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-07 15:17",
+   "consultado": "2026-11-07 16:17",
    "terminado": false,
    "firma": "5d562d88efe34bc4",
    "firma_clasificacion": "5d562d88efe34bc4",
