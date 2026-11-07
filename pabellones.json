@@ -191,6 +191,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-08"
     },
+    "IES MONTENEME (CARBALLO)": {
+        "id_campo": "",
+        "municipio": "CARBALLO",
+        "direccion": "INSTITUTO DE EDUCACIÓN SECUNDARIA MONTE NEME, 29, RÚA ROMEU, FONTE DA CRISTINA, A CRISTINA, CARBALLO, BERGANTIÑOS, LA CORUÑA, GALICIA, 15106",
+        "lat": 43.21241694345236,
+        "lon": -8.703918498991985,
+        "km": 151.6,
+        "minutos_coche": 121,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-11-07"
+    },
     "LICEO LA PAZ - PISTA 1": {
         "id_campo": "28",
         "municipio": "A CORUÑA",
@@ -346,6 +358,18 @@
         "fuente": "osrm",
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-09"
+    },
+    "RAMON CABANILLAS - PISTA 2": {
+        "id_campo": "",
+        "municipio": "CAMBADOS",
+        "direccion": "AV. ROSALÍA DE CASTRO, 18, 36630 CAMBADOS, PONTEVEDRA",
+        "lat": 42.5196857,
+        "lon": -8.810736499999999,
+        "km": 123.6,
+        "minutos_coche": 96,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-11-07"
     },
     "RAMON CABANILLAS - PISTA CENTRAL": {
         "id_campo": "98",
