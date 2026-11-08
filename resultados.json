@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
    "firma": "a9c8c1113d98f5c1",
    "firma_clasificacion": "a9c8c1113d98f5c1",
@@ -1044,10 +1044,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
-   "firma": "0eb5d47dcf01c32e",
-   "firma_clasificacion": "0eb5d47dcf01c32e",
+   "firma": "a55e7c37629c35a3",
+   "firma_clasificacion": "a55e7c37629c35a3",
    "partidos": [
     {
      "id": "97409",
@@ -1163,9 +1163,25 @@
      "clubVisitante": "206572604",
      "dia": "2026-11-07",
      "hora": "17:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       10
+      ],
+      [
+       25,
+       7
+      ],
+      [
+       25,
+       14
+      ]
+     ],
      "campo": "PAVILLON VELLO O BARCO",
      "lugar": {
       "lat": 42.416854991245934,
@@ -1401,11 +1417,11 @@
      "pos": 7,
      "equipo": "DOMPAVOLEI SM O BARCO",
      "club": "206572580",
-     "pt": 0,
-     "pj": 3,
-     "pg": 0,
+     "pt": 3,
+     "pj": 4,
+     "pg": 1,
      "pp": 3,
-     "sf": 1,
+     "sf": 4,
      "sc": 9
     },
     {
@@ -1413,11 +1429,11 @@
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 0,
-     "pj": 2,
+     "pj": 3,
      "pg": 0,
-     "pp": 2,
+     "pp": 3,
      "sf": 0,
-     "sc": 6
+     "sc": 9
     }
    ]
   },
@@ -1428,7 +1444,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
    "firma": "0f73a676341dc8a2",
    "firma_clasificacion": "0f73a676341dc8a2",
@@ -1860,7 +1876,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
    "firma": "e0ae32e02a28b933",
    "firma_clasificacion": "e0ae32e02a28b933",
@@ -2354,7 +2370,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
    "firma": "527970dce8d07e06",
    "firma_clasificacion": "527970dce8d07e06",
@@ -2876,7 +2892,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 20:17",
+   "consultado": "2026-11-08 21:17",
    "terminado": false,
    "firma": "01745e3dc7691c64",
    "firma_clasificacion": "01745e3dc7691c64",
