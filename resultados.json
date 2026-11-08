@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
    "firma": "93689fc420b45391",
    "firma_clasificacion": "93689fc420b45391",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
    "firma": "0eb5d47dcf01c32e",
    "firma_clasificacion": "0eb5d47dcf01c32e",
@@ -1428,10 +1428,10 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
-   "firma": "8114643dac2caabf",
-   "firma_clasificacion": "8114643dac2caabf",
+   "firma": "0f73a676341dc8a2",
+   "firma_clasificacion": "0f73a676341dc8a2",
    "partidos": [
     {
      "id": "97354",
@@ -1551,9 +1551,33 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-08",
      "hora": "12:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      2,
+      3
+     ],
+     "sets": [
+      [
+       24,
+       26
+      ],
+      [
+       25,
+       20
+      ],
+      [
+       19,
+       25
+      ],
+      [
+       25,
+       22
+      ],
+      [
+       13,
+       15
+      ]
+     ],
      "campo": "IES MONTENEME (CARBALLO)",
      "lugar": {
       "lat": 43.21241694345236,
@@ -1743,12 +1767,12 @@
      "pos": 1,
      "equipo": "DOMPAVOLEI SF1",
      "club": "206572580",
-     "pt": 8,
-     "pj": 3,
-     "pg": 3,
+     "pt": 10,
+     "pj": 4,
+     "pg": 4,
      "pp": 0,
-     "sf": 9,
-     "sc": 2
+     "sf": 12,
+     "sc": 4
     },
     {
      "pos": 2,
@@ -1809,12 +1833,12 @@
      "pos": 7,
      "equipo": "-1 ASESORIA CERVANTES XIRIA VOLEI",
      "club": "206572607",
-     "pt": 0,
-     "pj": 1,
+     "pt": 1,
+     "pj": 2,
      "pg": 0,
-     "pp": 1,
-     "sf": 0,
-     "sc": 3
+     "pp": 2,
+     "sf": 2,
+     "sc": 6
     },
     {
      "pos": 8,
@@ -1836,10 +1860,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
-   "firma": "062e645204d415cb",
-   "firma_clasificacion": "062e645204d415cb",
+   "firma": "d34b00e246aab7d8",
+   "firma_clasificacion": "d34b00e246aab7d8",
    "partidos": [
     {
      "id": "98184",
@@ -1935,9 +1959,25 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-08",
      "hora": "11:30",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       11
+      ],
+      [
+       25,
+       13
+      ],
+      [
+       25,
+       12
+      ]
+     ],
      "campo": "RAMON CABANILLAS - PISTA 2",
      "lugar": {
       "lat": 42.5196857,
@@ -2197,7 +2237,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "equipo": "1 XAV CAMBADOS AZUL",
+     "club": "206572588",
+     "pt": 12,
+     "pj": 4,
+     "pg": 4,
+     "pp": 0,
+     "sf": 12,
+     "sc": 1
+    },
+    {
+     "pos": 2,
+     "equipo": "-1 BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
      "club": "206572607",
      "pt": 11,
      "pj": 4,
@@ -2205,17 +2256,6 @@
      "pp": 0,
      "sf": 12,
      "sc": 2
-    },
-    {
-     "pos": 2,
-     "equipo": "XAV CAMBADOS AZUL",
-     "club": "206572588",
-     "pt": 9,
-     "pj": 3,
-     "pg": 3,
-     "pp": 0,
-     "sf": 9,
-     "sc": 1
     },
     {
      "pos": 3,
@@ -2299,11 +2339,11 @@
      "equipo": "DOMPAVOLEI XF1",
      "club": "206572580",
      "pt": 0,
-     "pj": 2,
+     "pj": 3,
      "pg": 0,
-     "pp": 2,
+     "pp": 3,
      "sf": 0,
-     "sc": 6
+     "sc": 9
     }
    ]
   },
@@ -2314,10 +2354,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
-   "firma": "013d07f21e0c106b",
-   "firma_clasificacion": "013d07f21e0c106b",
+   "firma": "527970dce8d07e06",
+   "firma_clasificacion": "527970dce8d07e06",
    "partidos": [
     {
      "id": "98364",
@@ -2441,9 +2481,25 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-08",
      "hora": "11:30",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       11
+      ],
+      [
+       25,
+       13
+      ],
+      [
+       25,
+       22
+      ]
+     ],
      "campo": "RAMON CABANILLAS - PISTA 1",
      "lugar": {
       "lat": 42.5196857,
@@ -2703,7 +2759,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "1 CLUB VOLEIBOL NOIA",
+     "equipo": "XAV CAMBADOS AZUL",
+     "club": "206572588",
+     "pt": 12,
+     "pj": 4,
+     "pg": 4,
+     "pp": 0,
+     "sf": 12,
+     "sc": 0
+    },
+    {
+     "pos": 2,
+     "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 12,
      "pj": 4,
@@ -2711,17 +2778,6 @@
      "pp": 0,
      "sf": 12,
      "sc": 3
-    },
-    {
-     "pos": 2,
-     "equipo": "-1 XAV CAMBADOS AZUL",
-     "club": "206572588",
-     "pt": 9,
-     "pj": 3,
-     "pg": 3,
-     "pp": 0,
-     "sf": 9,
-     "sc": 0
     },
     {
      "pos": 3,
@@ -2783,11 +2839,11 @@
      "equipo": "DOMPAVOLEI IF1",
      "club": "206572580",
      "pt": 0,
-     "pj": 3,
+     "pj": 4,
      "pg": 0,
-     "pp": 3,
+     "pp": 4,
      "sf": 3,
-     "sc": 9
+     "sc": 12
     },
     {
      "pos": 9,
@@ -2820,7 +2876,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 13:17",
+   "consultado": "2026-11-08 14:17",
    "terminado": false,
    "firma": "3a61fd516be4b2dc",
    "firma_clasificacion": "3a61fd516be4b2dc",
