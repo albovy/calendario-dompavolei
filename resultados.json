@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
    "firma": "93689fc420b45391",
    "firma_clasificacion": "93689fc420b45391",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
    "firma": "0eb5d47dcf01c32e",
    "firma_clasificacion": "0eb5d47dcf01c32e",
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
    "firma": "8114643dac2caabf",
    "firma_clasificacion": "8114643dac2caabf",
@@ -1836,10 +1836,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
-   "firma": "ce26400b5500fc30",
-   "firma_clasificacion": "ce26400b5500fc30",
+   "firma": "062e645204d415cb",
+   "firma_clasificacion": "062e645204d415cb",
    "partidos": [
     {
      "id": "98184",
@@ -2219,7 +2219,18 @@
     },
     {
      "pos": 3,
-     "equipo": "A TABERNA VOLEIBOL RIVEIRA",
+     "equipo": "1 CLUB VIGO VOLEIBOL",
+     "club": "206572606",
+     "pt": 9,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 10,
+     "sc": 3
+    },
+    {
+     "pos": 4,
+     "equipo": "-1 A TABERNA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 8,
      "pj": 4,
@@ -2227,17 +2238,6 @@
      "pp": 2,
      "sf": 10,
      "sc": 7
-    },
-    {
-     "pos": 4,
-     "equipo": "CLUB VIGO VOLEIBOL",
-     "club": "206572606",
-     "pt": 6,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 7,
-     "sc": 3
     },
     {
      "pos": 5,
@@ -2252,18 +2252,7 @@
     },
     {
      "pos": 6,
-     "equipo": "CLUB VOLEIBOL SANTIAGO",
-     "club": "206572589",
-     "pt": 4,
-     "pj": 3,
-     "pg": 1,
-     "pp": 2,
-     "sf": 5,
-     "sc": 7
-    },
-    {
-     "pos": 7,
-     "equipo": "1 CV CIUDAD DE A CORUÑA JF B",
+     "equipo": "2 CV CIUDAD DE A CORUÑA JF B",
      "club": "206572595",
      "pt": 4,
      "pj": 4,
@@ -2271,6 +2260,17 @@
      "pp": 3,
      "sf": 5,
      "sc": 9
+    },
+    {
+     "pos": 7,
+     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
+     "club": "206572589",
+     "pt": 4,
+     "pj": 4,
+     "pg": 1,
+     "pp": 3,
+     "sf": 5,
+     "sc": 10
     },
     {
      "pos": 8,
@@ -2314,7 +2314,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2820,10 +2820,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 12:17",
+   "consultado": "2026-11-08 13:17",
    "terminado": false,
-   "firma": "22d0da3599bc7e62",
-   "firma_clasificacion": "22d0da3599bc7e62",
+   "firma": "3a61fd516be4b2dc",
+   "firma_clasificacion": "3a61fd516be4b2dc",
    "partidos": [
     {
      "id": "98634",
@@ -3283,7 +3283,18 @@
     },
     {
      "pos": 3,
-     "equipo": "CLUB VOLEIBOL PONTEVEDRA CF2",
+     "equipo": "1 EMEVE COLEXIO SAN LORENZO CF",
+     "club": "206572578",
+     "pt": 9,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 10,
+     "sc": 4
+    },
+    {
+     "pos": 4,
+     "equipo": "-1 CLUB VOLEIBOL PONTEVEDRA CF2",
      "club": "206572577",
      "pt": 6,
      "pj": 3,
@@ -3291,17 +3302,6 @@
      "pp": 1,
      "sf": 7,
      "sc": 3
-    },
-    {
-     "pos": 4,
-     "equipo": "EMEVE COLEXIO SAN LORENZO CF",
-     "club": "206572578",
-     "pt": 6,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 7,
-     "sc": 4
     },
     {
      "pos": 5,
@@ -3327,18 +3327,7 @@
     },
     {
      "pos": 7,
-     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
-     "club": "206572608",
-     "pt": 3,
-     "pj": 3,
-     "pg": 1,
-     "pp": 2,
-     "sf": 4,
-     "sc": 6
-    },
-    {
-     "pos": 8,
-     "equipo": "SEI SN CADETE FEM",
+     "equipo": "1 SEI SN CADETE FEM",
      "club": "206572677",
      "pt": 3,
      "pj": 3,
@@ -3346,6 +3335,17 @@
      "pp": 2,
      "sf": 3,
      "sc": 6
+    },
+    {
+     "pos": 8,
+     "equipo": "-1 EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "club": "206572608",
+     "pt": 3,
+     "pj": 4,
+     "pg": 1,
+     "pp": 3,
+     "sf": 4,
+     "sc": 9
     },
     {
      "pos": 9,
