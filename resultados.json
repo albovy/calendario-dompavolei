@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
    "firma": "93689fc420b45391",
    "firma_clasificacion": "93689fc420b45391",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
    "firma": "0eb5d47dcf01c32e",
    "firma_clasificacion": "0eb5d47dcf01c32e",
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
    "firma": "0f73a676341dc8a2",
    "firma_clasificacion": "0f73a676341dc8a2",
@@ -1860,7 +1860,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
    "firma": "e0ae32e02a28b933",
    "firma_clasificacion": "e0ae32e02a28b933",
@@ -2354,7 +2354,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
    "firma": "527970dce8d07e06",
    "firma_clasificacion": "527970dce8d07e06",
@@ -2876,10 +2876,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 15:17",
+   "consultado": "2026-11-08 18:17",
    "terminado": false,
-   "firma": "3a61fd516be4b2dc",
-   "firma_clasificacion": "3a61fd516be4b2dc",
+   "firma": "01745e3dc7691c64",
+   "firma_clasificacion": "01745e3dc7691c64",
    "partidos": [
     {
      "id": "98634",
@@ -3350,7 +3350,18 @@
     },
     {
      "pos": 4,
-     "equipo": "-1 CLUB VOLEIBOL PONTEVEDRA CF2",
+     "equipo": "2 VOLEIBOL DUMBRIA",
+     "club": "206572591",
+     "pt": 7,
+     "pj": 4,
+     "pg": 2,
+     "pp": 2,
+     "sf": 9,
+     "sc": 6
+    },
+    {
+     "pos": 5,
+     "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA CF2",
      "club": "206572577",
      "pt": 6,
      "pj": 3,
@@ -3360,8 +3371,8 @@
      "sc": 3
     },
     {
-     "pos": 5,
-     "equipo": "DOMPAVOLEI CF1",
+     "pos": 6,
+     "equipo": "-1 DOMPAVOLEI CF1",
      "club": "206572580",
      "pt": 4,
      "pj": 3,
@@ -3371,36 +3382,25 @@
      "sc": 7
     },
     {
-     "pos": 6,
-     "equipo": "VOLEIBOL DUMBRIA",
-     "club": "206572591",
-     "pt": 4,
-     "pj": 3,
-     "pg": 1,
-     "pp": 2,
-     "sf": 6,
-     "sc": 6
-    },
-    {
      "pos": 7,
-     "equipo": "1 SEI SN CADETE FEM",
-     "club": "206572677",
-     "pt": 3,
-     "pj": 3,
-     "pg": 1,
-     "pp": 2,
-     "sf": 3,
-     "sc": 6
-    },
-    {
-     "pos": 8,
-     "equipo": "-1 EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
+     "equipo": "EXCAVACIONES DARIO VOLEY RIVEIRA CADETE AZUL",
      "club": "206572608",
      "pt": 3,
      "pj": 4,
      "pg": 1,
      "pp": 3,
      "sf": 4,
+     "sc": 9
+    },
+    {
+     "pos": 8,
+     "equipo": "SEI SN CADETE FEM",
+     "club": "206572677",
+     "pt": 3,
+     "pj": 4,
+     "pg": 1,
+     "pp": 3,
+     "sf": 3,
      "sc": 9
     },
     {
