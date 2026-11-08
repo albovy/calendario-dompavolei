@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
-   "firma": "93689fc420b45391",
-   "firma_clasificacion": "93689fc420b45391",
+   "firma": "a9c8c1113d98f5c1",
+   "firma_clasificacion": "a9c8c1113d98f5c1",
    "partidos": [
     {
      "id": "97104",
@@ -984,23 +984,23 @@
      "pos": 6,
      "equipo": "-1 CLUB VOLEIBOL NOIA",
      "club": "206572604",
-     "pt": 6,
-     "pj": 3,
+     "pt": 7,
+     "pj": 4,
      "pg": 2,
-     "pp": 1,
-     "sf": 8,
-     "sc": 5
+     "pp": 2,
+     "sf": 10,
+     "sc": 8
     },
     {
      "pos": 7,
      "equipo": "A LERIA CAMBADOS",
      "club": "206572588",
-     "pt": 3,
-     "pj": 3,
-     "pg": 1,
+     "pt": 5,
+     "pj": 4,
+     "pg": 2,
      "pp": 2,
-     "sf": 4,
-     "sc": 6
+     "sf": 7,
+     "sc": 8
     },
     {
      "pos": 8,
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
    "firma": "0eb5d47dcf01c32e",
    "firma_clasificacion": "0eb5d47dcf01c32e",
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
    "firma": "0f73a676341dc8a2",
    "firma_clasificacion": "0f73a676341dc8a2",
@@ -1860,7 +1860,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
    "firma": "e0ae32e02a28b933",
    "firma_clasificacion": "e0ae32e02a28b933",
@@ -2354,7 +2354,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
    "firma": "527970dce8d07e06",
    "firma_clasificacion": "527970dce8d07e06",
@@ -2876,7 +2876,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 18:17",
+   "consultado": "2026-11-08 20:17",
    "terminado": false,
    "firma": "01745e3dc7691c64",
    "firma_clasificacion": "01745e3dc7691c64",
