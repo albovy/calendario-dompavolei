@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
    "firma": "93689fc420b45391",
    "firma_clasificacion": "93689fc420b45391",
@@ -1044,10 +1044,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
-   "firma": "61f11b3afb4a4768",
-   "firma_clasificacion": "61f11b3afb4a4768",
+   "firma": "0eb5d47dcf01c32e",
+   "firma_clasificacion": "0eb5d47dcf01c32e",
    "partidos": [
     {
      "id": "97409",
@@ -1333,7 +1333,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "4 CV OLEIROS SMB",
+     "equipo": "3 ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "club": "206572597",
+     "pt": 7,
+     "pj": 3,
+     "pg": 2,
+     "pp": 1,
+     "sf": 8,
+     "sc": 4
+    },
+    {
+     "pos": 2,
+     "equipo": "3 CV OLEIROS SMB",
      "club": "206572590",
      "pt": 6,
      "pj": 2,
@@ -1341,17 +1352,6 @@
      "pp": 0,
      "sf": 6,
      "sc": 1
-    },
-    {
-     "pos": 2,
-     "equipo": "1 CLUB VOLEIBOL PONTEVEDRA SM2",
-     "club": "206572577",
-     "pt": 6,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 7,
-     "sc": 4
     },
     {
      "pos": 3,
@@ -1377,7 +1377,18 @@
     },
     {
      "pos": 5,
-     "equipo": "1 C.V. NARON VOLEA",
+     "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA SM2",
+     "club": "206572577",
+     "pt": 6,
+     "pj": 4,
+     "pg": 2,
+     "pp": 2,
+     "sf": 7,
+     "sc": 7
+    },
+    {
+     "pos": 6,
+     "equipo": "C.V. NARON VOLEA",
      "club": "206572598",
      "pt": 5,
      "pj": 3,
@@ -1385,17 +1396,6 @@
      "pp": 1,
      "sf": 7,
      "sc": 5
-    },
-    {
-     "pos": 6,
-     "equipo": "-2 ACEITES ABRIL CVO JUNIOR MASCULINO",
-     "club": "206572597",
-     "pt": 4,
-     "pj": 2,
-     "pg": 1,
-     "pp": 1,
-     "sf": 5,
-     "sc": 4
     },
     {
      "pos": 7,
@@ -1428,7 +1428,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
    "firma": "8114643dac2caabf",
    "firma_clasificacion": "8114643dac2caabf",
@@ -1836,7 +1836,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
    "firma": "ce26400b5500fc30",
    "firma_clasificacion": "ce26400b5500fc30",
@@ -2314,7 +2314,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
    "firma": "013d07f21e0c106b",
    "firma_clasificacion": "013d07f21e0c106b",
@@ -2820,10 +2820,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-08 08:17",
+   "consultado": "2026-11-08 12:17",
    "terminado": false,
-   "firma": "c000186c80eaee18",
-   "firma_clasificacion": "c000186c80eaee18",
+   "firma": "22d0da3599bc7e62",
+   "firma_clasificacion": "22d0da3599bc7e62",
    "partidos": [
     {
      "id": "98634",
@@ -2973,9 +2973,25 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-08",
      "hora": "10:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       18,
+       25
+      ],
+      [
+       18,
+       25
+      ],
+      [
+       18,
+       25
+      ]
+     ],
      "campo": "RAMON CABANILLAS - PISTA 2",
      "lugar": {
       "lat": 42.5196857,
