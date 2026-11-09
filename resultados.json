@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
-   "firma": "a9c8c1113d98f5c1",
-   "firma_clasificacion": "a9c8c1113d98f5c1",
+   "firma": "3fbfd9893839c074",
+   "firma_clasificacion": "3fbfd9893839c074",
    "partidos": [
     {
      "id": "97104",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
    "firma": "a55e7c37629c35a3",
    "firma_clasificacion": "a55e7c37629c35a3",
@@ -1444,7 +1444,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
    "firma": "0f73a676341dc8a2",
    "firma_clasificacion": "0f73a676341dc8a2",
@@ -1876,7 +1876,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
    "firma": "e0ae32e02a28b933",
    "firma_clasificacion": "e0ae32e02a28b933",
@@ -2370,10 +2370,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
-   "firma": "1190e2e389a7e76a",
-   "firma_clasificacion": "1190e2e389a7e76a",
+   "firma": "c507a9ab21128256",
+   "firma_clasificacion": "c507a9ab21128256",
    "partidos": [
     {
      "id": "98364",
@@ -2548,11 +2548,11 @@
      "clubLocal": "206572586",
      "clubVisitante": "206572580",
      "dia": "2026-11-21",
-     "hora": "",
+     "hora": "10:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
-     "campo": "A PINGUELA - PISTA 1",
+     "campo": "A PINGUELA - PISTA 2",
      "lugar": {
       "lat": 42.51356,
       "lon": -7.524249999999999,
@@ -2892,10 +2892,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-09 13:17",
+   "consultado": "2026-11-09 14:17",
    "terminado": false,
-   "firma": "01745e3dc7691c64",
-   "firma_clasificacion": "01745e3dc7691c64",
+   "firma": "3708e3efe242a97d",
+   "firma_clasificacion": "3708e3efe242a97d",
    "partidos": [
     {
      "id": "98634",

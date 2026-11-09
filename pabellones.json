@@ -35,6 +35,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-09-24"
     },
+    "A PINGUELA - PISTA 2": {
+        "id_campo": "",
+        "municipio": "MONFORTE DE LEMOS",
+        "direccion": "RÚA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO",
+        "lat": 42.51356,
+        "lon": -7.524249999999999,
+        "km": 46.1,
+        "minutos_coche": 42,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-11-09"
+    },
     "A SOLAINA - PISTA 1": {
         "id_campo": "48",
         "municipio": "NARÓN",
