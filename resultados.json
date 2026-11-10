@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
-   "firma": "b3dff2a1ad383ce1",
-   "firma_clasificacion": "b3dff2a1ad383ce1",
+   "firma": "b41d915ef126fb1b",
+   "firma_clasificacion": "b41d915ef126fb1b",
    "partidos": [
     {
      "id": "97104",
@@ -678,11 +678,11 @@
      "clubLocal": "206572580",
      "clubVisitante": "206572577",
      "dia": "2026-11-14",
-     "hora": "",
+     "hora": "16:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
-     "campo": "ANEXO OS REMEDIOS CAMPO1 - PISTA 1",
+     "campo": "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 2",
      "lugar": {
       "lat": 42.3442759,
       "lon": -7.871394800000001,
@@ -1044,10 +1044,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
-   "firma": "a55e7c37629c35a3",
-   "firma_clasificacion": "a55e7c37629c35a3",
+   "firma": "73f57887e418b52b",
+   "firma_clasificacion": "73f57887e418b52b",
    "partidos": [
     {
      "id": "97409",
@@ -1444,7 +1444,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
    "firma": "0f73a676341dc8a2",
    "firma_clasificacion": "0f73a676341dc8a2",
@@ -1608,7 +1608,7 @@
      "clubLocal": "206572580",
      "clubVisitante": "206572577",
      "dia": "2026-11-14",
-     "hora": "",
+     "hora": "16:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
@@ -1876,10 +1876,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
-   "firma": "793389a480523a8e",
-   "firma_clasificacion": "793389a480523a8e",
+   "firma": "0aea762436715150",
+   "firma_clasificacion": "0aea762436715150",
    "partidos": [
     {
      "id": "98184",
@@ -2007,16 +2007,16 @@
      "visitante": "CV CIUDAD DE A CORUÑA JF B",
      "clubLocal": "206572580",
      "clubVisitante": "206572595",
-     "dia": "2026-11-14",
-     "hora": "",
+     "dia": "2026-11-15",
+     "hora": "12:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
-     "campo": "A CARBALLEIRA",
+     "campo": "ANEXO OS REMEDIOS CAMPO1 - PISTA 1",
      "lugar": {
-      "lat": 42.332355,
-      "lon": -7.8742318,
-      "direccion": "RúA DO CASTELO RAMIRO, 28, 32002 OURENSE, ESPAñA, 32002"
+      "lat": 42.3442759,
+      "lon": -7.871394800000001,
+      "direccion": "RúA PARDO DE CELA, 2, 32002 OURENSE, ESPAñA, 32003"
      }
     },
     {
@@ -2370,10 +2370,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
-   "firma": "c507a9ab21128256",
-   "firma_clasificacion": "c507a9ab21128256",
+   "firma": "450fe575612af982",
+   "firma_clasificacion": "450fe575612af982",
    "partidos": [
     {
      "id": "98364",
@@ -2529,16 +2529,16 @@
      "visitante": "CV CIUDAD DE A CORUÑA INFANTIL B",
      "clubLocal": "206572580",
      "clubVisitante": "206572595",
-     "dia": "2026-11-14",
-     "hora": "",
+     "dia": "2026-11-15",
+     "hora": "10:30",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
-     "campo": "A CARBALLEIRA",
+     "campo": "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 2",
      "lugar": {
-      "lat": 42.332355,
-      "lon": -7.8742318,
-      "direccion": "RúA DO CASTELO RAMIRO, 28, 32002 OURENSE, ESPAñA, 32002"
+      "lat": 42.3442759,
+      "lon": -7.871394800000001,
+      "direccion": "RúA PARDO DE CELA, 2, 32002 OURENSE, ESPAñA, 32003"
      }
     },
     {
@@ -2892,7 +2892,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-10 08:17",
+   "consultado": "2026-11-10 10:17",
    "terminado": false,
    "firma": "6e535d4ecf69424d",
    "firma_clasificacion": "6e535d4ecf69424d",
