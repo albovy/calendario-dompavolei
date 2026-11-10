@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
    "firma": "eabff86ce9c60cec",
    "firma_clasificacion": "eabff86ce9c60cec",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
    "firma": "d01edae2cc773344",
    "firma_clasificacion": "d01edae2cc773344",
@@ -1196,7 +1196,7 @@
      "clubLocal": "206572597",
      "clubVisitante": "206572580",
      "dia": "2026-11-14",
-     "hora": "16:00",
+     "hora": "12:00",
      "estado": "Pendiente",
      "marcador": null,
      "sets": [],
@@ -1444,10 +1444,10 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
-   "firma": "456dd6f670ac86c0",
-   "firma_clasificacion": "456dd6f670ac86c0",
+   "firma": "b2675c774c95e5f4",
+   "firma_clasificacion": "b2675c774c95e5f4",
    "partidos": [
     {
      "id": "97354",
@@ -1876,7 +1876,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
    "firma": "091446c6ce6f91ea",
    "firma_clasificacion": "091446c6ce6f91ea",
@@ -2370,7 +2370,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
    "firma": "9df4aa18c10e6d61",
    "firma_clasificacion": "9df4aa18c10e6d61",
@@ -2892,7 +2892,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-10 18:17",
+   "consultado": "2026-11-10 21:17",
    "terminado": false,
    "firma": "9547d0e12fb121a9",
    "firma_clasificacion": "9547d0e12fb121a9",
