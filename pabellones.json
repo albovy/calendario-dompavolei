@@ -263,6 +263,18 @@
         "origen": "42.3442759,-7.8713948",
         "fecha": "2026-10-09"
     },
+    "O POMPEO - PISTA 1": {
+        "id_campo": "",
+        "municipio": "OURENSE",
+        "direccion": "R. DO VILAR, 38, 32005 OURENSE",
+        "lat": 42.3330403,
+        "lon": -7.864953900000001,
+        "km": 2.2,
+        "minutos_coche": 5,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-11-10"
+    },
     "PABELLÓN COLEGIO SAN NARCISO - PISTA 1": {
         "id_campo": "151",
         "municipio": "MARÍN",
