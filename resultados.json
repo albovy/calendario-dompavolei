@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
-   "firma": "eabff86ce9c60cec",
-   "firma_clasificacion": "eabff86ce9c60cec",
+   "firma": "945f05395ffc6530",
+   "firma_clasificacion": "945f05395ffc6530",
    "partidos": [
     {
      "id": "97104",
@@ -927,7 +927,7 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "1 AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 11,
      "pj": 4,
@@ -938,7 +938,7 @@
     },
     {
      "pos": 2,
-     "equipo": "2 CALVO XIRIA VOLEI",
+     "equipo": "CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 10,
      "pj": 4,
@@ -949,7 +949,7 @@
     },
     {
      "pos": 3,
-     "equipo": "-2 CLUB VOLEIBOL SANTIAGO",
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 8,
      "pj": 4,
@@ -960,7 +960,7 @@
     },
     {
      "pos": 4,
-     "equipo": "2 CLUB VIGO VOLEIBOL",
+     "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 8,
      "pj": 4,
@@ -971,7 +971,7 @@
     },
     {
      "pos": 5,
-     "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA SM1",
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 8,
      "pj": 4,
@@ -982,7 +982,7 @@
     },
     {
      "pos": 6,
-     "equipo": "-1 CLUB VOLEIBOL NOIA",
+     "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 7,
      "pj": 4,
@@ -1044,10 +1044,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
-   "firma": "d01edae2cc773344",
-   "firma_clasificacion": "d01edae2cc773344",
+   "firma": "73f57887e418b52b",
+   "firma_clasificacion": "73f57887e418b52b",
    "partidos": [
     {
      "id": "97409",
@@ -1349,7 +1349,7 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "3 ACEITES ABRIL CVO JUNIOR MASCULINO",
+     "equipo": "ACEITES ABRIL CVO JUNIOR MASCULINO",
      "club": "206572597",
      "pt": 7,
      "pj": 3,
@@ -1360,7 +1360,7 @@
     },
     {
      "pos": 2,
-     "equipo": "3 CV OLEIROS SMB",
+     "equipo": "CV OLEIROS SMB",
      "club": "206572590",
      "pt": 6,
      "pj": 2,
@@ -1371,7 +1371,7 @@
     },
     {
      "pos": 3,
-     "equipo": "-2 CV MEGATOXOS",
+     "equipo": "CV MEGATOXOS",
      "club": "206573095",
      "pt": 6,
      "pj": 3,
@@ -1382,7 +1382,7 @@
     },
     {
      "pos": 4,
-     "equipo": "-2 CS MOTOR VOLEY RIVEIRA SENIOR B",
+     "equipo": "CS MOTOR VOLEY RIVEIRA SENIOR B",
      "club": "206572608",
      "pt": 6,
      "pj": 4,
@@ -1393,7 +1393,7 @@
     },
     {
      "pos": 5,
-     "equipo": "-2 CLUB VOLEIBOL PONTEVEDRA SM2",
+     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM2",
      "club": "206572577",
      "pt": 6,
      "pj": 4,
@@ -1444,7 +1444,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
    "firma": "b2675c774c95e5f4",
    "firma_clasificacion": "b2675c774c95e5f4",
@@ -1876,7 +1876,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
    "firma": "091446c6ce6f91ea",
    "firma_clasificacion": "091446c6ce6f91ea",
@@ -2370,7 +2370,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
    "firma": "9df4aa18c10e6d61",
    "firma_clasificacion": "9df4aa18c10e6d61",
@@ -2892,7 +2892,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-11 08:17",
+   "consultado": "2026-11-11 09:17",
    "terminado": false,
    "firma": "9547d0e12fb121a9",
    "firma_clasificacion": "9547d0e12fb121a9",
