@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
    "firma": "32fd13d1db223cad",
    "firma_clasificacion": "32fd13d1db223cad",
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
    "firma": "dc0834f712ebfe8e",
    "firma_clasificacion": "dc0834f712ebfe8e",
@@ -1932,7 +1932,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
    "firma": "44214b4a9d35e9f5",
    "firma_clasificacion": "44214b4a9d35e9f5",
@@ -2426,10 +2426,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
-   "firma": "8d1540986e543a54",
-   "firma_clasificacion": "8d1540986e543a54",
+   "firma": "14126388bd3736d7",
+   "firma_clasificacion": "14126388bd3736d7",
    "partidos": [
     {
      "id": "98364",
@@ -2853,7 +2853,18 @@
     },
     {
      "pos": 3,
-     "equipo": "4 XUVENIL TEIS A",
+     "equipo": "3 ALDEBARAN SAN SADURNIÑO",
+     "club": "206572609",
+     "pt": 9,
+     "pj": 4,
+     "pg": 3,
+     "pp": 1,
+     "sf": 10,
+     "sc": 6
+    },
+    {
+     "pos": 4,
+     "equipo": "3 XUVENIL TEIS A",
      "club": "206572585",
      "pt": 9,
      "pj": 5,
@@ -2863,8 +2874,8 @@
      "sc": 9
     },
     {
-     "pos": 4,
-     "equipo": "-1 CV CIUDAD DE A CORUÑA INFANTIL B",
+     "pos": 5,
+     "equipo": "-2 CV CIUDAD DE A CORUÑA INFANTIL B",
      "club": "206572595",
      "pt": 8,
      "pj": 4,
@@ -2874,26 +2885,15 @@
      "sc": 6
     },
     {
-     "pos": 5,
-     "equipo": "-1 SEI SAN NARCISO IF",
+     "pos": 6,
+     "equipo": "-2 SEI SAN NARCISO IF",
      "club": "206572677",
      "pt": 7,
-     "pj": 4,
+     "pj": 5,
      "pg": 2,
-     "pp": 2,
-     "sf": 8,
-     "sc": 7
-    },
-    {
-     "pos": 6,
-     "equipo": "ALDEBARAN SAN SADURNIÑO",
-     "club": "206572609",
-     "pt": 6,
-     "pj": 3,
-     "pg": 2,
-     "pp": 1,
-     "sf": 7,
-     "sc": 5
+     "pp": 3,
+     "sf": 9,
+     "sc": 10
     },
     {
      "pos": 7,
@@ -2948,7 +2948,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 21:17",
+   "consultado": "2026-11-14 23:17",
    "terminado": false,
    "firma": "1a3c66bf1320cf72",
    "firma_clasificacion": "1a3c66bf1320cf72",
