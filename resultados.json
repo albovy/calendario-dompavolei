@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
    "firma": "945f05395ffc6530",
    "firma_clasificacion": "945f05395ffc6530",
@@ -1044,10 +1044,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
-   "firma": "73f57887e418b52b",
-   "firma_clasificacion": "73f57887e418b52b",
+   "firma": "60a6b8db58c54367",
+   "firma_clasificacion": "60a6b8db58c54367",
    "partidos": [
     {
      "id": "97409",
@@ -1197,9 +1197,25 @@
      "clubVisitante": "206572580",
      "dia": "2026-11-14",
      "hora": "12:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      3,
+      0
+     ],
+     "sets": [
+      [
+       25,
+       11
+      ],
+      [
+       25,
+       19
+      ],
+      [
+       25,
+       17
+      ]
+     ],
      "campo": "O POMPEO - PISTA 1",
      "lugar": {
       "lat": 42.3330403,
@@ -1351,11 +1367,11 @@
      "pos": 1,
      "equipo": "ACEITES ABRIL CVO JUNIOR MASCULINO",
      "club": "206572597",
-     "pt": 7,
-     "pj": 3,
-     "pg": 2,
+     "pt": 10,
+     "pj": 4,
+     "pg": 3,
      "pp": 1,
-     "sf": 8,
+     "sf": 11,
      "sc": 4
     },
     {
@@ -1418,11 +1434,11 @@
      "equipo": "DOMPAVOLEI SM O BARCO",
      "club": "206572580",
      "pt": 3,
-     "pj": 4,
+     "pj": 5,
      "pg": 1,
-     "pp": 3,
+     "pp": 4,
      "sf": 4,
-     "sc": 9
+     "sc": 12
     },
     {
      "pos": 8,
@@ -1444,7 +1460,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
    "firma": "b2675c774c95e5f4",
    "firma_clasificacion": "b2675c774c95e5f4",
@@ -1876,7 +1892,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
    "firma": "091446c6ce6f91ea",
    "firma_clasificacion": "091446c6ce6f91ea",
@@ -2370,7 +2386,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
    "firma": "e1770f121e82fc84",
    "firma_clasificacion": "e1770f121e82fc84",
@@ -2892,7 +2908,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 11:17",
+   "consultado": "2026-11-14 15:17",
    "terminado": false,
    "firma": "9547d0e12fb121a9",
    "firma_clasificacion": "9547d0e12fb121a9",
