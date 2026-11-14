@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
-   "firma": "945f05395ffc6530",
-   "firma_clasificacion": "945f05395ffc6530",
+   "firma": "06908e59402e4e82",
+   "firma_clasificacion": "06908e59402e4e82",
    "partidos": [
     {
      "id": "97104",
@@ -679,9 +679,25 @@
      "clubVisitante": "206572577",
      "dia": "2026-11-14",
      "hora": "16:00",
-     "estado": "Pendiente",
-     "marcador": null,
-     "sets": [],
+     "estado": "Finalizado",
+     "marcador": [
+      0,
+      3
+     ],
+     "sets": [
+      [
+       16,
+       25
+      ],
+      [
+       22,
+       25
+      ],
+      [
+       21,
+       25
+      ]
+     ],
      "campo": "ANEXO PM OS REMEDIOS - ANEXO OS REMEDIOS - PISTA 2",
      "lugar": {
       "lat": 42.3442759,
@@ -938,7 +954,18 @@
     },
     {
      "pos": 2,
-     "equipo": "CALVO XIRIA VOLEI",
+     "equipo": "3 CLUB VOLEIBOL PONTEVEDRA SM1",
+     "club": "206572577",
+     "pt": 11,
+     "pj": 5,
+     "pg": 3,
+     "pp": 2,
+     "sf": 13,
+     "sc": 7
+    },
+    {
+     "pos": 3,
+     "equipo": "-1 CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 10,
      "pj": 4,
@@ -948,8 +975,8 @@
      "sc": 5
     },
     {
-     "pos": 3,
-     "equipo": "CLUB VOLEIBOL SANTIAGO",
+     "pos": 4,
+     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 8,
      "pj": 4,
@@ -959,25 +986,14 @@
      "sc": 5
     },
     {
-     "pos": 4,
-     "equipo": "CLUB VIGO VOLEIBOL",
+     "pos": 5,
+     "equipo": "-1 CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 8,
      "pj": 4,
      "pg": 3,
      "pp": 1,
      "sf": 9,
-     "sc": 7
-    },
-    {
-     "pos": 5,
-     "equipo": "CLUB VOLEIBOL PONTEVEDRA SM1",
-     "club": "206572577",
-     "pt": 8,
-     "pj": 4,
-     "pg": 2,
-     "pp": 2,
-     "sf": 10,
      "sc": 7
     },
     {
@@ -1018,11 +1034,11 @@
      "equipo": "DOMPAVOLEI SM1",
      "club": "206572580",
      "pt": 0,
-     "pj": 4,
+     "pj": 5,
      "pg": 0,
-     "pp": 4,
+     "pp": 5,
      "sf": 3,
-     "sc": 12
+     "sc": 15
     },
     {
      "pos": 10,
@@ -1044,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1460,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
    "firma": "b2675c774c95e5f4",
    "firma_clasificacion": "b2675c774c95e5f4",
@@ -1892,7 +1908,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
    "firma": "091446c6ce6f91ea",
    "firma_clasificacion": "091446c6ce6f91ea",
@@ -2386,7 +2402,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
    "firma": "8d1540986e543a54",
    "firma_clasificacion": "8d1540986e543a54",
@@ -2908,7 +2924,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 17:17",
+   "consultado": "2026-11-14 18:17",
    "terminado": false,
    "firma": "9547d0e12fb121a9",
    "firma_clasificacion": "9547d0e12fb121a9",
