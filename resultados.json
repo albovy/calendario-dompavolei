@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
    "firma": "945f05395ffc6530",
    "firma_clasificacion": "945f05395ffc6530",
@@ -1044,7 +1044,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
    "firma": "73f57887e418b52b",
    "firma_clasificacion": "73f57887e418b52b",
@@ -1444,7 +1444,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
    "firma": "b2675c774c95e5f4",
    "firma_clasificacion": "b2675c774c95e5f4",
@@ -1876,7 +1876,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
    "firma": "091446c6ce6f91ea",
    "firma_clasificacion": "091446c6ce6f91ea",
@@ -2370,10 +2370,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
-   "firma": "9df4aa18c10e6d61",
-   "firma_clasificacion": "9df4aa18c10e6d61",
+   "firma": "e1770f121e82fc84",
+   "firma_clasificacion": "e1770f121e82fc84",
    "partidos": [
     {
      "id": "98364",
@@ -2777,11 +2777,11 @@
      "pos": 1,
      "equipo": "XAV CAMBADOS AZUL",
      "club": "206572588",
-     "pt": 12,
-     "pj": 4,
-     "pg": 4,
+     "pt": 15,
+     "pj": 5,
+     "pg": 5,
      "pp": 0,
-     "sf": 12,
+     "sf": 15,
      "sc": 0
     },
     {
@@ -2789,15 +2789,15 @@
      "equipo": "CLUB VOLEIBOL NOIA",
      "club": "206572604",
      "pt": 12,
-     "pj": 4,
+     "pj": 5,
      "pg": 4,
-     "pp": 0,
+     "pp": 1,
      "sf": 12,
-     "sc": 3
+     "sc": 6
     },
     {
      "pos": 3,
-     "equipo": "3 CV CIUDAD DE A CORUÑA INFANTIL B",
+     "equipo": "CV CIUDAD DE A CORUÑA INFANTIL B",
      "club": "206572595",
      "pt": 8,
      "pj": 4,
@@ -2808,7 +2808,7 @@
     },
     {
      "pos": 4,
-     "equipo": "-1 SEI SAN NARCISO IF",
+     "equipo": "SEI SAN NARCISO IF",
      "club": "206572677",
      "pt": 7,
      "pj": 4,
@@ -2819,7 +2819,7 @@
     },
     {
      "pos": 5,
-     "equipo": "-1 CLUB VIGO VOLEIBOL",
+     "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 6,
      "pj": 3,
@@ -2830,7 +2830,7 @@
     },
     {
      "pos": 6,
-     "equipo": "-1 ALDEBARAN SAN SADURNIÑO",
+     "equipo": "ALDEBARAN SAN SADURNIÑO",
      "club": "206572609",
      "pt": 6,
      "pj": 3,
@@ -2892,7 +2892,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-14 11:17",
    "terminado": false,
    "firma": "9547d0e12fb121a9",
    "firma_clasificacion": "9547d0e12fb121a9",
