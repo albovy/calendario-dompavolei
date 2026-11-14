@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
-   "firma": "c6067b6380fa307a",
-   "firma_clasificacion": "c6067b6380fa307a",
+   "firma": "32fd13d1db223cad",
+   "firma_clasificacion": "32fd13d1db223cad",
    "partidos": [
     {
      "id": "97104",
@@ -976,7 +976,18 @@
     },
     {
      "pos": 4,
-     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
+     "equipo": "2 CLUB VOLEIBOL NOIA",
+     "club": "206572604",
+     "pt": 10,
+     "pj": 5,
+     "pg": 3,
+     "pp": 2,
+     "sf": 13,
+     "sc": 8
+    },
+    {
+     "pos": 5,
+     "equipo": "-2 CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 8,
      "pj": 4,
@@ -986,8 +997,8 @@
      "sc": 5
     },
     {
-     "pos": 5,
-     "equipo": "-1 CLUB VIGO VOLEIBOL",
+     "pos": 6,
+     "equipo": "-2 CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 8,
      "pj": 4,
@@ -997,8 +1008,8 @@
      "sc": 7
     },
     {
-     "pos": 6,
-     "equipo": "1 A LERIA CAMBADOS",
+     "pos": 7,
+     "equipo": "A LERIA CAMBADOS",
      "club": "206572588",
      "pt": 7,
      "pj": 5,
@@ -1006,17 +1017,6 @@
      "pp": 2,
      "sf": 10,
      "sc": 10
-    },
-    {
-     "pos": 7,
-     "equipo": "-1 CLUB VOLEIBOL NOIA",
-     "club": "206572604",
-     "pt": 7,
-     "pj": 4,
-     "pg": 2,
-     "pp": 2,
-     "sf": 10,
-     "sc": 8
     },
     {
      "pos": 8,
@@ -1045,11 +1045,11 @@
      "equipo": "MANIOTAS SM",
      "club": "206572587",
      "pt": 0,
-     "pj": 4,
+     "pj": 5,
      "pg": 0,
-     "pp": 4,
+     "pp": 5,
      "sf": 0,
-     "sc": 12
+     "sc": 15
     }
    ]
   },
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
    "firma": "dc0834f712ebfe8e",
    "firma_clasificacion": "dc0834f712ebfe8e",
@@ -1932,10 +1932,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
-   "firma": "091446c6ce6f91ea",
-   "firma_clasificacion": "091446c6ce6f91ea",
+   "firma": "44214b4a9d35e9f5",
+   "firma_clasificacion": "44214b4a9d35e9f5",
    "partidos": [
     {
      "id": "98184",
@@ -2309,7 +2309,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "1 XAV CAMBADOS AZUL",
+     "equipo": "1 BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 14,
+     "pj": 5,
+     "pg": 5,
+     "pp": 0,
+     "sf": 15,
+     "sc": 3
+    },
+    {
+     "pos": 2,
+     "equipo": "-1 XAV CAMBADOS AZUL",
      "club": "206572588",
      "pt": 12,
      "pj": 4,
@@ -2319,19 +2330,8 @@
      "sc": 1
     },
     {
-     "pos": 2,
-     "equipo": "-1 BREIJO ARQUITECTURA E INGENIERIA XIRIA VOLEI",
-     "club": "206572607",
-     "pt": 11,
-     "pj": 4,
-     "pg": 4,
-     "pp": 0,
-     "sf": 12,
-     "sc": 2
-    },
-    {
      "pos": 3,
-     "equipo": "1 CLUB VIGO VOLEIBOL",
+     "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 9,
      "pj": 4,
@@ -2342,7 +2342,7 @@
     },
     {
      "pos": 4,
-     "equipo": "-1 A TABERNA VOLEIBOL RIVEIRA",
+     "equipo": "A TABERNA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 8,
      "pj": 4,
@@ -2355,16 +2355,16 @@
      "pos": 5,
      "equipo": "COLEGIO LICEO LA PAZ",
      "club": "206572593",
-     "pt": 6,
-     "pj": 4,
+     "pt": 7,
+     "pj": 5,
      "pg": 3,
-     "pp": 1,
-     "sf": 9,
-     "sc": 9
+     "pp": 2,
+     "sf": 11,
+     "sc": 12
     },
     {
      "pos": 6,
-     "equipo": "2 CV CIUDAD DE A CORUÑA JF B",
+     "equipo": "CV CIUDAD DE A CORUÑA JF B",
      "club": "206572595",
      "pt": 4,
      "pj": 4,
@@ -2375,18 +2375,18 @@
     },
     {
      "pos": 7,
-     "equipo": "-1 CLUB VOLEIBOL SANTIAGO",
+     "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 4,
-     "pj": 4,
+     "pj": 5,
      "pg": 1,
-     "pp": 3,
-     "sf": 5,
-     "sc": 10
+     "pp": 4,
+     "sf": 6,
+     "sc": 13
     },
     {
      "pos": 8,
-     "equipo": "-1 ACEITES ABRIL CVO JUV. AZUL FEM",
+     "equipo": "ACEITES ABRIL CVO JUV. AZUL FEM",
      "club": "206572597",
      "pt": 3,
      "pj": 3,
@@ -2399,12 +2399,12 @@
      "pos": 9,
      "equipo": "COSVAMA - MANIOTAS XF",
      "club": "206572587",
-     "pt": 0,
-     "pj": 4,
-     "pg": 0,
+     "pt": 2,
+     "pj": 5,
+     "pg": 1,
      "pp": 4,
-     "sf": 1,
-     "sc": 12
+     "sf": 4,
+     "sc": 14
     },
     {
      "pos": 10,
@@ -2426,7 +2426,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
    "firma": "8d1540986e543a54",
    "firma_clasificacion": "8d1540986e543a54",
@@ -2948,7 +2948,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 20:17",
+   "consultado": "2026-11-14 21:17",
    "terminado": false,
    "firma": "1a3c66bf1320cf72",
    "firma_clasificacion": "1a3c66bf1320cf72",
