@@ -90,7 +90,7 @@
     "4053",
     "4054"
    ],
-   "revisado": "2026-11-14 08:17"
+   "revisado": "2026-11-15 08:17"
   },
   "TORNEO APERTURA INFANTIL F": {
    "id": "1511",
@@ -111,7 +111,7 @@
     "4063",
     "4064"
    ],
-   "revisado": "2026-11-14 08:17"
+   "revisado": "2026-11-15 08:17"
   },
   "TORNEO APERTURA XUVENIL F": {
    "id": "1507",
@@ -133,7 +133,7 @@
     "4093",
     "4094"
    ],
-   "revisado": "2026-11-14 08:17"
+   "revisado": "2026-11-15 08:17"
   }
  },
  "grupos": {
@@ -144,7 +144,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": true,
    "firma": "f142d9984d5d1d5b",
    "firma_clasificacion": "f142d9984d5d1d5b",
@@ -333,7 +333,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": true,
    "firma": "c7d447739ce0bfd2",
    "firma_clasificacion": "c7d447739ce0bfd2",
@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "32fd13d1db223cad",
    "firma_clasificacion": "32fd13d1db223cad",
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "dc0834f712ebfe8e",
    "firma_clasificacion": "dc0834f712ebfe8e",
@@ -1932,7 +1932,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "44214b4a9d35e9f5",
    "firma_clasificacion": "44214b4a9d35e9f5",
@@ -2426,7 +2426,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "14126388bd3736d7",
    "firma_clasificacion": "14126388bd3736d7",
@@ -2948,7 +2948,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 23:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": false,
    "firma": "1a3c66bf1320cf72",
    "firma_clasificacion": "1a3c66bf1320cf72",
@@ -3768,7 +3768,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-14 08:17",
+   "consultado": "2026-11-15 08:17",
    "terminado": true,
    "firma": "2c76b8ad5837864a",
    "firma_clasificacion": "2c76b8ad5837864a",
