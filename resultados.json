@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
-   "firma": "32fd13d1db223cad",
-   "firma_clasificacion": "32fd13d1db223cad",
+   "firma": "72b8458e76a1b1fb",
+   "firma_clasificacion": "72b8458e76a1b1fb",
    "partidos": [
     {
      "id": "97104",
@@ -943,7 +943,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "equipo": "1 CALVO XIRIA VOLEI",
+     "club": "206572607",
+     "pt": 13,
+     "pj": 5,
+     "pg": 4,
+     "pp": 1,
+     "sf": 14,
+     "sc": 5
+    },
+    {
+     "pos": 2,
+     "equipo": "-1 AUTOS CADISTA VOLEIBOL RIVEIRA",
      "club": "206572608",
      "pt": 11,
      "pj": 4,
@@ -953,8 +964,8 @@
      "sc": 3
     },
     {
-     "pos": 2,
-     "equipo": "3 CLUB VOLEIBOL PONTEVEDRA SM1",
+     "pos": 3,
+     "equipo": "2 CLUB VOLEIBOL PONTEVEDRA SM1",
      "club": "206572577",
      "pt": 11,
      "pj": 5,
@@ -962,17 +973,6 @@
      "pp": 2,
      "sf": 13,
      "sc": 7
-    },
-    {
-     "pos": 3,
-     "equipo": "-1 CALVO XIRIA VOLEI",
-     "club": "206572607",
-     "pt": 10,
-     "pj": 4,
-     "pg": 3,
-     "pp": 1,
-     "sf": 11,
-     "sc": 5
     },
     {
      "pos": 4,
@@ -1001,11 +1001,11 @@
      "equipo": "-2 CLUB VIGO VOLEIBOL",
      "club": "206572606",
      "pt": 8,
-     "pj": 4,
+     "pj": 5,
      "pg": 3,
-     "pp": 1,
+     "pp": 2,
      "sf": 9,
-     "sc": 7
+     "sc": 10
     },
     {
      "pos": 7,
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
    "firma": "dc0834f712ebfe8e",
    "firma_clasificacion": "dc0834f712ebfe8e",
@@ -1932,10 +1932,10 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
-   "firma": "44214b4a9d35e9f5",
-   "firma_clasificacion": "44214b4a9d35e9f5",
+   "firma": "096ec2b67c0f37a7",
+   "firma_clasificacion": "096ec2b67c0f37a7",
    "partidos": [
     {
      "id": "98184",
@@ -2333,11 +2333,11 @@
      "pos": 3,
      "equipo": "CLUB VIGO VOLEIBOL",
      "club": "206572606",
-     "pt": 9,
-     "pj": 4,
-     "pg": 3,
+     "pt": 12,
+     "pj": 5,
+     "pg": 4,
      "pp": 1,
-     "sf": 10,
+     "sf": 13,
      "sc": 3
     },
     {
@@ -2389,11 +2389,11 @@
      "equipo": "ACEITES ABRIL CVO JUV. AZUL FEM",
      "club": "206572597",
      "pt": 3,
-     "pj": 3,
+     "pj": 4,
      "pg": 1,
-     "pp": 2,
+     "pp": 3,
      "sf": 6,
-     "sc": 8
+     "sc": 11
     },
     {
      "pos": 9,
@@ -2426,7 +2426,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
    "firma": "14126388bd3736d7",
    "firma_clasificacion": "14126388bd3736d7",
@@ -2948,10 +2948,10 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-15 08:17",
+   "consultado": "2026-11-15 12:17",
    "terminado": false,
-   "firma": "1a3c66bf1320cf72",
-   "firma_clasificacion": "1a3c66bf1320cf72",
+   "firma": "da242d4a9f38adf0",
+   "firma_clasificacion": "da242d4a9f38adf0",
    "partidos": [
     {
      "id": "98634",
@@ -3407,11 +3407,11 @@
      "pos": 1,
      "equipo": "CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
-     "pt": 12,
-     "pj": 4,
-     "pg": 4,
+     "pt": 15,
+     "pj": 5,
+     "pg": 5,
      "pp": 0,
-     "sf": 12,
+     "sf": 15,
      "sc": 2
     },
     {
@@ -3441,11 +3441,11 @@
      "equipo": "-1 EMEVE COLEXIO SAN LORENZO CF",
      "club": "206572578",
      "pt": 9,
-     "pj": 4,
+     "pj": 5,
      "pg": 3,
-     "pp": 1,
+     "pp": 2,
      "sf": 10,
-     "sc": 4
+     "sc": 7
     },
     {
      "pos": 5,
