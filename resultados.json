@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
    "firma": "72b8458e76a1b1fb",
    "firma_clasificacion": "72b8458e76a1b1fb",
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
    "firma": "4edb9a6d297cc86d",
    "firma_clasificacion": "4edb9a6d297cc86d",
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
    "firma": "dc0834f712ebfe8e",
    "firma_clasificacion": "dc0834f712ebfe8e",
@@ -1932,7 +1932,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
    "firma": "096ec2b67c0f37a7",
    "firma_clasificacion": "096ec2b67c0f37a7",
@@ -2426,10 +2426,10 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
-   "firma": "14126388bd3736d7",
-   "firma_clasificacion": "14126388bd3736d7",
+   "firma": "36ec4d01cc1aeafa",
+   "firma_clasificacion": "36ec4d01cc1aeafa",
    "partidos": [
     {
      "id": "98364",
@@ -2908,19 +2908,19 @@
     },
     {
      "pos": 8,
-     "equipo": "DOMPAVOLEI IF1",
-     "club": "206572580",
-     "pt": 0,
-     "pj": 4,
-     "pg": 0,
+     "equipo": "1 JEALSA BOIRO VOLEIBOL",
+     "club": "206572599",
+     "pt": 3,
+     "pj": 5,
+     "pg": 1,
      "pp": 4,
-     "sf": 3,
-     "sc": 12
+     "sf": 6,
+     "sc": 13
     },
     {
      "pos": 9,
-     "equipo": "JEALSA BOIRO VOLEIBOL",
-     "club": "206572599",
+     "equipo": "-1 DOMPAVOLEI IF1",
+     "club": "206572580",
      "pt": 0,
      "pj": 4,
      "pg": 0,
@@ -2933,11 +2933,11 @@
      "equipo": "RIBEIRA SACRA B",
      "club": "206572586",
      "pt": 0,
-     "pj": 4,
+     "pj": 5,
      "pg": 0,
-     "pp": 4,
-     "sf": 0,
-     "sc": 12
+     "pp": 5,
+     "sf": 1,
+     "sc": 15
     }
    ]
   },
@@ -2948,7 +2948,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-15 13:17",
+   "consultado": "2026-11-15 14:17",
    "terminado": false,
    "firma": "c7483f61848bda9b",
    "firma_clasificacion": "c7483f61848bda9b",
