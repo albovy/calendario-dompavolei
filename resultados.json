@@ -518,10 +518,10 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
-   "firma": "72b8458e76a1b1fb",
-   "firma_clasificacion": "72b8458e76a1b1fb",
+   "firma": "b254c1aa07443e36",
+   "firma_clasificacion": "b254c1aa07443e36",
    "partidos": [
     {
      "id": "97104",
@@ -943,7 +943,18 @@
    "clasificacion": [
     {
      "pos": 1,
-     "equipo": "1 CALVO XIRIA VOLEI",
+     "equipo": "AUTOS CADISTA VOLEIBOL RIVEIRA",
+     "club": "206572608",
+     "pt": 14,
+     "pj": 5,
+     "pg": 5,
+     "pp": 0,
+     "sf": 15,
+     "sc": 4
+    },
+    {
+     "pos": 2,
+     "equipo": "CALVO XIRIA VOLEI",
      "club": "206572607",
      "pt": 13,
      "pj": 5,
@@ -951,17 +962,6 @@
      "pp": 1,
      "sf": 14,
      "sc": 5
-    },
-    {
-     "pos": 2,
-     "equipo": "-1 AUTOS CADISTA VOLEIBOL RIVEIRA",
-     "club": "206572608",
-     "pt": 11,
-     "pj": 4,
-     "pg": 4,
-     "pp": 0,
-     "sf": 12,
-     "sc": 3
     },
     {
      "pos": 3,
@@ -990,11 +990,11 @@
      "equipo": "-2 CLUB VOLEIBOL SANTIAGO",
      "club": "206572589",
      "pt": 8,
-     "pj": 4,
+     "pj": 5,
      "pg": 3,
-     "pp": 1,
-     "sf": 10,
-     "sc": 5
+     "pp": 2,
+     "sf": 11,
+     "sc": 8
     },
     {
      "pos": 6,
@@ -1060,10 +1060,10 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
-   "firma": "4edb9a6d297cc86d",
-   "firma_clasificacion": "4edb9a6d297cc86d",
+   "firma": "2b55d8ed13002b78",
+   "firma_clasificacion": "2b55d8ed13002b78",
    "partidos": [
     {
      "id": "97409",
@@ -1392,7 +1392,18 @@
     },
     {
      "pos": 2,
-     "equipo": "1 CV MEGATOXOS",
+     "equipo": "CV OLEIROS SMB",
+     "club": "206572590",
+     "pt": 9,
+     "pj": 3,
+     "pg": 3,
+     "pp": 0,
+     "sf": 9,
+     "sc": 1
+    },
+    {
+     "pos": 3,
+     "equipo": "CV MEGATOXOS",
      "club": "206573095",
      "pt": 9,
      "pj": 4,
@@ -1400,17 +1411,6 @@
      "pp": 1,
      "sf": 9,
      "sc": 4
-    },
-    {
-     "pos": 3,
-     "equipo": "-1 CV OLEIROS SMB",
-     "club": "206572590",
-     "pt": 6,
-     "pj": 2,
-     "pg": 2,
-     "pp": 0,
-     "sf": 6,
-     "sc": 1
     },
     {
      "pos": 4,
@@ -1428,11 +1428,11 @@
      "equipo": "CLUB VOLEIBOL PONTEVEDRA SM2",
      "club": "206572577",
      "pt": 6,
-     "pj": 4,
+     "pj": 5,
      "pg": 2,
-     "pp": 2,
+     "pp": 3,
      "sf": 7,
-     "sc": 7
+     "sc": 10
     },
     {
      "pos": 6,
@@ -1476,7 +1476,7 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
    "firma": "e17a5d488987d92c",
    "firma_clasificacion": "e17a5d488987d92c",
@@ -1932,7 +1932,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
    "firma": "bb9fc994ae094a18",
    "firma_clasificacion": "bb9fc994ae094a18",
@@ -2450,7 +2450,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
    "firma": "61522568b70a5e59",
    "firma_clasificacion": "61522568b70a5e59",
@@ -2996,7 +2996,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-15 17:17",
+   "consultado": "2026-11-15 20:17",
    "terminado": false,
    "firma": "c7483f61848bda9b",
    "firma_clasificacion": "c7483f61848bda9b",
