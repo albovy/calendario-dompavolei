@@ -518,7 +518,7 @@
    "equipos": [
     "DOMPAVOLEI SM1"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
    "firma": "b254c1aa07443e36",
    "firma_clasificacion": "b254c1aa07443e36",
@@ -1060,7 +1060,7 @@
    "equipos": [
     "DOMPAVOLEI SM O BARCO"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
    "firma": "2b55d8ed13002b78",
    "firma_clasificacion": "2b55d8ed13002b78",
@@ -1476,10 +1476,10 @@
    "equipos": [
     "DOMPAVOLEI SF1"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
-   "firma": "e17a5d488987d92c",
-   "firma_clasificacion": "e17a5d488987d92c",
+   "firma": "846a004d4720c5cb",
+   "firma_clasificacion": "846a004d4720c5cb",
    "partidos": [
     {
      "id": "97354",
@@ -1881,8 +1881,8 @@
     },
     {
      "pos": 5,
-     "equipo": "CV MEGATOXOS",
-     "club": "206573095",
+     "equipo": "2 ASESORIA CERVANTES XIRIA VOLEI",
+     "club": "206572607",
      "pt": 4,
      "pj": 3,
      "pg": 1,
@@ -1892,7 +1892,18 @@
     },
     {
      "pos": 6,
-     "equipo": "C.V. NARON VOLEA B",
+     "equipo": "-1 CV MEGATOXOS",
+     "club": "206573095",
+     "pt": 4,
+     "pj": 3,
+     "pg": 1,
+     "pp": 2,
+     "sf": 5,
+     "sc": 6
+    },
+    {
+     "pos": 7,
+     "equipo": "-1 C.V. NARON VOLEA B",
      "club": "206572598",
      "pt": 2,
      "pj": 4,
@@ -1902,26 +1913,15 @@
      "sc": 11
     },
     {
-     "pos": 7,
-     "equipo": "ASESORIA CERVANTES XIRIA VOLEI",
-     "club": "206572607",
-     "pt": 1,
-     "pj": 2,
-     "pg": 0,
-     "pp": 2,
-     "sf": 2,
-     "sc": 6
-    },
-    {
      "pos": 8,
      "equipo": "C.V. NARON VOLEA C",
      "club": "206572598",
      "pt": 0,
-     "pj": 3,
+     "pj": 4,
      "pg": 0,
-     "pp": 3,
+     "pp": 4,
      "sf": 0,
-     "sc": 9
+     "sc": 12
     }
    ]
   },
@@ -1932,7 +1932,7 @@
    "equipos": [
     "DOMPAVOLEI XF1"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
    "firma": "bb9fc994ae094a18",
    "firma_clasificacion": "bb9fc994ae094a18",
@@ -2450,7 +2450,7 @@
    "equipos": [
     "DOMPAVOLEI IF1"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
    "firma": "9e523a4a6fb9c65d",
    "firma_clasificacion": "9e523a4a6fb9c65d",
@@ -2996,7 +2996,7 @@
    "equipos": [
     "DOMPAVOLEI CF1"
    ],
-   "consultado": "2026-11-16 08:17",
+   "consultado": "2026-11-16 11:17",
    "terminado": false,
    "firma": "c7483f61848bda9b",
    "firma_clasificacion": "c7483f61848bda9b",
