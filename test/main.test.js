@@ -69,14 +69,15 @@ async function sinEsperas(t, f) {
 }
 
 // Reglas de red: a la federación, solo GET a competicion_completa.php y clasificacion.php (y listado_clubs.php, solo
-// con --listar-clubs), con el User-Agent del programa y ninguna otra cabecera; nunca nada bajo /json/, ni equipo.php,
-// ni actas, ni previos.
+// con --listar-clubs), en su versión clásica (clasica=1), con el User-Agent del programa y ninguna otra cabecera; nunca
+// nada bajo /json/, ni equipo.php, ni actas, ni previos.
 function comprobarReglas(pedidas, listar) {
   const paginas = ['/competicion_completa.php', '/clasificacion.php', ...(listar ? ['/listado_clubs.php'] : [])];
   for (const { url, opciones } of pedidas) {
     if (url.origin === 'https://router.project-osrm.org') continue;
     assert.equal(url.origin, 'https://resultadosvoleibol.isquad.es', url.href);
     assert.ok(paginas.includes(url.pathname), url.href);
+    assert.equal(url.searchParams.get('clasica'), '1', url.href);
     assert.ok(!/json|equipo|acta|previo/i.test(url.href), url.href);
     assert.equal(opciones.method, 'GET', url.href);
     assert.equal(opciones.body, undefined, url.href);

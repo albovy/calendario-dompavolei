@@ -8,6 +8,9 @@
 // descarga mientras el club tiene grupos sin terminar en ellas y, cuando ya los ha terminado todos, mirando una vez al
 // día la página del último (gruposARepasar).
 //
+// Desde el 16/11/2026 esas páginas mandan (302) a la web nueva de iSquad, la «BETA» (/maqueta/), que saca los datos
+// de /json/; se piden en su «Versión clásica», la que ofrece la propia web (clasica=1, ver clasica() en isquad.js).
+//
 // Para no cargar su web: solo GET a competicion_completa.php y clasificacion.php, con el User-Agent del programa y
 // nada más; al menos 1,5 s entre dos peticiones; sin reintentos si la federación dice que no (3xx o 4xx); los grupos
 // terminados no se vuelven a pedir (salvo ese repaso diario) y la clasificación, solo cuando cambian los partidos del
@@ -15,7 +18,7 @@
 // resultados.json.
 
 import { existsSync, readFileSync } from 'node:fs';
-import { peticion } from './isquad.js';
+import { clasica, peticion } from './isquad.js';
 import {
   anotarGrupos, anotarResultados, guardarCacheResultados, horasDesde, leerClasificacion, leerGrupos, leerResultados,
   marca, pagina, repararNombre,
@@ -39,8 +42,9 @@ export const PLAZO_MS = 5 * 60 * 1000;
 
 // --- config.json -----------------------------------------------------------------------------------------
 
-const COMO_APUNTARLOS = 'Cada grupo se apunta con el id= y el id_competicion= de la dirección de su página en '
-  + 'https://resultadosvoleibol.isquad.es (la de Resultados del grupo), por ejemplo: '
+const COMO_APUNTARLOS = 'Cada grupo se apunta con el id= y el id_competicion= de la dirección de su página clásica en '
+  + 'https://resultadosvoleibol.isquad.es (con el grupo abierto en la web nueva, la que abre el botón «Versión clásica»), '
+  + 'por ejemplo: '
   + '"federacion": { "grupos": [ { "equipo": "DOMPAVOLEI SM1", "grupo": "3857", "competicion": "1516" } ] }.';
 
 // Grupos de config.json (federacion.grupos): [{ equipo, grupo, competicion }], con grupo y competicion como textos de
@@ -352,7 +356,7 @@ export async function actualizarFederacion({
     }
     if (cuando > Date.now()) await esperar(cuando - Date.now());
     try {
-      return await peticion(pagina(archivo, t, cache.grupos[t].id_competicion), null, { esperas });
+      return await peticion(clasica(pagina(archivo, t, cache.grupos[t].id_competicion)), null, { esperas });
     } finally {
       ultima = Date.now();
     }

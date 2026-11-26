@@ -15,6 +15,13 @@ export const SUPERFICIE = '1';    // voleibol en pista (no playa)
 
 const AGENTE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendario-voley/1.0';
 
+// Desde el 16/11/2026 las páginas de siempre de la web de resultados (las «clásicas»: competicion_completa.php,
+// clasificacion.php, listado_clubs.php...) responden con un 302 a la web nueva de iSquad (/maqueta/, la «BETA»), que
+// saca los datos de /json/, cerrado a los programas. La propia web deja volver a la «Versión clásica» (el botón de
+// arriba; en la dirección, el parámetro clasica=1): con eso responde la página de siempre. Es lo que pide el programa:
+// ruta con clasica=1 añadido.
+export function clasica(ruta) { return `${ruta}${ruta.includes('?') ? '&' : '?'}clasica=1`; }
+
 // Texto del error de fetch: el motivo de verdad (DNS, conexión rechazada...) viene en "cause". Si el
 // nombre tiene varias direcciones (IPv4 e IPv6) y fallan todas, la causa es un AggregateError sin
 // texto: se usa el del primer intento.
@@ -126,7 +133,7 @@ export async function clubsFederacion() {
   // Nombre oficial de cada club (el ID coincide con id_club_local / id_club_visitante).
   const clubs = new Map();
   try {
-    const html = await peticion(`listado_clubs.php?id_territorial=${AMBITO}&id_superficie=${SUPERFICIE}`, null);
+    const html = await peticion(clasica(`listado_clubs.php?id_territorial=${AMBITO}&id_superficie=${SUPERFICIE}`), null);
     const patron = /afiliacion_clubs\/(\d+)\/[^'"]*['"][^>]*?\balt\s*=\s*['"]([^'"]*)['"]/g;
     for (const m of html.matchAll(patron)) {
       const id = m[1];

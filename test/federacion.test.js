@@ -192,12 +192,14 @@ function federacion(pedidas, cambios) {
   };
 }
 
-// Reglas de red: solo GET a competicion_completa.php y clasificacion.php de la web de resultados, con el User-Agent
-// del programa y ninguna otra cabecera, y sin seguir redirecciones; nada bajo /json/, ni equipo.php, ni actas, ni previos.
+// Reglas de red: solo GET a competicion_completa.php y clasificacion.php de la web de resultados, en su versión clásica
+// (clasica=1: sin eso, la federación manda a su web nueva), con el User-Agent del programa y ninguna otra cabecera, y
+// sin seguir redirecciones; nada bajo /json/, ni equipo.php, ni actas, ni previos.
 function comprobarReglas(pedidas) {
   for (const { url, opciones } of pedidas) {
     assert.equal(url.origin, 'https://resultadosvoleibol.isquad.es', url.href);
     assert.ok(['/competicion_completa.php', '/clasificacion.php'].includes(url.pathname), url.href);
+    assert.equal(url.searchParams.get('clasica'), '1', url.href);
     assert.ok(!/json|equipo|acta|previo/i.test(url.href), url.href);
     assert.equal(opciones.method, 'GET');
     assert.equal(opciones.body, undefined);
@@ -249,9 +251,9 @@ test('actualizarFederacion: el grupo y su clasificación; guarda resultados.json
   assert.deepEqual(avisos, []);
   assert.deepEqual(nombres(pedidas), ['grupo 3941', 'clasificacion 3941']);
   assert.equal(pedidas[0].url.href, 'https://resultadosvoleibol.isquad.es/competicion_completa.php?seleccion=0&id=3941&id_ambito=6'
-    + '&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1537');
+    + '&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1537&clasica=1');
   assert.equal(pedidas[1].url.href, 'https://resultadosvoleibol.isquad.es/clasificacion.php?seleccion=0&id=3941&id_ambito=6'
-    + '&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1537');
+    + '&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1537&clasica=1');
   const { cache, filas, lugares, anterior, fallo } = resultado;
   assert.equal(fallo, null);
   assert.deepEqual(Object.keys(cache), ['temporada', 'clubs', 'competiciones', 'grupos']);

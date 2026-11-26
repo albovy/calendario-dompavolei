@@ -120,6 +120,18 @@ test('leerGrupos y leerClasificacion: también con las páginas de noviembre de 
   assert.deepEqual(tabla[8], { pos: 9, equipo: 'DOMPAVOLEI SM1', club: DOMPA, pt: 0, pj: 3, pg: 0, pp: 3, sf: 2, sc: 9 });
 });
 
+test('leerClasificacion: los puestos que sube o baja un equipo no son parte de su nombre', () => {
+  // Como lo pone la página cuando un equipo cambia de puesto: <div class='sube'></div> <span>1</span>, delante del nombre.
+  const sinFlechas = pagina('clasificacion-3857-2026-11.html');
+  const flecha = (html, equipo, clase, puestos) => html.replace(new RegExp(`(\\s*)(${equipo}\\s*</a>)`),
+    `\n<div class='${clase}'></div>\n<span>${puestos}</span>$1$2`);
+  const conFlechas = flecha(flecha(sinFlechas, 'DOMPAVOLEI SM1', 'sube', '1'), 'CLUB VOLEIBOL SANTIAGO', 'baja', '-2');
+  assert.match(conFlechas, /<div class='sube'><\/div>\n<span>1<\/span>\s+DOMPAVOLEI SM1/);
+  assert.match(conFlechas, /<div class='baja'><\/div>\n<span>-2<\/span>\s+CLUB VOLEIBOL SANTIAGO/);
+  assert.deepEqual(leerClasificacion(conFlechas), leerClasificacion(sinFlechas));
+  assert.deepEqual(leerClasificacion(conFlechas).filter((f) => [1, 9].includes(f.pos)).map((f) => f.equipo), ['CLUB VOLEIBOL SANTIAGO', 'DOMPAVOLEI SM1']);
+});
+
 test('leerClasificacion: la tabla del grupo; sin clasificación, null', () => {
   assert.deepEqual(leerClasificacion(pagina('clasificacion-4064.html')), [
     { pos: 1, equipo: 'DOMPAVOLEI IF1', club: DOMPA, pt: 6, pj: 2, pg: 2, pp: 0, sf: 6, sc: 0 },
@@ -219,6 +231,7 @@ test('clasificaciones: la del grupo del próximo partido del equipo o, si no le 
   assert.equal(lista.length, 1);   // el CF1 no tiene grupos en la caché
   const [if1] = lista;
   assert.deepEqual([if1.equipo, if1.competicion, if1.grupo], ['DOMPAVOLEI IF1', APERTURA, 'SEGUNDA FASE - GRUPO 1']);
+  // El enlace de la página va sin clasica=1: a quien lo abre, la federación lo lleva a esa clasificación en su web nueva.
   assert.equal(if1.url, 'https://resultadosvoleibol.isquad.es/clasificacion.php?seleccion=0&id=3818&id_ambito=6&id_territorial=20&id_superficie=1&iframe=0&id_competicion=1511');
   assert.equal(if1.actualizado.getTime(), AHORA.getTime());
   assert.deepEqual(if1.filas.filter((f) => f.nuestro).map((f) => f.equipo), ['DOMPAVOLEI IF1']);
