@@ -785,6 +785,36 @@ test('un pabellón nuevo sale con las coordenadas y la dirección de la página 
   }
 });
 
+test('un pabellón cercano sin municipio apuntado: sus partidos salen como de fuera, con un aviso; con el municipio escrito a mano, en casa', async (t) => {
+  const dir = carpetaConConfig({
+    clubs: [{ id: DOMPA, nombre: 'DOMPAVOLEI' }],
+    salidas: { origen: 'Os Remedios', latitud: 42.3442759, longitud: -7.8713948, municipios_casa: ['Ourense', 'Orense'] },
+  });
+  try {
+    // En Ourense, a 1,1 km del club; de su dirección (con el código postal al final) no salió el municipio.
+    const entrada = { id_campo: '', municipio: '', direccion: 'RÚA DE EDUARDO BLANCO AMOR, AS LAGOAS, OURENSE, ORENSE, GALICIA, 32003',
+      lat: 42.3449319, lon: -7.8578327, km: 2.2, minutos_coche: 5, fuente: 'osrm', origen: '42.3442759,-7.8713948', fecha: '2026-11-25' };
+    const partido = { ...fila('2026-11-28 10:30:00', 'DOMPAVOLEI IF1', 'RIVAL', DOMPA, '1'), campo: 'I.E.S. NUEVO' };
+    const generarCon = async (municipio) => {
+      writeFileSync(join(dir, 'pabellones.json'), JSON.stringify({ 'I.E.S. NUEVO': { ...entrada, municipio } }));
+      const { consola, pedidas } = await generar(t, soloPartidos([partido]),
+        ['--config', dir, '--salida', join(dir, 's'), '--nombre-base', 'cal'], new Date('2026-11-26T08:00:00Z'));
+      assert.ok(pedidas.every((p) => p.url.origin !== 'https://router.project-osrm.org'));
+      const [p] = datosDePagina(join(dir, 's', 'cal.html')).partidos;
+      return { avisos: consola.filter((l) => l.includes('Sin municipio')), partido: [p.casa, p.s, p.ca, p.vj] };
+    };
+    // 5 min * 1,10 -> 15 de bus; 10:30 - 60 - 15 = 9:15.
+    assert.deepEqual(await generarCon(''), {
+      avisos: ['  ! Sin municipio en pabellones.json: I.E.S. NUEVO (a 1,1 km). Sus partidos salen como de fuera; si el pabellón es de un '
+        + 'municipio de municipios_casa (config.json), se escribe a mano su "municipio" en pabellones.json.'],
+      partido: [false, '09:15', '09:30', 15],
+    });
+    assert.deepEqual(await generarCon('Ourense'), { avisos: [], partido: [true, '', '09:30', 0] });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ¿Es la página del diseño nuevo, sin el selector de diseño ni nada del anterior?
 function esDisenoNuevo(ruta) {
   const html = readFileSync(ruta, 'utf8');

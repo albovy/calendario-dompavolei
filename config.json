@@ -38,6 +38,7 @@
         "redondeo_viaje_minutos": 15,
         "redondeo_salida_minutos": 30,
         "margen_minutos": 0,
+        "municipios_casa": ["Ourense", "Orense"],
         "tiempos_viaje_minutos": {
         }
     },

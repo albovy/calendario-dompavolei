@@ -16,7 +16,19 @@ federación apuntados en `config.json`, se queda con los del club indicado allí
 página (plantilla `src/plantilla.html`, con el escudo del club, `escudo.png`, dentro), el `.ics`, un Excel y un `.ics` por equipo. La tarea `.github/workflows/calendario.yml`
 lo ejecuta y publica el resultado en GitHub Pages. La carpeta `historial` guarda la lista de partidos cada vez que la federación cambia algo (su historial de cambios muestra qué cambió y cuándo).
 
-Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje en bus: los km por carretera a 100 km/h, al alza; la salida, siempre a la hora en punto o a la media) o, en casa, a la hora de calentamiento. La hora del partido nunca se mueve: fuera, el calentamiento empieza al llegar (salida + viaje), así que lo que se gana al redondear la salida es calentamiento (y lo que se pierde si la salida es más tarde). Los partidos que aún no tienen hora ya salen «en casa» si se juegan en el pabellón del club. Los tiempos de viaje se guardan en `pabellones.json` (el sitio de un pabellón nuevo sale de la página de su grupo; lo ya guardado no se toca y se puede corregir a mano) y se pueden fijar a mano en `config.json`. Los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez, al cambiar de temporada, en `temporada-anterior.json`.
+Cada partido empieza en el calendario a la **hora de salida en bus desde Os Remedios** (partido − 1 h de calentamiento − viaje en bus: los km por carretera a 100 km/h, al alza; la salida, siempre a la hora en punto o a la media) o, en casa, a la hora de calentamiento. La hora del partido nunca se mueve: fuera, el calentamiento empieza al llegar (salida + viaje), así que lo que se gana al redondear la salida es calentamiento (y lo que se pierde si la salida es más tarde). También son «en casa» los partidos en cualquier pabellón de los municipios de `municipios_casa` (`config.json`, `salidas`; aquí Ourense, que la federación escribe también «Orense»): se va sin bus y el evento empieza a la hora de calentamiento. Solo cuentan los pabellones a menos de 15 km del club: así, si la dirección que da la federación trae la provincia donde iría el municipio, un pabellón de otra localidad a más de 15 km no se queda sin su salida en bus (uno más cercano sí saldría «en casa»: se corrige como se explica abajo). Los partidos que aún no tienen hora ya salen «en casa» si se juegan en uno de esos pabellones. Los tiempos de viaje se guardan en `pabellones.json` (el sitio de un pabellón nuevo sale de la página de su grupo; lo ya guardado no se toca y se puede corregir a mano) y se pueden fijar a mano en `config.json`. Los partidos del club de la temporada anterior (para los equipos que aún no juegan y para agosto) se guardan una vez, al cambiar de temporada, en `temporada-anterior.json`.
+
+Para ajustar qué es «en casa»: el municipio de un pabellón es su `municipio` de `pabellones.json` (sale de la
+dirección que da la federación: lo que sigue al código postal) y tiene que ser, entero, uno de los nombres de
+`municipios_casa`, sin contar mayúsculas ni tildes. Si de la dirección no sale (la federación la da a veces
+con el código postal al final), el pabellón se queda sin municipio y sale como de fuera: cuando está a menos
+de 15 km del club, la publicación lo avisa en su registro («Sin municipio en pabellones.json…») y se arregla
+escribiéndoselo ahí a mano; igual se corrige uno que traiga otra cosa en su lugar (la provincia, la
+parroquia). Un tiempo puesto a mano en `tiempos_viaje_minutos` (`config.json`; por el nombre del pabellón o
+una parte: `"O Pompeo": 15`) manda sobre el municipio: con él, un pabellón de Ourense sigue saliendo con bus
+(y con 0 minutos, cualquiera es «en casa»). Sin `municipios_casa`, o con la lista vacía, solo es «en casa» el
+pabellón del club (lo que esté a menos de 1 km); lo que no sea un nombre (dos en un mismo texto, por ejemplo)
+se ignora con un aviso.
 
 En los partidos ya jugados salen el **resultado** y los sets, y la pestaña **Clasificación** enseña la tabla
 del grupo de cada equipo. Salen de las mismas páginas de los grupos, sin más descargas; la clasificación
@@ -48,9 +60,10 @@ la página a la clasificación van sin `clasica=1`, así que a quien los abre la
 /maqueta/…») y a las 48 horas dará error: entonces solo quedará pedirle permiso para leer sus datos de otra forma.
 
 Si la federación da un pabellón sin coordenadas (pasó con el I.E.S. AS LAGOAS: su mapa busca la dirección),
-sus partidos salen «sin tiempo de viaje», con un aviso. Se arregla a mano en `pabellones.json`, poniéndole
-`municipio`, `direccion`, `lat` y `lon` (el viaje lo calcula el programa en la ejecución siguiente), o con un
-tiempo fijo en `config.json` (`salidas` › `tiempos_viaje_minutos`).
+sus partidos salen «sin tiempo de viaje», con un aviso (y no «en casa», aunque el pabellón sea de Ourense). Se
+arregla a mano en `pabellones.json`, poniéndole `municipio`, `direccion`, `lat` y `lon` (el viaje lo calcula el
+programa en la ejecución siguiente; con las coordenadas, si su `municipio` es Ourense ya sale «en casa»), o con
+un tiempo fijo en `config.json` (`salidas` › `tiempos_viaje_minutos`).
 
 **Al empezar cada temporada hay que apuntar los grupos** de los equipos del club en `config.json`:
 
@@ -154,9 +167,9 @@ Lo guarda la tarea `.github/workflows/salida.yml` (la lanza la página con la ll
 `salidas-manuales.json`, y lanza la publicación. Vale el último cambio de cada partido (los de un mismo partido
 van en fila); la hora puede ser cualquiera antes del partido (no solo en punto o y media); el 2.º partido del
 día va con el 1.º. Si la federación cambia después la fecha u hora del partido, o pasa a jugarse en casa o
-fuera, o a ser el 2.º del día, la hora a mano deja de valer (vuelve la calculada y la publicación lo avisa en
-su registro): se pone otra si hace falta. El historial de cambios de `salidas-manuales.json` dice qué se cambió
-y cuándo.
+fuera (también cuando es por un cambio en `municipios_casa` o en el municipio de su pabellón), o a ser el 2.º
+del día, la hora a mano deja de valer (vuelve la calculada y la publicación lo avisa en su registro): se pone
+otra si hace falta. El historial de cambios de `salidas-manuales.json` dice qué se cambió y cuándo.
 
 Con la llave se pueden lanzar, parar, repetir, desactivar y borrar las ejecuciones de las tareas de este
 repositorio (publicar y cambiar horas), y poner cualquier hora a cualquier partido; no se puede tocar el
