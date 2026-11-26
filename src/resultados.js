@@ -169,6 +169,10 @@ export function leerResultados(html) {
   return filas;
 }
 
+// En la celda del equipo, delante del nombre, va a veces cuántos puestos ha subido o bajado
+// (<div class='sube'></div> <span>1</span>, o 'baja' y -1): no es parte del nombre.
+const RE_PUESTOS = /<div\b[^>]*>\s*<\/div>\s*<span\b[^>]*>\s*[+-]?\d+\s*<\/span>/gi;
+
 // Clasificación del grupo: [{ pos, equipo, club, pt, pj, pg, pp, sf, sc }]; null si la competición no
 // tiene ("Clasificación NO DISPONIBLE") o la página no trae la tabla.
 export function leerClasificacion(html) {
@@ -185,7 +189,7 @@ export function leerClasificacion(html) {
     const exportado = /data-export=["']([^"']*)["']/i.exec(c[1]);
     filas.push({
       pos: numero(c[0]),
-      equipo: repararNombre(unaLinea(exportado ? exportado[1] : c[1])),
+      equipo: repararNombre(unaLinea(exportado ? exportado[1] : c[1].replace(RE_PUESTOS, ' '))),
       club: RE_CLUB.exec(c[1])?.[1] ?? '',
       pt: numero(c[3]),
       pj: numero(c[4]),
@@ -285,7 +289,8 @@ export function pagina(archivo, torneo, competicion) {
     + `&id_superficie=1&iframe=0&id_competicion=${competicion}`;
 }
 
-// Dirección de la clasificación de un grupo en la web de la federación.
+// Dirección de la clasificación de un grupo en la web de la federación, para el enlace de la página: sin clasica=1,
+// así a quien lo abre la federación lo lleva a esa clasificación en su web nueva (o a la de siempre, si la quita).
 export function urlClasificacion(torneo, competicion) {
   return `${URL_BASE}/${pagina('clasificacion.php', torneo, competicion)}`;
 }

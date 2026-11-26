@@ -40,15 +40,29 @@ durante 48 horas, con un aviso; después, la publicación da error y no cambia n
 `resultados.json` solo se reescribe (y el workflow solo lo sube) cuando cambia algo de la federación; si
 solo cambia la hora de consulta, como mucho cada 12 horas, así que esas 48 horas pueden quedarse en 36.
 
+Desde el 16/11/2026 esas páginas mandan (302) a la web nueva de iSquad, la «BETA» (`/maqueta/`), que saca los
+datos de `/json/` y por eso no sirve al programa. La propia web deja volver a la «Versión clásica» (el botón de
+arriba; en la dirección, `clasica=1`): el programa pide las páginas así y recibe las de siempre. Los enlaces de
+la página a la clasificación van sin `clasica=1`, así que a quien los abre la federación lo lleva a su web nueva.
+**Si la federación retira la versión clásica**, la publicación avisará («respuesta 302 Found, que lleva a
+/maqueta/…») y a las 48 horas dará error: entonces solo quedará pedirle permiso para leer sus datos de otra forma.
+
+Si la federación da un pabellón sin coordenadas (pasó con el I.E.S. AS LAGOAS: su mapa busca la dirección),
+sus partidos salen «sin tiempo de viaje», con un aviso. Se arregla a mano en `pabellones.json`, poniéndole
+`municipio`, `direccion`, `lat` y `lon` (el viaje lo calcula el programa en la ejecución siguiente), o con un
+tiempo fijo en `config.json` (`salidas` › `tiempos_viaje_minutos`).
+
 **Al empezar cada temporada hay que apuntar los grupos** de los equipos del club en `config.json`:
 
 ```json
 "federacion": { "grupos": [{ "equipo": "DOMPAVOLEI SM1", "grupo": "3857", "competicion": "1516" }] }
 ```
 
-`grupo` y `competicion` son el `id=` y el `id_competicion=` de la dirección de la página del grupo
-(`.../competicion_completa.php?...&id=3857&...&id_competicion=1516`, la de los resultados de su
-competición); `equipo` solo sale en los mensajes. Se pueden apuntar antes de que la federación publique su
+`grupo` y `competicion` son el `id=` y el `id_competicion=` de la dirección de la página clásica del grupo
+(`.../competicion.php?...&id=3857&...&id_competicion=1516`). Para verla desde la web nueva de la federación:
+con el grupo abierto, el botón **Versión clásica** (arriba) abre esa página y los dos números están en su
+dirección. En la dirección de la web nueva son `id=` (el grupo) y, cuando aparece, `comp=` (la competición):
+`…&comp=1516&id=3857`. `equipo` solo sale en los mensajes. Se pueden apuntar antes de que la federación publique su
 calendario: mientras un grupo no tenga partidos, sale un aviso. Desde octubre, si el club no tiene ningún
 partido en los grupos apuntados, la publicación da error (no se publica la temporada anterior en su lugar).
 

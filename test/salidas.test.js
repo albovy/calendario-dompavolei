@@ -290,7 +290,7 @@ test('resolverPabellones: con la caché al día no se consulta nada ni se reescr
   const dir = carpetaTemporal();
   try {
     const ruta = join(dir, 'pabellones.json');
-    // "OTRO" (de un partido sin fecha ni hora) ya se buscó hoy sin encontrarlo: no se repite hasta mañana.
+    // "OTRO" (de un partido sin fecha ni hora) ya está apuntado como «sin-datos» y la página sigue sin decir dónde está.
     const cache = {
       'A PINGUELA - PISTA 1': { id_campo: '68', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER', lat: 42.51356, lon: -7.52425, km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-09-24' },
       OTRO: { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-09-25' },
@@ -326,7 +326,7 @@ test('resolverPabellones: un pabellón nuevo sale de la página del grupo: ningu
       id_campo: '', municipio: 'MONFORTE DE LEMOS', direccion: 'RÚA SOBER, 6, 27420 MONFORTE DE LEMOS, LUGO', lat: 42.51356, lon: -7.52425,
       km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-11-06',
     });
-    // Sin sitio en la página: sin datos (se vuelve a mirar mañana).
+    // Sin sitio en la página: sin datos (se calculará cuando la página lo traiga).
     assert.deepEqual(cache.NINGUNO, { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-06' });
     assert.deepEqual(cache.VIEJO, { ...viejo, direccion: 'RÚA CARBALLO CALERO, 15, 15100 CARBALLO, A CORUÑA' });
     assert.deepEqual(Object.keys(cache.VIEJO), ['id_campo', 'municipio', 'direccion', 'lat', 'lon', 'km', 'minutos_coche', 'fuente', 'origen', 'fecha']);
@@ -340,6 +340,42 @@ test('resolverPabellones: un pabellón nuevo sale de la página del grupo: ningu
       () => resolverPabellones(ps.slice(1, 2), CFG, ruta, fechaPared(2026, 11, 6)));
     assert.deepEqual(ninguna, []);
     assert.deepEqual(sin['NUEVO PABELLON - PISTA 1'], { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-06' });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resolverPabellones: un «sin-datos» que sigue sin sitio en la página no se reescribe cada día (solo cambiaría la fecha)', async () => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    // Apuntado ayer: la página sigue dando el pabellón sin coordenadas, y ya no hay nada más que consultar.
+    writeFileSync(ruta, JSON.stringify({ OTRO: { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-25' } }));
+    const antes = readFileSync(ruta, 'utf8');
+    const ps = [partido('2026-11-28 10:30', 'OTRO', 'IF1')];
+    const [cache, pedidas] = await conFetch(() => { throw new Error('no debería consultar'); },
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 26), { lugares: LUGARES }));
+    assert.deepEqual(pedidas, []);
+    assert.deepEqual(cache.OTRO, { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-25' });
+    assert.equal(readFileSync(ruta, 'utf8'), antes);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('resolverPabellones: un pabellón con las coordenadas puestas a mano (la federación no las da): se calcula el viaje y lo demás se conserva', async (t) => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    // Como se apunta a mano en pabellones.json: municipio, dirección, lat y lon; el viaje lo pone el programa.
+    const aMano = { id_campo: '', municipio: 'OURENSE', direccion: 'RÚA DE EDUARDO BLANCO AMOR, AS LAGOAS, OURENSE', lat: 42.3449319, lon: -7.8578327 };
+    writeFileSync(ruta, JSON.stringify({ 'I.E.S. AS LAGOAS': aMano }));
+    const ps = [partido('2026-11-28 10:30', 'I.E.S. AS LAGOAS', 'IF1')];
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(soloOsrm(OSRM_LUGO),
+      () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 26), { lugares: LUGARES })));
+    assert.deepEqual(pedidas, ['https://router.project-osrm.org/route/v1/driving/-7.8713948,42.3442759;-7.8578327,42.3449319?overview=false']);
+    assert.deepEqual(cache['I.E.S. AS LAGOAS'], { ...aMano, km: 46.1, minutos_coche: 42, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-11-26' });
+    assert.deepEqual(JSON.parse(readFileSync(ruta, 'utf8')), { ...cache });
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

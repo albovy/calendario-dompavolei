@@ -4,6 +4,8 @@
 #
 # Los partidos salen de las páginas públicas de los grupos del club en la web de resultados de la federación
 # (config.json › federacion.grupos): desde el 06/11/2026 la federación da 403 a los programas en su agenda.
+# Desde el 16/11/2026 esas páginas mandan a la web nueva de iSquad (BETA); se piden en su «Versión clásica»
+# (clasica=1, ver src/isquad.js).
 #
 # Lo lanza cada hora cron-job.org (llamando a workflow_dispatch; la programación de GitHub llegaba con mucho
 # retraso), el botón «Run workflow» y cada cambio que se sube.

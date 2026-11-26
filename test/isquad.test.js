@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESPERAS_SEGUNDOS, partidosApi, peticion } from '../src/isquad.js';
+import { ESPERAS_SEGUNDOS, clasica, clubsFederacion, partidosApi, peticion } from '../src/isquad.js';
 import { BOM, fechaPared } from '../src/util.js';
 
 const URL_PARTIDOS = 'https://resultadosvoleibol.isquad.es/json/partidos_equipos_consultas.php';
@@ -59,6 +59,29 @@ test('peticion: POST con el formulario o GET, y sin los BOM del principio', asyn
   assert.deepEqual([get.llamadas[0].opciones.method, get.llamadas[0].opciones.body], ['GET', undefined]);
   // Sin seguir redirecciones: una podría llevar a /json/ o a otra web sin que el programa se enterara.
   assert.equal(get.llamadas[0].opciones.redirect, 'manual');
+});
+
+test('clasica: pide la versión clásica de una página (clasica=1), la que la federación da sin mandar a su web nueva', () => {
+  assert.equal(clasica('listado_clubs.php?id_territorial=20&id_superficie=1'), 'listado_clubs.php?id_territorial=20&id_superficie=1&clasica=1');
+  assert.equal(clasica('competicion.php'), 'competicion.php?clasica=1');
+});
+
+test('clubsFederacion: el listado oficial se pide en su versión clásica; si la federación manda a su web nueva, aviso y sin nombres', async (t) => {
+  const pedidas = [];
+  const avisos = [];
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  t.mock.method(console, 'log', (texto) => avisos.push(texto));
+  const listado = "<a href='club.php?id=206572580&id_superficie=1'><img src='//voleibol.isquad.es/images/afiliacion_clubs/206572580/square_x.jpg' "
+    + "alt='CLUB DOMPAVOLEI' title='CLUB DOMPAVOLEI' /></a>";
+  globalThis.fetch = async (url, opciones) => { pedidas.push({ url: String(url), opciones }); return new Response(listado); };
+  assert.deepEqual([...await clubsFederacion()], [['206572580', 'CLUB DOMPAVOLEI']]);
+  assert.deepEqual(pedidas.map((p) => p.url), ['https://resultadosvoleibol.isquad.es/listado_clubs.php?id_territorial=20&id_superficie=1&clasica=1']);
+  assert.deepEqual(avisos, []);
+  // Sin la versión clásica, la federación responde con un 302 a /maqueta/: no se sigue ni se reintenta.
+  globalThis.fetch = async () => new Response('', { status: 302, statusText: 'Found', headers: { Location: '/maqueta/#v=ver&p=clubs&t=20' } });
+  assert.deepEqual([...await clubsFederacion()], []);
+  assert.deepEqual(avisos, ['  ! No se pudo descargar el listado oficial de clubs; se usarán los nombres de los equipos.']);
 });
 
 test('peticion: una redirección no se sigue ni se reintenta: dice a dónde lleva', async (t) => {

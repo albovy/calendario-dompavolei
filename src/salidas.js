@@ -200,9 +200,12 @@ export async function resolverPabellones(partidos, cfgSalidas, rutaCache, hoy = 
       cambios = true;
     }
     const conCoordenadas = Boolean(e && e.lat != null);
-    // Al día (o, sin coordenadas en ningún sitio, ya mirado hoy). Un «sin-datos» se calcula en cuanto la página trae
-    // dónde está.
-    if (e && e.origen === origen && (e.fuente === 'osrm' || e.fecha === hoyTxt) && (conCoordenadas || !sitio)) continue;
+    // Al día, o ya intentado hoy (una ruta estimada porque OSRM falló), o sin coordenadas en ningún sitio y ya apuntado
+    // como «sin-datos»: no hay nada que volver a consultar, y reescribirlo cada día solo le cambiaría la fecha (un commit
+    // diario del workflow). Un «sin-datos» se calcula en cuanto la página trae dónde está, o si se le ponen a mano lat y
+    // lon en pabellones.json.
+    const sinDatos = e?.fuente === 'sin-datos' && !conCoordenadas;
+    if (e && e.origen === origen && (e.fuente === 'osrm' || e.fecha === hoyTxt || sinDatos) && (conCoordenadas || !sitio)) continue;
     let lat = null;
     let lon = null;
     let idCampo = '';
