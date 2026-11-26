@@ -209,11 +209,11 @@
         "direccion": "RÚA DE EDUARDO BLANCO AMOR, AS LAGOAS, OURENSE, ORENSE, GALICIA, 32003",
         "lat": 42.3449319,
         "lon": -7.8578327,
-        "km": null,
-        "minutos_coche": null,
-        "fuente": "",
-        "origen": "",
-        "fecha": ""
+        "km": 2.2,
+        "minutos_coche": 5,
+        "fuente": "osrm",
+        "origen": "42.3442759,-7.8713948",
+        "fecha": "2026-11-26"
     },
     "IES MONTENEME (CARBALLO)": {
         "id_campo": "",
