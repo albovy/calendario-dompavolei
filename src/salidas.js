@@ -53,6 +53,20 @@ export function configSalidas(cfg) {
     if (v !== null && v > 0) velocidadBus = v;
     else aviso('config.json: "velocidad_bus_kmh" no es un número de km/h mayor que 0; se usa el tiempo en coche.');
   }
+  // municipios_casa: los municipios en los que se va sin bus (el del club): sus pabellones cuentan como «en casa»
+  // aunque no sean el del club. Un nombre o una lista; se comparan sin mayúsculas ni tildes. Lo que no es un nombre
+  // (varios en un mismo texto, un número, una lista dentro de la lista...) se ignora con un aviso: si no, ningún
+  // pabellón sería de ese «municipio» y sus partidos saldrían con bus sin que nadie se enterase.
+  const municipiosCasa = new Set();
+  for (const m of comoLista(s.municipios_casa ?? [])) {
+    const nombre = typeof m === 'string' && !/[,;]/.test(m) ? clave(m) : '';
+    const vacio = m == null || (typeof m === 'string' && !m.trim());
+    if (nombre) municipiosCasa.add(nombre);
+    else if (!vacio) {
+      aviso(`config.json: «${typeof m === 'string' ? m : JSON.stringify(m)}» no vale en "municipios_casa" (un nombre o una lista de `
+        + 'nombres: ["Uno", "Otro"]); se ignora.');
+    }
+  }
   return {
     origen: s.origen ? txt(s.origen) : 'el pabellón del club',
     lat,
@@ -66,6 +80,7 @@ export function configSalidas(cfg) {
     redondeoViaje: Math.max(1, aEntero(aNumero(s.redondeo_viaje_minutos, 15))),
     redondeo: Math.max(1, aEntero(aNumero(s.redondeo_salida_minutos, 15))),
     radioCasaKm: aNumero(s.radio_casa_km, 1),
+    municipiosCasa,
     manual,
   };
 }
@@ -246,10 +261,17 @@ export async function resolverPabellones(partidos, cfgSalidas, rutaCache, hoy = 
 
 // --- Salida de cada partido ---------------------------------------------------------------------
 
+// Un pabellón de un municipio de municipios_casa solo es «en casa» si además está a menos de estos km en línea recta
+// del club: el municipio sale de la dirección que da la federación, y detrás del código postal puede venir la
+// provincia. Así un pabellón de otra localidad a más de esos km no se queda sin su salida en bus. Uno más cercano
+// con la provincia donde iría el municipio sí saldría «en casa»: se corrige su "municipio" en pabellones.json o se
+// le pone su tiempo en tiempos_viaje_minutos (config.json).
+const KM_MUNICIPIO_CASA = 15;
+
 // Dónde se juega el partido: apunta en p el municipio y los km del pabellón (si está en la caché) y
-// devuelve si es en casa (a menos de radio_casa_km del origen o con un tiempo a mano de 0 minutos), los
-// minutos de viaje en bus (null si no se saben) y de dónde sale ese tiempo ('osrm', 'estimado',
-// 'manual' o '').
+// devuelve si es en casa (a menos de radio_casa_km del origen, en un municipio de municipios_casa y a menos de
+// KM_MUNICIPIO_CASA, o con un tiempo a mano de 0 minutos), los minutos de viaje en bus (null si no se saben) y de
+// dónde sale ese tiempo ('osrm', 'estimado', 'manual' o '').
 function lugarDelPartido(p, pabellones, cfg) {
   const e = p.pabellon ? pabellones[claveSinCaja(pabellones, p.pabellon)] : null;
   let viaje = null;
@@ -258,7 +280,9 @@ function lugarDelPartido(p, pabellones, cfg) {
   if (e && e.lat != null) {
     p.municipio = txt(e.municipio);
     p.km = e.km ?? null;
-    if (distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon)) <= cfg.radioCasaKm) {
+    const recta = distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon));
+    const enMunicipio = recta <= KM_MUNICIPIO_CASA && Boolean(cfg.municipiosCasa?.has(clave(e.municipio)));
+    if (recta <= cfg.radioCasaKm || enMunicipio) {
       casa = true;
     } else if (cfg.velocidadBus && Number(e.km) > 0) {
       // A la velocidad del bus con los km por carretera (100 km/h: 160 km son 96 min, 1 h 45 al alza).
@@ -280,6 +304,28 @@ function lugarDelPartido(p, pabellones, cfg) {
     }
   }
   return { casa, viaje, fuente };
+}
+
+// Los pabellones de los partidos que salen como de fuera sin municipio apuntado en pabellones.json y a menos de
+// KM_MUNICIPIO_CASA del club, con sus km en línea recta («I.E.S. AS LAGOAS (a 1,1 km)»), para avisarlo (main.js):
+// pueden ser de un municipio de municipios_casa. Pasa con un pabellón nuevo si la federación da su dirección con el
+// código postal al final (de esas no sale el municipio) o si se apunta a mano solo con lat y lon. Con un tiempo a
+// mano en config.json no cuentan: ya está decidido.
+export function cercaSinMunicipio(partidos, pabellones, cfgSalidas) {
+  const cfg = cfgSalidas;
+  if (!cfg.municipiosCasa?.size) return [];
+  const cerca = [];
+  for (const n of ordenarUnicos(partidos.filter((p) => p.pabellon).map((p) => p.pabellon))) {
+    const k = claveSinCaja(pabellones, n);
+    const e = pabellones[k];
+    if (!e || e.lat == null || clave(e.municipio)) continue;
+    const recta = distanciaKm(cfg.lat, cfg.lon, Number(e.lat), Number(e.lon));
+    const { casa, fuente } = lugarDelPartido({ pabellon: n }, pabellones, cfg);
+    if (!casa && fuente !== 'manual' && recta <= KM_MUNICIPIO_CASA) {
+      cerca.push(`${k} (a ${recta.toFixed(1).replace('.', ',')} km)`);
+    }
+  }
+  return cerca;
 }
 
 // pabellones: la caché de resolverPabellones. Como en el .ps1 (dos @{}), ni el pabellón ni los equipos

@@ -7,8 +7,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  aNumero, anadirSalidas, configPedirBus, configSalidas, direccionCampo, distanciaKm, guardarCachePabellones,
-  leerCachePabellones, lineasSalida, municipioDe, resolverPabellones, rutaCoche, textoSalida,
+  aNumero, anadirSalidas, cercaSinMunicipio, configPedirBus, configSalidas, direccionCampo, distanciaKm,
+  guardarCachePabellones, leerCachePabellones, lineasSalida, municipioDe, resolverPabellones, rutaCoche, textoSalida,
 } from '../src/salidas.js';
 import { fechaPared } from '../src/util.js';
 
@@ -131,6 +131,98 @@ test('en casa por el pabellón aunque el partido no tenga hora todavía (sin sal
   assert.deepEqual(ps.map(textoSalida), ['', '', 'En casa', '', '', '']);
 });
 
+test('municipios_casa: un pabellón de esos municipios es «en casa» aunque no esté junto al del club', () => {
+  const pabellones = {
+    ...PABELLONES,
+    // En Ourense, a 1,4 y 1,1 km en línea recta del pabellón del club (más que radio_casa_km, 1 km).
+    'O POMPEO - PISTA 1': { lat: 42.3330403, lon: -7.8649539, km: 2.2, minutos_coche: 5, municipio: 'OURENSE', fuente: 'osrm' },
+    'I.E.S. AS LAGOAS': { lat: 42.3449319, lon: -7.8578327, km: 2.2, minutos_coche: 5, municipio: 'ORENSE', fuente: 'osrm' },
+  };
+  const partidos = () => [
+    partido('2026-11-28 19:00', 'O POMPEO - PISTA 1', 'SM1'),
+    partido('2026-11-28 10:30', 'I.E.S. AS LAGOAS', 'IF1'),                    // el municipio, escrito «ORENSE»
+    partido('2026-12-12 00:00', 'O POMPEO - PISTA 1', 'XF1', 'pendiente'),     // sin hora: ya se sabe que es en casa
+    partido('2026-11-29 11:30', 'A PINGUELA - PISTA 1', 'CF1'),                // otro municipio
+  ];
+  const resumen = (p) => `casa=${p.enCasa} salida=${hm(p.salida)} cal=${hm(p.calentamiento)} viaje=${p.viajeMin ?? ''} inicio=${hm(p.inicio)}`;
+
+  // Sin municipios_casa, como siempre: fuera, con salida en bus (5 min * 1,10 -> 15; 19:00 - 60 - 15 = 17:45).
+  const antes = partidos();
+  anadirSalidas(antes, pabellones, configSalidas({ salidas: ORIGEN }));
+  assert.deepEqual(antes.map(resumen), [
+    'casa=false salida=17:45 cal=18:00 viaje=15 inicio=17:45',
+    'casa=false salida=09:15 cal=09:30 viaje=15 inicio=09:15',
+    'casa=false salida=- cal=- viaje= inicio=00:00',
+    'casa=false salida=09:30 cal=10:30 viaje=60 inicio=09:30',
+  ]);
+
+  // Con municipios_casa: en casa (sin bus; el evento empieza en el calentamiento, una hora antes). Lo demás, igual.
+  const cfg = configSalidas({ salidas: { ...ORIGEN, municipios_casa: ['Ourense', 'Orense'] } });
+  const ps = partidos();
+  anadirSalidas(ps, pabellones, cfg);
+  assert.deepEqual(ps.map(resumen), [
+    'casa=true salida=- cal=18:00 viaje= inicio=18:00',
+    'casa=true salida=- cal=09:30 viaje= inicio=09:30',
+    'casa=true salida=- cal=- viaje= inicio=00:00',
+    'casa=false salida=09:30 cal=10:30 viaje=60 inicio=09:30',
+  ]);
+  assert.deepEqual(lineasSalida(ps[0], cfg), ['En casa · calentamiento 18:00 · partido 19:00']);
+  assert.deepEqual(ps.map(textoSalida), ['En casa', 'En casa', '', '09:30']);
+  assert.deepEqual(ps.map((p) => p.municipio), ['OURENSE', 'ORENSE', 'OURENSE', 'MONFORTE DE LEMOS']);
+
+  // Un pabellón lejos del club no es «en casa» aunque su municipio apuntado coincida: en las direcciones de la
+  // federación, detrás del código postal puede venir la provincia (un pabellón de O Barco con «32300 OURENSE»).
+  const lejos = { ...pabellones, 'PAVILLON DE LEJOS': { lat: 42.4153, lon: -6.9817, km: 101.2, minutos_coche: 75, municipio: 'OURENSE', fuente: 'osrm' } };
+  const r = partido('2026-11-28 17:00', 'PAVILLON DE LEJOS', 'SM O BARCO');
+  anadirSalidas([r], lejos, cfg);
+  assert.deepEqual([r.enCasa, r.viajeMin, hm(r.salida)], [false, 90, '14:30']);
+
+  // Un tiempo puesto a mano en config.json para un pabellón manda también sobre su municipio.
+  const aMano = configSalidas({ salidas: { ...ORIGEN, municipios_casa: 'Ourense', tiempos_viaje_minutos: { 'O Pompeo': 20 } } });
+  const [q] = partidos();
+  anadirSalidas([q], pabellones, aMano);
+  assert.deepEqual([q.enCasa, q.viajeMin, hm(q.salida), q.viajeFuente], [false, 20, '17:30', 'manual']);
+});
+
+test('municipios_casa: cuenta el municipio, no la cercanía (un pabellón de otro municipio a 4 km sigue con su bus)', () => {
+  const cfg = configSalidas({ salidas: { ...ORIGEN, municipios_casa: ['Ourense', 'Orense'] } });
+  // De un municipio vecino, a 4 km en línea recta (muy dentro de los 15 km): 13 min * 1,10 -> 15; 19:00 - 60 - 15 = 17:45.
+  const pabellones = { 'PAVILLON DE BARBADAS': { lat: 42.3156, lon: -7.9003, km: 6.4, minutos_coche: 13, municipio: 'BARBADÁS', fuente: 'osrm' } };
+  assert.equal(distanciaKm(ORIGEN.latitud, ORIGEN.longitud, 42.3156, -7.9003).toFixed(1), '4.0');
+  const ps = [partido('2026-11-28 19:00', 'PAVILLON DE BARBADAS', 'SM1'), partido('2026-12-12 00:00', 'PAVILLON DE BARBADAS', 'XF1', 'pendiente')];
+  anadirSalidas(ps, pabellones, cfg);
+  assert.deepEqual(ps.map((p) => [p.enCasa, p.viajeMin, hm(p.salida), p.municipio]),
+    [[false, 15, '17:45', 'BARBADÁS'], [false, null, '-', 'BARBADÁS']]);
+});
+
+test('municipios_casa: el municipio de pabellones.json (también el escrito a mano) se compara entero, sin mayúsculas ni tildes', () => {
+  const cfg = configSalidas({ salidas: { ...ORIGEN, municipios_casa: ['Ourense', 'A Coruña'] } });
+  // Todos a 1,4 km del club (más que radio_casa_km). Los que no son en casa: 5 min * 1,10 -> 15; 19:00 - 60 - 15 = 17:45.
+  const sitio = { lat: 42.3330403, lon: -7.8649539, km: 2.2, minutos_coche: 5, fuente: 'osrm' };
+  const municipios = ['Ourense', ' ourense ', 'A CORUÑA', 'a coruna', '', null, 'OURENSE (A PONTE)', 'SAN CIBRAO DAS VIÑAS, OURENSE'];
+  const pabellones = Object.fromEntries(municipios.map((municipio, i) => [`PABELLON ${i}`, { ...sitio, municipio }]));
+  pabellones['SIN MUNICIPIO'] = sitio;
+  const ps = Object.keys(pabellones).map((n, i) => partido('2026-11-28 19:00', n, `EQUIPO ${i}`));
+  anadirSalidas(ps, pabellones, cfg);
+  assert.deepEqual(ps.map((p) => (p.enCasa ? 'en casa' : `${p.viajeMin} ${hm(p.salida)}`)),
+    ['en casa', 'en casa', 'en casa', 'en casa', '15 17:45', '15 17:45', '15 17:45', '15 17:45', '15 17:45']);
+});
+
+test('municipios_casa: solo a menos de 15 km del club en línea recta (a 14,9 km, en casa; a 15,1 km, fuera y con su bus)', () => {
+  const cfg = configSalidas({ salidas: { ...ORIGEN, municipios_casa: 'Ourense' } });
+  // Un punto a «km» al norte del club (con el radio de distanciaKm, 6371 km, un grado de latitud son 111,19 km).
+  const alNorte = (km) => ({ lat: ORIGEN.latitud + km / (6371 * Math.PI / 180), lon: ORIGEN.longitud });
+  const pabellones = {
+    'A 14,9 KM': { ...alNorte(14.9), km: 19.4, minutos_coche: 20, municipio: 'OURENSE', fuente: 'osrm' },
+    'A 15,1 KM': { ...alNorte(15.1), km: 19.6, minutos_coche: 20, municipio: 'OURENSE', fuente: 'osrm' },
+  };
+  const ps = [partido('2026-11-28 19:00', 'A 14,9 KM', 'SM1'), partido('2026-11-28 19:00', 'A 15,1 KM', 'SF1')];
+  anadirSalidas(ps, pabellones, cfg);
+  // En casa, el calentamiento una hora antes. Fuera: 20 min * 1,10 = 22 -> 30; 19:00 - 60 - 30 = 17:30.
+  assert.deepEqual(ps.map((p) => [p.enCasa, p.viajeMin, hm(p.salida), hm(p.inicio)]),
+    [[true, null, '-', '18:00'], [false, 30, '17:30', '17:30']]);
+});
+
 test('un tiempo a mano de 0 minutos es "en casa"; margen y redondeos', () => {
   const cfg = configSalidas({
     salidas: {
@@ -167,10 +259,24 @@ test('configSalidas: valores por defecto, números con coma y avisos', async () 
     salidas: { latitud: '42,5', longitud: ' -7.8 ', factor_bus: '1,25', redondeo_viaje_minutos: 0, radio_casa_km: '2',
       tiempos_viaje_minutos: { 'Pazo dos Deportes': '25,6', malo: 'mucho', negativo: -5 } },
   }));
-  assert.deepEqual({ ...cfg, manual: [...cfg.manual] }, {
+  assert.deepEqual({ ...cfg, manual: [...cfg.manual], municipiosCasa: [...cfg.municipiosCasa] }, {
     origen: 'el pabellón del club', lat: 42.5, lon: -7.8, calentamiento: 60, factorBus: 1.25, velocidadBus: null, margen: 0,
-    redondeoViaje: 1, redondeo: 15, radioCasaKm: 2, manual: [['PAZO DOS DEPORTES', 26]],
+    redondeoViaje: 1, redondeo: 15, radioCasaKm: 2, municipiosCasa: [], manual: [['PAZO DOS DEPORTES', 26]],
   });
+  // municipios_casa: una lista (o un solo nombre), sin distinguir mayúsculas ni tildes; lo vacío no cuenta.
+  const municipios = async (valor) => {
+    const [c, dichos] = await enSilencio(() => configSalidas({ salidas: { ...ORIGEN, municipios_casa: valor } }));
+    return [[...c.municipiosCasa], dichos];
+  };
+  assert.deepEqual(await municipios(['Ourense', ' orense ', '', null, 'A Coruña']), [['OURENSE', 'ORENSE', 'A CORUNA'], []]);
+  assert.deepEqual(await municipios('Ourense'), [['OURENSE'], []]);
+  for (const nada of [null, '', '  ', []]) assert.deepEqual(await municipios(nada), [[], []], JSON.stringify(nada));
+  // Lo que no es un nombre (varios en un mismo texto, una lista dentro de la lista, un número...) se ignora con un aviso:
+  // si no, ningún pabellón sería de ese «municipio» y sus partidos saldrían con bus sin que nadie se enterase.
+  const noVale = (texto) => `  ! config.json: «${texto}» no vale en "municipios_casa" (un nombre o una lista de nombres: ["Uno", "Otro"]); se ignora.`;
+  assert.deepEqual(await municipios('Ourense, Orense'), [[], [noVale('Ourense, Orense')]]);
+  assert.deepEqual(await municipios(['Ourense', 'Vigo; Lugo', ['Orense'], { nombre: 'Orense' }, 5, false, '¿?']),
+    [['OURENSE'], ['Vigo; Lugo', '["Orense"]', '{"nombre":"Orense"}', '5', 'false', '¿?'].map(noVale)]);
   // velocidad_bus_kmh: el viaje sale de los km por carretera; con coma también. Si no es un número > 0, no vale.
   assert.equal(configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: '100' } }).velocidadBus, 100);
   assert.equal(configSalidas({ salidas: { ...ORIGEN, velocidad_bus_kmh: '87,5' } }).velocidadBus, 87.5);
@@ -405,6 +511,58 @@ test('resolverPabellones: sin municipio tras el código postal, el que lleva el 
       () => resolverPabellones(ps, CFG, ruta, fechaPared(2026, 11, 6), { lugares: LUGARES })));
     assert.deepEqual([cache['IES MONTENEME (CARBALLO)'].municipio, cache['IES MONTENEME (CARBALLO)'].direccion], ['CARBALLO',
       'INSTITUTO DE EDUCACIÓN SECUNDARIA MONTE NEME, 29, RÚA ROMEU, FONTE DA CRISTINA, A CRISTINA, CARBALLO, BERGANTIÑOS, LA CORUÑA, GALICIA, 15106']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('cercaSinMunicipio: los pabellones cercanos sin municipio apuntado, que salen como de fuera aunque sean de municipios_casa (para avisarlo)', async (t) => {
+  const dir = carpetaTemporal();
+  try {
+    const ruta = join(dir, 'pabellones.json');
+    const cfg = configSalidas({ salidas: { ...ORIGEN, municipios_casa: ['Ourense', 'Orense'], tiempos_viaje_minutos: { 'Con tiempo a mano': 10 } } });
+    // A 1,4 km del club (donde O Pompeo), ya con su ruta: no hay nada que consultar.
+    const cerca = { lat: 42.3330403, lon: -7.8649539, km: 2.2, minutos_coche: 5, fuente: 'osrm', origen: ORIGEN_TXT, fecha: '2026-11-25' };
+    writeFileSync(ruta, JSON.stringify({
+      'SOLO LAT Y LON': cerca,                                                           // puesto a mano, sin municipio
+      'O POMPEO': { ...cerca, municipio: 'OURENSE' },                                    // en casa por su municipio
+      'DE OTRO MUNICIPIO': { ...cerca, municipio: 'BARBADÁS' },                          // de fuera, y se sabe de dónde es
+      'CON TIEMPO A MANO': cerca,                                                        // ya decidido en config.json
+      'JUNTO AL CLUB': { ...cerca, lat: 42.3438638, lon: -7.8701618 },                   // en casa por radio_casa_km
+      LEJOS: { ...cerca, lat: 42.4153, lon: -6.9817, km: 101.2, minutos_coche: 75 },     // a 73 km: no es de aquí
+      'SIN SITIO': { fuente: 'sin-datos', origen: ORIGEN_TXT, fecha: '2026-11-25' },     // ya sale «sin tiempo de viaje»
+    }));
+    // Un pabellón nuevo de Ourense, a 1,1 km, con la dirección como la da la federación para el I.E.S. AS LAGOAS (el
+    // código postal, al final): de ella no sale el municipio.
+    const lugares = new Map([['IES NUEVO', { lat: 42.3449319, lon: -7.8578327,
+      direccion: 'RúA DE EDUARDO BLANCO AMOR, AS LAGOAS, OURENSE, ORENSE, GALICIA, 32003, ESPAñA, 32003' }]]);
+    const partidos = () => [
+      ...['IES NUEVO', 'Ies Nuevo', 'O POMPEO', 'DE OTRO MUNICIPIO', 'CON TIEMPO A MANO', 'JUNTO AL CLUB', 'LEJOS', 'SIN SITIO', '']
+        .map((n, i) => partido('2026-11-28 19:00', n, `EQUIPO ${i}`)),
+      partido('2026-12-12 00:00', 'Solo lat y lon', 'XF1', 'pendiente'),                 // sin hora y con otras mayúsculas
+    ];
+    const ps = partidos();
+    const osrm = JSON.stringify({ code: 'Ok', routes: [{ distance: 2200, duration: 290 }] });
+    const [cache, pedidas] = await sinEsperas(t, () => conFetch(soloOsrm(osrm),
+      () => resolverPabellones(ps, cfg, ruta, fechaPared(2026, 11, 26), { lugares })));
+    assert.equal(pedidas.length, 1);
+    assert.deepEqual([cache['IES NUEVO'].municipio, cache['IES NUEVO'].direccion],
+      ['', 'RÚA DE EDUARDO BLANCO AMOR, AS LAGOAS, OURENSE, ORENSE, GALICIA, 32003']);
+    // Salen como de fuera, con su bus (5 min * 1,10 -> 15), igual que el de otro municipio.
+    anadirSalidas(ps, cache, cfg);
+    assert.deepEqual(ps.map((p) => [p.enCasa, p.viajeMin]),
+      [[false, 15], [false, 15], [true, null], [false, 15], [false, 10], [true, null], [false, 90], [false, null], [false, null], [false, null]]);
+    // Solo se avisan esos dos (también el del partido sin hora): una vez cada uno, con el nombre de pabellones.json (el
+    // que hay que corregir) y los km en línea recta.
+    assert.deepEqual(cercaSinMunicipio(ps, cache, cfg), ['IES NUEVO (a 1,1 km)', 'SOLO LAT Y LON (a 1,4 km)']);
+    // Sin municipios_casa no hay nada que avisar: nadie es «en casa» por su municipio.
+    assert.deepEqual(cercaSinMunicipio(ps, cache, configSalidas({ salidas: ORIGEN })), []);
+    // Con el municipio escrito a mano en pabellones.json, en casa y sin aviso.
+    const corregido = { ...cache, 'IES NUEVO': { ...cache['IES NUEVO'], municipio: 'Ourense' }, 'SOLO LAT Y LON': { ...cerca, municipio: 'ORENSE' } };
+    const qs = partidos();
+    anadirSalidas(qs, corregido, cfg);
+    assert.deepEqual([qs[0].enCasa, qs[1].enCasa, qs[9].enCasa], [true, true, true]);
+    assert.deepEqual(cercaSinMunicipio(qs, corregido, cfg), []);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -59,7 +59,7 @@ import { buscarClubs, catalogoClubs, clubsFederacion, fechaCruda } from './isqua
 import { aplicarManuales, configEdicion, leerManuales } from './manuales.js';
 import { conHora, convertirPartidos, equipos as equiposDelClub } from './partidos.js';
 import { anadirResultados, clasificaciones } from './resultados.js';
-import { anadirSalidas, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
+import { anadirSalidas, cercaSinMunicipio, configPedirBus, configSalidas, resolverPabellones, textoSalida } from './salidas.js';
 import {
   ahoraMadrid, anioTemporada, aviso, comoLista, esObjeto, esperar, fechaCorta, fechaPared, fechaValida, fmt, leerJson,
   minusculas, ordenarUnicos, paso, prefijoComun, slug, soloDia, txt,
@@ -573,6 +573,12 @@ export async function principal(args, ahora = new Date()) {
       .map((p) => p.pabellon || '(sin pabellón)'));
     if (sinCalcular.length) {
       aviso(`Sin tiempo de viaje para: ${sinCalcular.join('; ')}. Se puede poner a mano en config.json (salidas > tiempos_viaje_minutos).`);
+    }
+    // Un pabellón cercano sin municipio apuntado sale como de fuera aunque sea de un municipio de municipios_casa.
+    const sinMunicipio = cercaSinMunicipio(partidos, pabellones, salidas);
+    if (sinMunicipio.length) {
+      aviso(`Sin municipio en pabellones.json: ${sinMunicipio.join('; ')}. Sus partidos salen como de fuera; si el pabellón es de un `
+        + 'municipio de municipios_casa (config.json), se escribe a mano su "municipio" en pabellones.json.');
     }
   }
 
